@@ -6,25 +6,19 @@ import { GenerateButton } from "./GenerateButton";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { STLPreview } from "./STLPreview";
 import { DownloadButton } from "./DownloadButton";
-
-interface BinConfig {
-  gridUnitsX: number;
-  gridUnitsY: number;
-  binHeight: number;
-  cutoutDepth: number;
-  wallThickness: number;
-  magnetHoles: boolean;
-  screwHoles: boolean;
-  labelArea: boolean;
-}
+import type { GridfinityConfig } from "@/types/gridfinity";
 
 interface GenerateStepProps {
-  config: BinConfig;
+  config: GridfinityConfig;
   svgContent: string;
   onGenerate: () => void;
   generationStatus: "idle" | "queued" | "processing" | "complete" | "error";
   generationId?: string;
   generationError?: string;
+  progress?: number; // 0-100
+  downloadUrl?: string;
+  previewUrl?: string;
+  onDismissError?: () => void;
 }
 
 export function GenerateStep({
@@ -34,11 +28,19 @@ export function GenerateStep({
   generationStatus,
   generationId,
   generationError,
+  progress = 0,
+  downloadUrl,
+  previewUrl,
+  onDismissError,
 }: GenerateStepProps) {
   const GRID_UNIT_SIZE = 42; // mm per Gridfinity unit
 
   const canGenerate = generationStatus === "idle" || generationStatus === "error";
   const canDownload = generationStatus === "complete" && !!generationId;
+
+  const handleRetry = () => {
+    onGenerate();
+  };
 
   return (
     <div className="container max-w-6xl mx-auto p-6 space-y-6">
@@ -103,12 +105,12 @@ export function GenerateStep({
                       Screw Holes
                     </div>
                   )}
-                  {config.labelArea && (
+                  {config.stackingLip && (
                     <div className="px-3 py-1 bg-primary/10 text-primary rounded-full text-sm">
-                      Label Area
+                      Stacking Lip
                     </div>
                   )}
-                  {!config.magnetHoles && !config.screwHoles && !config.labelArea && (
+                  {!config.magnetHoles && !config.screwHoles && !config.stackingLip && (
                     <span className="text-sm text-muted-foreground">No additional features</span>
                   )}
                 </div>
@@ -123,12 +125,10 @@ export function GenerateStep({
           {generationStatus !== "idle" && (
             <ProgressIndicator
               status={generationStatus}
-              progress={
-                generationStatus === "queued" ? 25 :
-                generationStatus === "processing" ? 75 :
-                generationStatus === "complete" ? 100 : 0
-              }
+              progress={progress}
               error={generationError}
+              onRetry={handleRetry}
+              onDismissError={onDismissError}
             />
           )}
 
@@ -144,7 +144,11 @@ export function GenerateStep({
 
         {/* Right column - Preview */}
         <div className="space-y-6">
-          <STLPreview stlUrl={canDownload ? `/api/generations/${generationId}/preview` : undefined} />
+          <STLPreview
+            svg={svgContent}
+            config={config}
+            quality="low"
+          />
         </div>
       </div>
     </div>

@@ -2,6 +2,11 @@
  * Gridfinity bin configuration types
  */
 
+/**
+ * GridfinityConfig - API request format
+ * This matches the schema validated by the backend API (schemas/generate.ts)
+ * Use this type when making API calls to /api/generate
+ */
 export interface GridfinityConfig {
   // Grid dimensions
   gridUnitsX: number; // Width in Gridfinity units (42mm each)
@@ -25,7 +30,7 @@ export interface GridfinityConfig {
 
   // Advanced options
   cornerRadius: number; // Fillet radius for corners in mm
-  baseThickness: number; // Bottom thickness in mm
+  baseThickness: number; // Bottom thickness in mm (NOTE: not currently used by backend)
 }
 
 export interface BinConfigState extends GridfinityConfig {

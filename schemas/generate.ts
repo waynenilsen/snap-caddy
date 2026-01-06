@@ -1,11 +1,26 @@
 /**
  * Zod schemas for generate API
+ *
+ * These schemas validate API requests and define the contract between
+ * frontend and backend. The GridfinityConfig type here is the API format,
+ * which differs from the backend GridfinityBinConfig used by OpenSCAD.
+ *
+ * Conversion happens in app/api/generate/route.ts via apiConfigToBinConfig()
  */
 
 import { z } from 'zod';
 
 /**
- * Gridfinity configuration schema
+ * Gridfinity configuration schema - API request format
+ *
+ * This schema validates the configuration sent from the frontend.
+ * It uses boolean flags (magnetHoles, screwHoles, stackingLip) and
+ * individual padding values for easier frontend manipulation.
+ *
+ * The backend converts this to GridfinityBinConfig which uses:
+ * - baseType enum instead of magnet/screw booleans
+ * - lipStyle enum instead of stackingLip boolean
+ * - single cutoutPadding instead of individual padding values
  */
 export const GridfinityConfigSchema = z.object({
   // Grid dimensions

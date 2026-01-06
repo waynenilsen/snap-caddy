@@ -3,9 +3,9 @@
 import { useState, useEffect } from "react";
 import { BinConfigurator, BinConfig } from "./BinConfigurator";
 import { GridfinityPreview } from "./GridfinityPreview";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, CheckCircle } from "lucide-react";
+import { Info, CheckCircle, AlertCircle } from "lucide-react";
 
 interface ConfigureStepProps {
   svgDimensions?: { width: number; height: number }; // in mm
@@ -136,7 +136,10 @@ export function ConfigureStep({
       <div className="mt-6 space-y-4">
         {validationErrors.length > 0 && (
           <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Configuration Errors</AlertTitle>
             <AlertDescription>
+              <p className="mb-2">Please fix the following issues before proceeding:</p>
               <ul className="list-disc list-inside space-y-1">
                 {validationErrors.map((error, idx) => (
                   <li key={idx}>{error}</li>

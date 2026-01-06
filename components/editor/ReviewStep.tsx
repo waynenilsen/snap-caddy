@@ -5,7 +5,8 @@ import { useState } from "react"
 import { SVGPreview } from "./SVGPreview"
 import { PaddingControls } from "./PaddingControls"
 import { Button } from "@/components/ui/button"
-import { Check } from "lucide-react"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Check, AlertCircle, X } from "lucide-react"
 
 interface ReviewStepProps {
   svgContent: string
@@ -20,11 +21,37 @@ export function ReviewStep({
 }: ReviewStepProps) {
   const [padding, setPadding] = useState(2) // Default 2mm padding
   const [zoom, setZoom] = useState(1)
+  const [error, setError] = useState<string | null>(null)
 
   const handleConfirm = () => {
-    // Apply padding to SVG
-    const paddedSvg = applyPaddingToSvg(svgContent, padding, pixelsPerMm)
-    onConfirm(paddedSvg, padding)
+    try {
+      // Clear any previous errors
+      setError(null)
+
+      // Validate SVG content
+      if (!svgContent || svgContent.trim().length === 0) {
+        setError("No SVG content available. Please go back and complete the previous steps.")
+        return
+      }
+
+      // Apply padding to SVG
+      const paddedSvg = applyPaddingToSvg(svgContent, padding, pixelsPerMm)
+
+      // Validate the result
+      if (!paddedSvg || paddedSvg.trim().length === 0) {
+        setError("Failed to apply padding to the SVG. Please try again.")
+        return
+      }
+
+      onConfirm(paddedSvg, padding)
+    } catch (error) {
+      console.error("Error confirming SVG:", error)
+      setError("An error occurred while processing the SVG. Please try adjusting the padding or go back to the previous step.")
+    }
+  }
+
+  const handleDismissError = () => {
+    setError(null)
   }
 
   return (
@@ -54,6 +81,24 @@ export function ReviewStep({
 
           {/* Controls - takes 1 column */}
           <div className="space-y-6">
+            {/* Error Display */}
+            {error && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertDescription className="flex items-center justify-between">
+                  <span className="flex-1">{error}</span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleDismissError}
+                    className="h-6 w-6 p-0 ml-2 hover:bg-destructive/20"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </AlertDescription>
+              </Alert>
+            )}
+
             <PaddingControls
               padding={padding}
               onPaddingChange={setPadding}
@@ -88,45 +133,73 @@ function applyPaddingToSvg(
   paddingMm: number,
   pixelsPerMm: number
 ): string {
-  const paddingPx = paddingMm * pixelsPerMm
+  try {
+    const paddingPx = paddingMm * pixelsPerMm
 
-  const parser = new DOMParser()
-  const doc = parser.parseFromString(svgContent, "image/svg+xml")
-  const svgEl = doc.querySelector("svg")
+    const parser = new DOMParser()
+    const doc = parser.parseFromString(svgContent, "image/svg+xml")
 
-  if (!svgEl) return svgContent
+    // Check for parsing errors
+    const parserError = doc.querySelector("parsererror")
+    if (parserError) {
+      throw new Error("Invalid SVG content")
+    }
 
-  // Get current viewBox
-  const viewBox = svgEl.getAttribute("viewBox")
-  if (viewBox) {
-    const [x, y, width, height] = viewBox.split(" ").map(Number)
+    const svgEl = doc.querySelector("svg")
 
-    // Expand viewBox by padding
-    const newViewBox = [
-      x - paddingPx,
-      y - paddingPx,
-      width + paddingPx * 2,
-      height + paddingPx * 2,
-    ].join(" ")
+    if (!svgEl) {
+      throw new Error("No SVG element found")
+    }
 
-    svgEl.setAttribute("viewBox", newViewBox)
+    // Get current viewBox
+    const viewBox = svgEl.getAttribute("viewBox")
+    if (viewBox) {
+      const parts = viewBox.split(" ").map(Number)
+
+      // Validate viewBox values
+      if (parts.length !== 4 || parts.some(isNaN)) {
+        throw new Error("Invalid viewBox format")
+      }
+
+      const [x, y, width, height] = parts
+
+      // Expand viewBox by padding
+      const newViewBox = [
+        x - paddingPx,
+        y - paddingPx,
+        width + paddingPx * 2,
+        height + paddingPx * 2,
+      ].join(" ")
+
+      svgEl.setAttribute("viewBox", newViewBox)
+    }
+
+    // For a real implementation, you would also need to:
+    // 1. Offset all paths by the padding amount
+    // 2. Or apply a transform to the group containing all paths
+    // For now, we'll add a transform to shift content
+    const g = doc.createElementNS("http://www.w3.org/2000/svg", "g")
+    g.setAttribute("transform", `translate(${paddingPx}, ${paddingPx})`)
+
+    // Move all existing children into the group
+    while (svgEl.firstChild) {
+      g.appendChild(svgEl.firstChild)
+    }
+
+    svgEl.appendChild(g)
+
+    // Serialize back to string
+    const serializer = new XMLSerializer()
+    const result = serializer.serializeToString(svgEl)
+
+    if (!result || result.trim().length === 0) {
+      throw new Error("Failed to serialize SVG")
+    }
+
+    return result
+  } catch (error) {
+    console.error("Error applying padding to SVG:", error)
+    // Return original content if padding fails
+    return svgContent
   }
-
-  // For a real implementation, you would also need to:
-  // 1. Offset all paths by the padding amount
-  // 2. Or apply a transform to the group containing all paths
-  // For now, we'll add a transform to shift content
-  const g = doc.createElementNS("http://www.w3.org/2000/svg", "g")
-  g.setAttribute("transform", `translate(${paddingPx}, ${paddingPx})`)
-
-  // Move all existing children into the group
-  while (svgEl.firstChild) {
-    g.appendChild(svgEl.firstChild)
-  }
-
-  svgEl.appendChild(g)
-
-  // Serialize back to string
-  const serializer = new XMLSerializer()
-  return serializer.serializeToString(svgEl)
 }

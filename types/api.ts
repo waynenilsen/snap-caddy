@@ -1,79 +1,70 @@
 /**
  * API request and response types
+ * These types represent the API contract between frontend and backend.
+ * Where possible, they reference schema-validated types for consistency.
  */
 
-import type { ClickPoint, MaskOption } from './segmentation';
+import type {
+  SegmentRequest as SchemaSegmentRequest,
+  SegmentResponse as SchemaSegmentResponse,
+  SegmentErrorResponse as SchemaSegmentErrorResponse,
+} from '@/schemas/segment';
+import type {
+  GenerateRequest as SchemaGenerateRequest,
+  GenerateResponse as SchemaGenerateResponse,
+  GenerateErrorResponse as SchemaGenerateErrorResponse,
+  GenerationStatus as SchemaGenerationStatus,
+  GenerationStatusResponse as SchemaGenerationStatusResponse,
+} from '@/schemas/generate';
 import type { GridfinityConfig } from './gridfinity';
-import type { BoundingBox } from './image';
 
 // ============================================================================
 // Segment API
 // ============================================================================
 
-export interface SegmentRequest {
-  image: string; // Base64 encoded image (data URI or raw)
-  points: ClickPoint[]; // Click points for segmentation
-  imageWidth: number;
-  imageHeight: number;
-  returnMultipleMasks?: boolean; // Return multiple mask options
-  maskFormat?: 'base64png' | 'rle' | 'binary'; // Mask encoding format
-}
+/**
+ * SegmentRequest - uses schema-validated type
+ */
+export type SegmentRequest = SchemaSegmentRequest;
 
-export interface SegmentResponse {
-  success: boolean;
-  masks: MaskOption[]; // Primary mask first, alternatives if requested
-  imageWidth: number;
-  imageHeight: number;
-  processingTimeMs: number;
-}
+/**
+ * SegmentResponse - uses schema-validated type
+ */
+export type SegmentResponse = SchemaSegmentResponse;
 
-export interface SegmentErrorResponse {
-  success: false;
-  error: string;
-  code: 'INVALID_INPUT' | 'IMAGE_TOO_LARGE' | 'SAM_ERROR' | 'RATE_LIMIT' | 'SERVER_ERROR';
-  details?: unknown;
-}
+/**
+ * SegmentErrorResponse - uses schema-validated type
+ */
+export type SegmentErrorResponse = SchemaSegmentErrorResponse;
 
 // ============================================================================
 // Generate API
 // ============================================================================
 
-export interface GenerateRequest {
-  svg: string; // SVG content
-  config: GridfinityConfig;
-  async?: boolean; // Request async generation with webhook
-  webhookUrl?: string; // Optional webhook URL for completion notification
-}
+/**
+ * GenerateRequest - uses schema-validated type
+ */
+export type GenerateRequest = SchemaGenerateRequest;
 
-export type GenerationStatus = 'queued' | 'processing' | 'complete' | 'error';
+/**
+ * GenerationStatus - uses schema-validated type
+ */
+export type GenerationStatus = SchemaGenerationStatus;
 
-export interface GenerateResponse {
-  success: boolean;
-  generationId: string; // UUID for download
-  status: GenerationStatus;
-  estimatedTimeMs?: number;
-  downloadUrl?: string; // Available when complete
-  previewUrl?: string; // PNG preview of model
-  queuePosition?: number; // If queued
-}
+/**
+ * GenerateResponse - uses schema-validated type
+ */
+export type GenerateResponse = SchemaGenerateResponse;
 
-export interface GenerateErrorResponse {
-  success: false;
-  error: string;
-  code: 'INVALID_INPUT' | 'INVALID_SVG' | 'OPENSCAD_ERROR' | 'RATE_LIMIT' | 'SERVER_ERROR';
-  details?: unknown;
-}
+/**
+ * GenerateErrorResponse - uses schema-validated type
+ */
+export type GenerateErrorResponse = SchemaGenerateErrorResponse;
 
-export interface GenerationStatusResponse {
-  id: string;
-  status: GenerationStatus;
-  progress: number; // 0-100
-  downloadUrl?: string;
-  previewUrl?: string;
-  error?: string;
-  createdAt: string;
-  completedAt?: string;
-}
+/**
+ * GenerationStatusResponse - uses schema-validated type
+ */
+export type GenerationStatusResponse = SchemaGenerationStatusResponse;
 
 // ============================================================================
 // Download API
@@ -94,6 +85,9 @@ export interface DownloadErrorResponse {
 // Preview API
 // ============================================================================
 
+/**
+ * PreviewRequest - request for generating a preview image
+ */
 export interface PreviewRequest {
   svg: string;
   config: GridfinityConfig;

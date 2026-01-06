@@ -2,6 +2,7 @@
 
 import { useCallback, useState } from "react";
 import { useWizard } from "@/hooks/useWizard";
+import { useGenerationPolling } from "@/hooks/useGenerationPolling";
 import { WizardLayout, StepIndicator, WizardNavigation } from "@/components/wizard";
 import { CaptureStep } from "@/components/capture";
 import { SelectStep } from "@/components/segmentation";
@@ -10,15 +11,32 @@ import { ReviewStep } from "@/components/editor";
 import { ConfigureStep } from "@/components/configuration";
 import { GenerateStep } from "@/components/generation";
 import { Button } from "@/components/ui/button";
-import { RotateCcw } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { RotateCcw, AlertCircle, X } from "lucide-react";
+import { api, APIClientError } from "@/lib/api/client";
 
 export default function Home() {
   const wizard = useWizard();
   const { state, setImageData, setCalibration, setSvgOutline, setGridfinityConfig, setGenerationStatus, setGenerationId } = wizard;
   const [isLoading, setIsLoading] = useState(false);
 
-  // Convert generation status for GenerateStep component
-  const generationStatus = state.generationStatus === "generating" ? "processing" : state.generationStatus;
+  // Use polling hook to track generation status
+  const polling = useGenerationPolling(state.generationId, {
+    enabled: !!state.generationId && (state.generationStatus === "queued" || state.generationStatus === "processing"),
+    pollingInterval: 2500, // Poll every 2.5 seconds
+    onComplete: (data) => {
+      console.log("Generation complete:", data);
+      setGenerationStatus("complete");
+    },
+    onError: (error) => {
+      console.error("Generation error:", error);
+      setGenerationStatus("error");
+      wizard.setError(error);
+    },
+  });
+
+  // Use polling status if available, otherwise use wizard state
+  const generationStatus = polling.status || state.generationStatus;
 
   // Step handlers
   const handleImageCaptured = useCallback((imageDataUrl: string) => {
@@ -64,30 +82,86 @@ export default function Home() {
   }, [setGridfinityConfig]);
 
   const handleGenerate = useCallback(async () => {
+    // Validate required data
+    if (!state.svgOutline) {
+      wizard.setError("SVG outline is missing. Please complete the previous steps.");
+      return;
+    }
+
     setIsLoading(true);
-    setGenerationStatus("generating");
+    setGenerationStatus("queued"); // Set wizard status to 'queued' while initiating
+    wizard.setError(null); // Clear any previous errors
 
     try {
-      // TODO: Replace with actual API call
-      // const response = await fetch('/api/generate', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({
-      //     svg: state.svgOutline,
-      //     config: state.gridfinityConfig,
-      //   }),
-      // });
+      // Call the generate API with the SVG and configuration
+      // Map state config to API config format (API expects GridfinityConfig from types/gridfinity)
+      const response = await api.generate({
+        svg: state.svgOutline,
+        config: {
+          gridUnitsX: state.gridfinityConfig.gridUnitsX,
+          gridUnitsY: state.gridfinityConfig.gridUnitsY,
+          binHeight: state.gridfinityConfig.binHeight,
+          cutoutDepth: state.gridfinityConfig.cutoutDepth,
+          wallThickness: state.gridfinityConfig.wallThickness,
+          paddingTop: 2, // Default padding - backend will apply defaults but we set them explicitly
+          paddingBottom: 2,
+          paddingLeft: 2,
+          paddingRight: 2,
+          magnetHoles: state.gridfinityConfig.magnetHoles,
+          screwHoles: state.gridfinityConfig.screwHoles,
+          stackingLip: state.gridfinityConfig.stackingLip,
+          cornerRadius: state.gridfinityConfig.cornerRadius,
+          baseThickness: state.gridfinityConfig.baseThickness,
+        },
+        async: true, // Request async generation for polling
+      });
 
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-
-      // Mock successful response
-      setGenerationId("mock-generation-id-" + Date.now());
-      setGenerationStatus("complete");
+      // Set the generation ID to start polling
+      setGenerationId(response.generationId);
+      // Update status from response - polling hook will monitor progress and update to "complete"
+      if (response.status === 'queued' || response.status === 'processing') {
+        setGenerationStatus(response.status);
+      } else if (response.status === 'complete') {
+        setGenerationStatus("complete");
+      }
     } catch (error) {
       console.error("Generation failed:", error);
       setGenerationStatus("error");
-      wizard.setError("Failed to generate STL. Please try again.");
+
+      // User-friendly error message
+      let errorMessage = "Unable to generate the 3D model. Please try again.";
+
+      if (error instanceof APIClientError) {
+        // Handle specific API errors
+        switch (error.code) {
+          case 'INVALID_INPUT':
+            errorMessage = "Invalid configuration. Please check your settings and try again.";
+            break;
+          case 'INVALID_SVG':
+            errorMessage = "Invalid SVG outline. Please go back and review your outline.";
+            break;
+          case 'OPENSCAD_ERROR':
+            errorMessage = "Error generating the 3D model. Please try different configuration settings.";
+            break;
+          case 'RATE_LIMIT':
+            errorMessage = "Too many requests. Please wait a moment before trying again.";
+            break;
+          case 'SERVER_ERROR':
+            errorMessage = "Server error. Please try again later.";
+            break;
+          default:
+            errorMessage = error.message || errorMessage;
+        }
+      } else if (error instanceof Error) {
+        // Check for specific error types
+        if (error.message.includes("network") || error.message.includes("fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message.includes("timeout")) {
+          errorMessage = "The request took too long. Please try again.";
+        }
+      }
+
+      wizard.setError(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +177,10 @@ export default function Home() {
 
   const handleNext = useCallback(() => {
     wizard.goToNextStep();
+  }, [wizard]);
+
+  const handleDismissError = useCallback(() => {
+    wizard.setError(null);
   }, [wizard]);
 
   // Render current step content
@@ -172,21 +250,16 @@ export default function Home() {
       case 5: // Generate
         return (
           <GenerateStep
-            config={{
-              gridUnitsX: state.gridfinityConfig.gridUnitsX,
-              gridUnitsY: state.gridfinityConfig.gridUnitsY,
-              binHeight: state.gridfinityConfig.binHeight,
-              cutoutDepth: state.gridfinityConfig.cutoutDepth,
-              wallThickness: state.gridfinityConfig.wallThickness,
-              magnetHoles: state.gridfinityConfig.magnetHoles,
-              screwHoles: state.gridfinityConfig.screwHoles,
-              labelArea: state.gridfinityConfig.stackingLip,
-            }}
+            config={state.gridfinityConfig}
             svgContent={state.svgOutline || ""}
             onGenerate={handleGenerate}
             generationStatus={generationStatus as "idle" | "queued" | "processing" | "complete" | "error"}
             generationId={state.generationId || undefined}
-            generationError={state.error || undefined}
+            generationError={polling.error || state.error || undefined}
+            progress={polling.progress}
+            downloadUrl={polling.downloadUrl}
+            previewUrl={polling.previewUrl}
+            onDismissError={handleDismissError}
           />
         );
 
@@ -228,6 +301,29 @@ export default function Home() {
           />
         </div>
       </div>
+
+      {/* Global Error Display */}
+      {state.error && (
+        <div className="border-b bg-destructive/5">
+          <div className="container mx-auto px-4 py-4">
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle className="flex items-center justify-between">
+                <span>Error</span>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDismissError}
+                  className="h-6 w-6 p-0 hover:bg-destructive/20"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              </AlertTitle>
+              <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+          </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <main className="flex-1">
