@@ -137,6 +137,22 @@ mock.module('@/lib/api/errors', () => ({
   APIError,
 }));
 
+// Mock queue functions
+const mockAddSTLJob = mock(async (data: { generationId: string }) => ({
+  jobId: data.generationId,
+  queuePosition: 1,
+}));
+
+const mockGetJobStatus = mock(async (id: string) => null);
+
+const mockInitializeQueue = mock(() => {});
+
+mock.module('@/lib/queue', () => ({
+  addSTLJob: mockAddSTLJob,
+  getJobStatus: mockGetJobStatus,
+  initializeQueue: mockInitializeQueue,
+}));
+
 // Import the route handlers after mocking
 // Note: We need to import the internal functions for testing
 // In a real implementation, you might export these or use a different testing approach
@@ -361,6 +377,9 @@ beforeEach(() => {
   mockLogger.error.mockClear();
   mockLogger.debug.mockClear();
   mockMetrics.recordGeneration.mockClear();
+  mockAddSTLJob.mockClear();
+  mockGetJobStatus.mockClear();
+  mockInitializeQueue.mockClear();
 
   // Set default mock behaviors
   mockValidateSVG.mockImplementation(() => ({ valid: true }));
@@ -387,6 +406,11 @@ beforeEach(() => {
     outputPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl',
     duration: 1500,
   }));
+  mockAddSTLJob.mockImplementation(async (data: { generationId: string }) => ({
+    jobId: data.generationId,
+    queuePosition: 1,
+  }));
+  mockGetJobStatus.mockImplementation(async (id: string) => null);
 });
 
 describe('POST /api/generate', () => {
@@ -517,20 +541,17 @@ describe('POST /api/generate', () => {
     const data = await response.json();
 
     expect(response.status).toBe(200);
-    expect(data).toEqual({
-      success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued',
-      queuePosition: 1,
-      estimatedTimeMs: 30000,
-    });
+    expect(data.success).toBe(true);
+    expect(data.status).toBe('queued');
+    expect(data.queuePosition).toBe(1);
+    expect(data.generationId).toBeDefined();
+    expect(typeof data.generationId).toBe('string');
+    expect(data.estimatedTimeMs).toBeGreaterThan(0);
 
-    // Should not call render for async requests
+    // Should not call render for async requests (goes to queue)
     expect(mockRender).not.toHaveBeenCalled();
-    expect(mockLogger.warn).toHaveBeenCalledWith(
-      'Async generation not yet implemented - job will remain queued',
-      { generationId: '550e8400-e29b-41d4-a716-446655440000' }
-    );
+    // Queue job should have been called
+    expect(mockAddSTLJob).toHaveBeenCalled();
   });
 
   it('returns 500 when OpenSCAD generation fails', async () => {
@@ -754,6 +775,19 @@ describe('GET /api/generate', () => {
     const postResponse = await routeModule.POST(postRequest);
     const postData = await postResponse.json();
     const generationId = postData.generationId;
+
+    // Mock getJobStatus to return queued status for this job
+    mockGetJobStatus.mockImplementation(async (id: string) => {
+      if (id === generationId) {
+        return {
+          id: generationId,
+          status: 'queued',
+          progress: 0,
+          createdAt: new Date().toISOString(),
+        };
+      }
+      return null;
+    });
 
     // Get status
     const getRequest = createMockRequest(

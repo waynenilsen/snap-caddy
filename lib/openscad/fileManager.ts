@@ -72,6 +72,41 @@ export class STLFileManager {
   }
 
   /**
+   * Create job directory with a specific ID
+   * Used by async queue to ensure consistent job IDs across requests
+   */
+  async createJobPathsWithId(jobId: string): Promise<JobPaths> {
+    try {
+      // Create job directory path
+      const jobDir = join(this.tempDir, 'stl-jobs', jobId);
+
+      // Create the directory
+      await mkdir(jobDir, { recursive: true });
+
+      // Store job directory
+      this.jobDirs.set(jobId, jobDir);
+
+      // Define file paths
+      const paths: JobPaths = {
+        jobId,
+        jobDir,
+        svgPath: join(jobDir, 'cutout.svg'),
+        scadPath: join(jobDir, 'bin.scad'),
+        stlPath: join(jobDir, 'bin.stl'),
+        previewPath: join(jobDir, 'preview.png'),
+      };
+
+      logger.debug('Created job paths with ID', { jobId, jobDir });
+
+      return paths;
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      logger.error('Failed to create job paths with ID', { error: errorMessage, jobId });
+      throw new Error(`Failed to create job paths: ${errorMessage}`);
+    }
+  }
+
+  /**
    * Write SVG content to file
    */
   async writeSVG(path: string, content: string): Promise<void> {
