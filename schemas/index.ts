@@ -13,6 +13,7 @@ export {
 } from './segment';
 
 export type {
+  Point,
   SegmentRequest,
   SegmentResponse,
   SegmentErrorResponse,
