@@ -69,6 +69,7 @@ export const SegmentErrorResponseSchema = z.object({
 });
 
 // Infer types from schemas
+export type Point = z.infer<typeof PointSchema>;
 export type SegmentRequest = z.infer<typeof SegmentRequestSchema>;
 export type SegmentResponse = z.infer<typeof SegmentResponseSchema>;
 export type SegmentErrorResponse = z.infer<typeof SegmentErrorResponseSchema>;
