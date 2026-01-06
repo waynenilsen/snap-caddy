@@ -1,0 +1,80 @@
+# Render.com Blueprint for Snap Caddy
+# ====================================
+# Deploy: Connect this repo to Render and it will auto-detect this file
+# Docs: https://render.com/docs/blueprint-spec
+
+services:
+  # Main web service
+  - type: web
+    name: snap-caddy
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+
+    # Instance configuration
+    plan: standard  # Required for persistent disk
+    region: oregon  # or your preferred region
+
+    # Scaling (optional - adjust based on needs)
+    scaling:
+      minInstances: 1
+      maxInstances: 3
+      targetMemoryPercent: 80
+      targetCPUPercent: 80
+
+    # Health check
+    healthCheckPath: /
+
+    # Persistent disk for generated STL files
+    disk:
+      name: snap-caddy-storage
+      mountPath: /data/snap-caddy
+      sizeGB: 10  # Adjust based on expected usage
+
+    # Environment variables
+    envVars:
+      # Application
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: "3000"
+
+      # SAM Segmentation - REQUIRED
+      - key: REPLICATE_API_TOKEN
+        sync: false  # Set manually in Render dashboard for security
+      - key: SAM_MODEL_VERSION
+        value: meta/sam-2-hiera-large
+
+      # OpenSCAD Configuration (pre-configured in Docker image)
+      - key: OPENSCAD_PATH
+        value: /usr/bin/openscad
+      - key: GRIDFINITY_LIB_PATH
+        value: /opt/gridfinity_extended_openscad
+      - key: OPENSCAD_USE_XVFB
+        value: "true"
+      - key: OPENSCAD_TIMEOUT
+        value: "300000"
+
+      # File Storage (uses persistent disk)
+      - key: TEMP_DIR
+        value: /data/snap-caddy
+      - key: MAX_FILE_SIZE
+        value: "10485760"
+      - key: FILE_RETENTION_MS
+        value: "3600000"
+
+      # Rate Limiting
+      - key: RATE_LIMIT_REQUESTS
+        value: "10"
+      - key: RATE_LIMIT_WINDOW
+        value: "60000"
+
+      # Feature Flags
+      - key: GENERATE_PREVIEWS
+        value: "false"
+      - key: ENABLE_ASYNC_GENERATION
+        value: "false"
+
+      # Logging
+      - key: LOG_LEVEL
+        value: info

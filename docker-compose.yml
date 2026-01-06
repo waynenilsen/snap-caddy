@@ -1,0 +1,57 @@
+# Snap Caddy Docker Compose Configuration
+# ========================================
+# Run with: docker compose up -d
+# Build and run: docker compose up -d --build
+
+services:
+  snap-caddy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: snap-caddy
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # Application
+      - NODE_ENV=production
+      - PORT=3000
+
+      # SAM Segmentation (Required - set your Replicate API token)
+      - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN:-}
+      - SAM_MODEL_VERSION=${SAM_MODEL_VERSION:-meta/sam-2-hiera-large}
+
+      # OpenSCAD Configuration
+      - OPENSCAD_PATH=/usr/bin/openscad
+      - GRIDFINITY_LIB_PATH=/opt/gridfinity_extended_openscad
+      - OPENSCAD_USE_XVFB=true
+      - OPENSCAD_TIMEOUT=${OPENSCAD_TIMEOUT:-300000}
+
+      # File Storage (uses mounted volume)
+      - TEMP_DIR=/data/snap-caddy
+      - MAX_FILE_SIZE=${MAX_FILE_SIZE:-10485760}
+      - FILE_RETENTION_MS=${FILE_RETENTION_MS:-3600000}
+
+      # Rate Limiting
+      - RATE_LIMIT_REQUESTS=${RATE_LIMIT_REQUESTS:-10}
+      - RATE_LIMIT_WINDOW=${RATE_LIMIT_WINDOW:-60000}
+
+      # Feature Flags
+      - GENERATE_PREVIEWS=${GENERATE_PREVIEWS:-false}
+      - ENABLE_ASYNC_GENERATION=${ENABLE_ASYNC_GENERATION:-false}
+
+      # Logging
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    volumes:
+      # Persistent storage for generated STL files and job data
+      - snap-caddy-data:/data/snap-caddy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  snap-caddy-data:
+    driver: local
