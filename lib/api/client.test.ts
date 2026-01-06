@@ -7,6 +7,25 @@ import type {
 } from '@/types/api';
 import type { GridfinityConfig } from '@/types/gridfinity';
 
+// Helper to create a valid GridfinityConfig for tests
+const createTestConfig = (overrides: Partial<GridfinityConfig> = {}): GridfinityConfig => ({
+  gridUnitsX: 2,
+  gridUnitsY: 2,
+  binHeight: 21,
+  cutoutDepth: 10,
+  wallThickness: 1.2,
+  paddingTop: 2,
+  paddingBottom: 2,
+  paddingLeft: 2,
+  paddingRight: 2,
+  magnetHoles: false,
+  screwHoles: false,
+  stackingLip: true,
+  cornerRadius: 0.5,
+  baseThickness: 5,
+  ...overrides,
+});
+
 describe('APIClientError', () => {
   it('should set message, code, and statusCode correctly', () => {
     const error = new APIClientError('Test error', 'TEST_CODE', 404);
@@ -144,14 +163,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should make correct POST request to /api/generate', async () => {
-      const config: GridfinityConfig = {
-        width: 2,
-        depth: 2,
-        height: 3,
-        wallThickness: 1.2,
-        baseHeight: 5,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig();
 
       const mockResponse: GenerateResponse = {
         success: true,
@@ -184,14 +196,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should handle optional async parameter', async () => {
-      const config: GridfinityConfig = {
-        width: 1,
-        depth: 1,
-        height: 2,
-        wallThickness: 1.0,
-        baseHeight: 4,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 14 });
 
       const mockResponse: GenerateResponse = {
         success: true,
@@ -326,14 +331,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should make POST request and return blob', async () => {
-      const config: GridfinityConfig = {
-        width: 2,
-        depth: 2,
-        height: 3,
-        wallThickness: 1.2,
-        baseHeight: 5,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig();
 
       const mockBlob = new Blob(['PNG data'], { type: 'image/png' });
 
@@ -465,14 +463,7 @@ describe('SnapCaddyAPI', () => {
       try {
         await api.getPreview({
           svg: '<svg>test</svg>',
-          config: {
-            width: 1,
-            depth: 1,
-            height: 1,
-            wallThickness: 1.0,
-            baseHeight: 4,
-            tolerance: 0.1,
-          },
+          config: createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 7 }),
         });
         expect(true).toBe(false); // Should not reach here
       } catch (error) {
@@ -492,14 +483,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should poll until complete and return blob', async () => {
-      const config: GridfinityConfig = {
-        width: 2,
-        depth: 2,
-        height: 3,
-        wallThickness: 1.2,
-        baseHeight: 5,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig();
 
       const mockBlob = new Blob(['STL data'], { type: 'model/stl' });
       let pollCount = 0;
@@ -559,14 +543,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should call onProgress callback during polling', async () => {
-      const config: GridfinityConfig = {
-        width: 1,
-        depth: 1,
-        height: 1,
-        wallThickness: 1.0,
-        baseHeight: 4,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 7 });
 
       const mockBlob = new Blob(['STL data'], { type: 'model/stl' });
       const progressUpdates: GenerationStatusResponse[] = [];
@@ -623,14 +600,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should throw error when generation fails', async () => {
-      const config: GridfinityConfig = {
-        width: 1,
-        depth: 1,
-        height: 1,
-        wallThickness: 1.0,
-        baseHeight: 4,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 7 });
 
       const fetchMock = mock(async (url: string) => {
         if (url.includes('/api/generate') && !url.includes('?id=')) {
@@ -677,14 +647,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should use default error message when generation error has no message', async () => {
-      const config: GridfinityConfig = {
-        width: 1,
-        depth: 1,
-        height: 1,
-        wallThickness: 1.0,
-        baseHeight: 4,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 7 });
 
       const fetchMock = mock(async (url: string) => {
         if (url.includes('/api/generate') && !url.includes('?id=')) {
@@ -726,14 +689,7 @@ describe('SnapCaddyAPI', () => {
     });
 
     it('should use default polling interval of 1000ms when not specified', async () => {
-      const config: GridfinityConfig = {
-        width: 1,
-        depth: 1,
-        height: 1,
-        wallThickness: 1.0,
-        baseHeight: 4,
-        tolerance: 0.1,
-      };
+      const config = createTestConfig({ gridUnitsX: 1, gridUnitsY: 1, binHeight: 7 });
 
       const mockBlob = new Blob(['STL data'], { type: 'model/stl' });
       const startTime = Date.now();
