@@ -148,6 +148,8 @@ export function GenerateStep({
             svg={svgContent}
             config={config}
             quality="low"
+            generationId={generationId}
+            generationStatus={generationStatus}
           />
         </div>
       </div>
