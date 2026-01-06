@@ -1,0 +1,27 @@
+/**
+ * Image and geometric types
+ */
+
+export interface Point {
+  x: number;
+  y: number;
+}
+
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
+
+export interface ImageDimensions {
+  width: number;
+  height: number;
+}
+
+export interface ImageData {
+  data: string; // Base64 encoded image (data URI or raw)
+  dimensions: ImageDimensions;
+  format?: string; // image/png, image/jpeg, etc.
+  size?: number; // File size in bytes
+}
