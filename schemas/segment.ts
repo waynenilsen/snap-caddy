@@ -1,11 +1,16 @@
 /**
  * Zod schemas for segment API
+ *
+ * These schemas validate segmentation API requests/responses.
+ * Types inferred from these schemas are re-exported in types/segmentation.ts
+ * to maintain a single source of truth for the API contract.
  */
 
 import { z } from 'zod';
 
 /**
- * Point schema
+ * Point schema - represents a click point for segmentation
+ * Note: This is what types/segmentation.ts calls "ClickPoint"
  */
 export const PointSchema = z.object({
   x: z.number().min(0),

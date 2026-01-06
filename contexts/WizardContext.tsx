@@ -1,28 +1,27 @@
 'use client';
 
 import React, { createContext, useReducer, useCallback, type ReactNode } from 'react';
+import type { BinConfigState } from '@/types/gridfinity';
+import type { GenerationStatus as APIGenerationStatus } from '@/types/api';
 
 // Types
-export type GenerationStatus = 'idle' | 'generating' | 'complete' | 'error';
+/**
+ * GenerationStatus - extended API status with frontend 'idle' state
+ * API uses: 'queued' | 'processing' | 'complete' | 'error'
+ * Frontend adds: 'idle' for initial state
+ */
+export type GenerationStatus = 'idle' | APIGenerationStatus;
 
 export interface CalibrationData {
   pixelsPerMm: number | null;
   unit: 'mm' | 'cm' | 'in';
 }
 
-export interface GridfinityConfig {
-  gridUnitsX: number;
-  gridUnitsY: number;
-  binHeight: number;
-  cutoutDepth: number;
-  wallThickness: number;
-  baseThickness: number;
-  magnetHoles: boolean;
-  screwHoles: boolean;
-  stackingLip: boolean;
-  cornerRadius: number;
-  tolerance: number;
-}
+/**
+ * GridfinityConfig extended with tolerance for frontend state management
+ * This is the full config used in the wizard, including frontend-only fields like tolerance
+ */
+export type GridfinityConfig = BinConfigState;
 
 export interface WizardState {
   currentStep: number; // 0-5 (capture, segment, calibrate, review, configure, generate)
@@ -73,11 +72,16 @@ const initialGridfinityConfig: GridfinityConfig = {
   cutoutDepth: 35,
   wallThickness: 1.2,
   baseThickness: 2.6,
+  paddingTop: 2,
+  paddingBottom: 2,
+  paddingLeft: 2,
+  paddingRight: 2,
   magnetHoles: true,
   screwHoles: false,
   stackingLip: true,
   cornerRadius: 0.5,
   tolerance: 0.2,
+  error: null,
 };
 
 const initialState: WizardState = {

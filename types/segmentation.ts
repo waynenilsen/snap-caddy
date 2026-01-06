@@ -1,20 +1,26 @@
 /**
  * SAM segmentation types
+ * Note: Core types (ClickPoint, MaskOption) are defined in schemas/segment.ts
+ * and re-exported here for consistency with the validated API contract
  */
 
-import type { Point, BoundingBox } from './image';
+import type { Point as SchemaPoint, MaskOption as SchemaMaskOption } from '@/schemas/segment';
 
-export interface ClickPoint extends Point {
-  label: 0 | 1; // 0 = background, 1 = foreground
-}
+/**
+ * ClickPoint - represents a user click for segmentation
+ * Uses schema-validated type to ensure consistency with API
+ */
+export type ClickPoint = SchemaPoint;
 
-export interface MaskOption {
-  mask: string; // Base64 PNG or RLE encoded
-  confidence: number; // 0-1 score
-  boundingBox: BoundingBox;
-  area: number; // Pixel count
-}
+/**
+ * MaskOption - represents a segmentation mask result
+ * Uses schema-validated type to ensure consistency with API
+ */
+export type MaskOption = SchemaMaskOption;
 
+/**
+ * SegmentationResult - complete response from segmentation
+ */
 export interface SegmentationResult {
   masks: MaskOption[];
   imageWidth: number;

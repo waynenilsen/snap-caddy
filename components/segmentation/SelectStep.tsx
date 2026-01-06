@@ -1,11 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ClickToSegment, SegmentPoint } from './ClickToSegment';
 import { MaskOverlay } from './MaskOverlay';
 import { SegmentationControls } from './SegmentationControls';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Info } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Info, AlertCircle, X, RefreshCw } from 'lucide-react';
+import { api, APIClientError } from '@/lib/api/client';
+import type { ClickPoint } from '@/types/segmentation';
 
 interface SelectStepProps {
   imageUrl: string;
@@ -16,6 +19,9 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
   const [points, setPoints] = useState<SegmentPoint[]>([]);
   const [isSegmenting, setIsSegmenting] = useState(false);
   const [maskData, setMaskData] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const imageRef = useRef<HTMLImageElement | null>(null);
 
   const handlePointAdd = (point: SegmentPoint) => {
     setPoints((prev) => [...prev, point]);
@@ -28,6 +34,7 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
   const handleClear = () => {
     setPoints([]);
     setMaskData(null);
+    setError(null);
   };
 
   const handleUndo = () => {
@@ -36,51 +43,106 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
 
   const handleSegment = async () => {
     if (points.length === 0) return;
+    if (!imageDimensions) {
+      setError('Image dimensions not loaded. Please try again.');
+      return;
+    }
 
     setIsSegmenting(true);
+    setError(null);
 
     try {
-      // TODO: This will be replaced with actual SAM API call
-      // For now, simulate a delay
-      await new Promise((resolve) => setTimeout(resolve, 1500));
+      // Convert SegmentPoint[] to ClickPoint[] (remove the id field)
+      const clickPoints: ClickPoint[] = points.map((point) => ({
+        x: point.x,
+        y: point.y,
+        label: point.label,
+      }));
 
-      // Placeholder: Generate a simple mock mask
-      // In production, this will call the SAM API with points
-      const mockMaskData = generateMockMask();
-      setMaskData(mockMaskData);
-      onMaskGenerated(mockMaskData);
+      // Call the segment API
+      const response = await api.segment({
+        image: imageUrl,
+        points: clickPoints,
+        imageWidth: imageDimensions.width,
+        imageHeight: imageDimensions.height,
+        returnMultipleMasks: false,
+      });
+
+      // Extract the first (best) mask from the response
+      if (response.masks && response.masks.length > 0) {
+        const bestMask = response.masks[0];
+        const maskDataUrl = bestMask.mask;
+
+        setMaskData(maskDataUrl);
+        onMaskGenerated(maskDataUrl);
+      } else {
+        throw new Error('No masks returned from segmentation');
+      }
     } catch (error) {
       console.error('Segmentation failed:', error);
-      // TODO: Add error handling UI
+
+      // Transform technical errors into user-friendly messages
+      let errorMessage = "Unable to identify the object. Please try clicking on a different part of the image.";
+
+      if (error instanceof APIClientError) {
+        if (error.status === 429) {
+          errorMessage = "Too many requests. Please wait a moment before trying again.";
+        } else if (error.status === 413) {
+          errorMessage = "Image is too large. Please use a smaller image.";
+        } else if (error.status === 400) {
+          errorMessage = "Invalid request. Please make sure you've clicked on the object and try again.";
+        } else if (error.status >= 500) {
+          errorMessage = "Server error. Please try again in a moment.";
+        } else if (error.message.includes("network") || error.message.includes("fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (error.message) {
+          errorMessage = `Segmentation failed: ${error.message}`;
+        }
+      } else if (error instanceof Error) {
+        if (error.message.includes("No masks")) {
+          errorMessage = "Unable to detect the object. Please try adding more points or clicking on different areas.";
+        } else if (error.message.includes("timeout")) {
+          errorMessage = "Request timed out. Please try again.";
+        } else if (error.message.includes("network") || error.message.includes("fetch")) {
+          errorMessage = "Network error. Please check your connection and try again.";
+        }
+      }
+
+      setError(errorMessage);
+      // Note: We intentionally don't clear points here so users can retry with the same points
     } finally {
       setIsSegmenting(false);
     }
   };
 
-  // Temporary function to generate a mock mask for testing
-  // This will be removed when SAM integration is complete
-  const generateMockMask = (): string => {
-    const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-
-    if (ctx) {
-      // Create a simple circular mask around the first point
-      ctx.fillStyle = 'rgba(34, 197, 94, 0.5)';
-      if (points.length > 0) {
-        const firstPoint = points[0];
-        // Scale point coordinates if needed
-        const x = (firstPoint.x / 1024) * 512;
-        const y = (firstPoint.y / 1024) * 512;
-        ctx.beginPath();
-        ctx.arc(x, y, 100, 0, 2 * Math.PI);
-        ctx.fill();
-      }
-    }
-
-    return canvas.toDataURL('image/png');
+  const handleDismissError = () => {
+    setError(null);
   };
+
+  const handleRetry = () => {
+    setError(null);
+    handleSegment();
+  };
+
+  // Load image to get dimensions
+  useEffect(() => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+
+    img.onload = () => {
+      setImageDimensions({
+        width: img.naturalWidth,
+        height: img.naturalHeight,
+      });
+    };
+
+    img.onerror = () => {
+      setError('Failed to load image');
+    };
+
+    img.src = imageUrl;
+    imageRef.current = img;
+  }, [imageUrl]);
 
   return (
     <div className="space-y-6">
@@ -92,6 +154,36 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
           and exclude points (right-click) on the background to refine the selection.
         </AlertDescription>
       </Alert>
+
+      {/* Error alert */}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="h-4 w-4" />
+          <AlertDescription className="flex items-start justify-between gap-4">
+            <span className="flex-1">{error}</span>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRetry}
+                disabled={isSegmenting || points.length === 0}
+                className="h-8 px-3 hover:bg-destructive/20"
+              >
+                <RefreshCw className="h-4 w-4 mr-1" />
+                Retry
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleDismissError}
+                className="h-8 w-8 p-0 hover:bg-destructive/20"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Controls */}
       <SegmentationControls

@@ -25,7 +25,16 @@ const jobStatusStore = new Map<string, GenerationStatusResponse>();
 
 /**
  * Convert API GridfinityConfig to GridfinityBinConfig
- * Applies defaults for optional values
+ *
+ * Transforms the frontend/API config format to the backend OpenSCAD format:
+ * - Converts magnetHoles + screwHoles booleans → baseType enum
+ * - Converts stackingLip boolean → lipStyle enum
+ * - Averages individual padding values → single cutoutPadding value
+ * - Sets cutoutOffsetX/Y to 0 (centered)
+ * - Applies schema defaults for optional values
+ *
+ * @param config - API GridfinityConfig (from schemas/generate.ts)
+ * @returns GridfinityBinConfig for OpenSCAD generator
  */
 function apiConfigToBinConfig(config: {
   gridUnitsX: number;

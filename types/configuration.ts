@@ -1,12 +1,26 @@
 /**
  * Gridfinity bin configuration types
+ *
+ * NOTE: This file defines the BACKEND configuration format used by OpenSCAD generation.
+ * The FRONTEND uses GridfinityConfig from types/gridfinity.ts which is converted
+ * to this format by the API route (app/api/generate/route.ts).
+ *
+ * Key differences:
+ * - Backend uses baseType enum (solid/magnet/screw/magnet_screw)
+ * - Frontend uses magnetHoles and screwHoles booleans
+ * - Backend uses single cutoutPadding value
+ * - Frontend uses individual paddingTop/Bottom/Left/Right values
  */
 
 export type BaseType = 'solid' | 'magnet' | 'screw' | 'magnet_screw';
 export type LipStyle = 'normal' | 'reduced' | 'none';
 
 /**
- * Gridfinity bin configuration for custom cutout generation
+ * GridfinityBinConfig - Backend configuration for OpenSCAD generation
+ *
+ * This is the internal format used by the OpenSCAD generator.
+ * API requests use GridfinityConfig (from types/gridfinity.ts) which is
+ * converted to this format by apiConfigToBinConfig() in app/api/generate/route.ts
  */
 export interface GridfinityBinConfig {
   // Grid dimensions (1 unit = 42mm)

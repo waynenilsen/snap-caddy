@@ -11,7 +11,17 @@ import type {
   GenerationStatusResponse,
   PreviewRequest,
 } from '@/types/api';
-import type { GridfinityConfig } from '@/types/gridfinity';
+import type { GridfinityConfig, BinConfigState } from '@/types/gridfinity';
+
+/**
+ * Convert frontend BinConfigState to API GridfinityConfig
+ * Removes frontend-only fields (tolerance, error) for API requests
+ */
+function binConfigToApiConfig(config: BinConfigState): GridfinityConfig {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const { tolerance, error, ...apiConfig } = config;
+  return apiConfig;
+}
 
 /**
  * Custom error class for API errors
@@ -119,13 +129,16 @@ export class SnapCaddyAPI {
     imageHeight: number;
     returnMultipleMasks?: boolean;
   }): Promise<SegmentResponse> {
-    const request: SegmentRequest = {
+    const request: Partial<SegmentRequest> = {
       image: params.image,
       points: params.points,
       imageWidth: params.imageWidth,
       imageHeight: params.imageHeight,
-      returnMultipleMasks: params.returnMultipleMasks,
     };
+
+    if (params.returnMultipleMasks !== undefined) {
+      request.returnMultipleMasks = params.returnMultipleMasks;
+    }
 
     return this.fetch<SegmentResponse>('/api/segment', {
       method: 'POST',
@@ -140,14 +153,22 @@ export class SnapCaddyAPI {
    */
   async generate(params: {
     svg: string;
-    config: GridfinityConfig;
+    config: GridfinityConfig | BinConfigState;
     async?: boolean;
   }): Promise<GenerateResponse> {
-    const request: GenerateRequest = {
+    // Convert BinConfigState to API format if needed
+    const apiConfig = 'tolerance' in params.config
+      ? binConfigToApiConfig(params.config as BinConfigState)
+      : params.config;
+
+    const request: Partial<GenerateRequest> = {
       svg: params.svg,
-      config: params.config,
-      async: params.async,
+      config: apiConfig,
     };
+
+    if (params.async !== undefined) {
+      request.async = params.async;
+    }
 
     return this.fetch<GenerateResponse>('/api/generate', {
       method: 'POST',
@@ -180,11 +201,18 @@ export class SnapCaddyAPI {
    */
   async getPreview(params: {
     svg: string;
-    config: GridfinityConfig;
+    config: GridfinityConfig | BinConfigState;
+    quality?: 'low' | 'medium' | 'high';
   }): Promise<Blob> {
+    // Convert BinConfigState to API format if needed
+    const apiConfig = 'tolerance' in params.config
+      ? binConfigToApiConfig(params.config as BinConfigState)
+      : params.config;
+
     const request: PreviewRequest = {
       svg: params.svg,
-      config: params.config,
+      config: apiConfig,
+      quality: params.quality,
     };
 
     return this.fetchBlob('/api/preview', {
@@ -204,7 +232,7 @@ export class SnapCaddyAPI {
    */
   async generateAndDownload(params: {
     svg: string;
-    config: GridfinityConfig;
+    config: GridfinityConfig | BinConfigState;
     onProgress?: (status: GenerationStatusResponse) => void;
     pollingInterval?: number;
   }): Promise<Blob> {

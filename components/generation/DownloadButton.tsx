@@ -4,7 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Download, FileText, Loader2, Info } from "lucide-react";
+import { Download, FileText, Loader2, Info, AlertCircle } from "lucide-react";
+import { api, APIClientError } from "@/lib/api/client";
 
 interface DownloadButtonProps {
   generationId: string;
@@ -18,27 +19,40 @@ export function DownloadButton({
   filename = "gridfinity-bin.stl",
 }: DownloadButtonProps) {
   const [isDownloading, setIsDownloading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleDownload = async () => {
+    if (!generationId) {
+      setError("No generation ID provided");
+      return;
+    }
+
     setIsDownloading(true);
+    setError(null);
 
     try {
-      // TODO: Replace with actual API endpoint
-      const stlUrl = `/api/generations/${generationId}/download`;
+      // Use API client to download STL
+      const blob = await api.downloadSTL(generationId);
 
-      const response = await fetch(stlUrl);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
+      // Trigger browser download
+      api.triggerDownload(blob, filename);
+    } catch (err) {
+      console.error("Download failed:", err);
 
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = filename;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Download failed:", error);
+      // Handle specific API errors
+      if (err instanceof APIClientError) {
+        if (err.statusCode === 404) {
+          setError("File not found. The generation may have been deleted.");
+        } else if (err.statusCode === 410) {
+          setError("File has expired. Please regenerate the model.");
+        } else if (err.statusCode === 400) {
+          setError("Invalid generation ID format.");
+        } else {
+          setError(err.message || "Failed to download file. Please try again.");
+        }
+      } else {
+        setError("An unexpected error occurred. Please try again.");
+      }
     } finally {
       setIsDownloading(false);
     }
@@ -59,7 +73,7 @@ export function DownloadButton({
 
             <Button
               onClick={handleDownload}
-              disabled={disabled || isDownloading}
+              disabled={disabled || isDownloading || !generationId}
               size="lg"
             >
               {isDownloading ? (
@@ -75,6 +89,13 @@ export function DownloadButton({
               )}
             </Button>
           </div>
+
+          {error && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>{error}</AlertDescription>
+            </Alert>
+          )}
 
           <Alert>
             <Info className="h-4 w-4" />
