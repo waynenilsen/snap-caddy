@@ -13,6 +13,7 @@ import {
   spyOn,
 } from "bun:test";
 import { promises as fs } from "node:fs";
+import type { Dirent, Stats } from "node:fs";
 import { join } from "node:path";
 
 // Mock environment variables
@@ -40,8 +41,8 @@ mock.module("@/lib/logger", () => ({
 }));
 
 describe("FileManager", () => {
-  let FileManager: any;
-  let fileManager: any;
+  let FileManager: typeof import("./files").FileManager;
+  let fileManager: InstanceType<typeof FileManager>;
 
   beforeEach(async () => {
     // Clear all mocks
@@ -60,7 +61,7 @@ describe("FileManager", () => {
     spyOn(fs, "readdir").mockResolvedValue([]);
     spyOn(fs, "stat").mockResolvedValue({
       mtimeMs: Date.now(),
-    } as any);
+    } as Partial<Stats> as Stats);
 
     // Re-import the module after mocking
     const module = await import("./files");
@@ -258,7 +259,7 @@ describe("FileManager", () => {
     });
 
     it("should ignore ENOENT errors", async () => {
-      const error: any = new Error("File not found");
+      const error = new Error("File not found") as NodeJS.ErrnoException;
       error.code = "ENOENT";
       spyOn(fs, "rm").mockRejectedValue(error);
 
@@ -358,18 +359,25 @@ describe("FileManager", () => {
         { name: "some-file.txt", isDirectory: () => false }, // Should be skipped
       ];
 
-      spyOn(fs, "readdir").mockResolvedValue(mockEntries as any);
+      spyOn(fs, "readdir").mockResolvedValue(
+        mockEntries as Partial<Dirent>[] as Dirent[],
+      );
 
       const _statCallCount = 0;
-      spyOn(fs, "stat").mockImplementation(async (path: any) => {
-        const pathStr = path.toString();
-        if (pathStr.includes("old-file-1") || pathStr.includes("old-file-2")) {
-          return { mtimeMs: oldFileAge } as any;
-        } else if (pathStr.includes("recent-file")) {
-          return { mtimeMs: recentFileAge } as any;
-        }
-        return { mtimeMs: now } as any;
-      });
+      spyOn(fs, "stat").mockImplementation(
+        async (path: string | Buffer | URL) => {
+          const pathStr = path.toString();
+          if (
+            pathStr.includes("old-file-1") ||
+            pathStr.includes("old-file-2")
+          ) {
+            return { mtimeMs: oldFileAge } as Partial<Stats> as Stats;
+          } else if (pathStr.includes("recent-file")) {
+            return { mtimeMs: recentFileAge } as Partial<Stats> as Stats;
+          }
+          return { mtimeMs: now } as Partial<Stats> as Stats;
+        },
+      );
 
       const maxAge = 3600000; // 1 hour
       const cleaned = await fileManager.cleanupOldFiles(maxAge);
@@ -395,7 +403,9 @@ describe("FileManager", () => {
         { name: "another.log", isDirectory: () => false },
       ];
 
-      spyOn(fs, "readdir").mockResolvedValue(mockEntries as any);
+      spyOn(fs, "readdir").mockResolvedValue(
+        mockEntries as Partial<Dirent>[] as Dirent[],
+      );
 
       const cleaned = await fileManager.cleanupOldFiles(3600000);
 
@@ -410,15 +420,19 @@ describe("FileManager", () => {
         { name: "good-dir", isDirectory: () => true },
       ];
 
-      spyOn(fs, "readdir").mockResolvedValue(mockEntries as any);
+      spyOn(fs, "readdir").mockResolvedValue(
+        mockEntries as Partial<Dirent>[] as Dirent[],
+      );
 
-      spyOn(fs, "stat").mockImplementation(async (path: any) => {
-        const pathStr = path.toString();
-        if (pathStr.includes("inaccessible-dir")) {
-          throw new Error("Permission denied");
-        }
-        return { mtimeMs: Date.now() - 7200000 } as any; // 2 hours old
-      });
+      spyOn(fs, "stat").mockImplementation(
+        async (path: string | Buffer | URL) => {
+          const pathStr = path.toString();
+          if (pathStr.includes("inaccessible-dir")) {
+            throw new Error("Permission denied");
+          }
+          return { mtimeMs: Date.now() - 7200000 } as Partial<Stats> as Stats; // 2 hours old
+        },
+      );
 
       const cleaned = await fileManager.cleanupOldFiles(3600000);
 
@@ -439,8 +453,12 @@ describe("FileManager", () => {
         { name: "recent-file-2", isDirectory: () => true },
       ];
 
-      spyOn(fs, "readdir").mockResolvedValue(mockEntries as any);
-      spyOn(fs, "stat").mockResolvedValue({ mtimeMs: now - 1000 } as any); // 1 second old
+      spyOn(fs, "readdir").mockResolvedValue(
+        mockEntries as Partial<Dirent>[] as Dirent[],
+      );
+      spyOn(fs, "stat").mockResolvedValue({
+        mtimeMs: now - 1000,
+      } as Partial<Stats> as Stats); // 1 second old
 
       const cleaned = await fileManager.cleanupOldFiles(3600000);
 

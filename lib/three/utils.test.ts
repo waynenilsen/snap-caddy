@@ -25,14 +25,18 @@ describe("Three.js utilities", () => {
 
   describe("calculateCameraPosition", () => {
     it("returns position and target vectors", () => {
-      const result = calculateCameraPosition(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateCameraPosition(geometry);
 
       expect(result.position).toBeInstanceOf(THREE.Vector3);
       expect(result.target).toBeInstanceOf(THREE.Vector3);
     });
 
     it("positions camera away from the geometry", () => {
-      const result = calculateCameraPosition(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateCameraPosition(geometry);
 
       // Camera should be at a distance from the origin (centered geometry)
       const distance = result.position.length();
@@ -40,15 +44,19 @@ describe("Three.js utilities", () => {
     });
 
     it("targets the center of the geometry", () => {
-      const result = calculateCameraPosition(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateCameraPosition(geometry);
 
       // For centered geometry, target should be near origin
       expect(result.target.length()).toBeLessThan(1);
     });
 
     it("respects FOV parameter", () => {
-      const narrowFov = calculateCameraPosition(geometry!, 30);
-      const wideFov = calculateCameraPosition(geometry!, 90);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const narrowFov = calculateCameraPosition(geometry, 30);
+      const wideFov = calculateCameraPosition(geometry, 90);
 
       // Narrower FOV should result in farther camera position
       const narrowDistance = narrowFov.position.length();
@@ -76,7 +84,9 @@ describe("Three.js utilities", () => {
 
   describe("getGeometryDimensions", () => {
     it("returns correct dimensions for box geometry", () => {
-      const dims = getGeometryDimensions(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const dims = getGeometryDimensions(geometry);
 
       expect(dims.width).toBeCloseTo(100, 1);
       expect(dims.height).toBeCloseTo(50, 1);
@@ -109,7 +119,9 @@ describe("Three.js utilities", () => {
 
   describe("calculateGridSize", () => {
     it("returns size and divisions", () => {
-      const result = calculateGridSize(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateGridSize(geometry);
 
       expect(typeof result.size).toBe("number");
       expect(typeof result.divisions).toBe("number");
@@ -118,22 +130,28 @@ describe("Three.js utilities", () => {
     });
 
     it("grid size is larger than geometry", () => {
-      const result = calculateGridSize(geometry!);
-      const dims = getGeometryDimensions(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateGridSize(geometry);
+      const dims = getGeometryDimensions(geometry);
       const maxDim = Math.max(dims.width, dims.depth);
 
       expect(result.size).toBeGreaterThan(maxDim);
     });
 
     it("respects padding parameter", () => {
-      const smallPadding = calculateGridSize(geometry!, 1.1);
-      const largePadding = calculateGridSize(geometry!, 2.0);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const smallPadding = calculateGridSize(geometry, 1.1);
+      const largePadding = calculateGridSize(geometry, 2.0);
 
       expect(largePadding.size).toBeGreaterThan(smallPadding.size);
     });
 
     it("divisions result in approximately 10mm grid squares", () => {
-      const result = calculateGridSize(geometry!);
+      if (!geometry)
+        throw new Error("Test setup failed: geometry not initialized");
+      const result = calculateGridSize(geometry);
 
       // Grid square size should be around 10mm
       const gridSquareSize = result.size / result.divisions;

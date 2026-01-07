@@ -94,14 +94,16 @@ describe("withErrorHandler", () => {
       typeof logger.error === "function" &&
       "mock" in logger.error
     ) {
-      (logger.error as any).mock?.calls?.splice(0);
+      const mockError = logger.error as ReturnType<typeof mock>;
+      mockError.mock?.calls?.splice(0);
     }
     if (
       metrics.recordError &&
       typeof metrics.recordError === "function" &&
       "mock" in metrics.recordError
     ) {
-      (metrics.recordError as any).mock?.calls?.splice(0);
+      const mockRecordError = metrics.recordError as ReturnType<typeof mock>;
+      mockRecordError.mock?.calls?.splice(0);
     }
   });
 

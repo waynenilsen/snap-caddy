@@ -20,7 +20,7 @@ class MockImageData {
 }
 
 // Use mock in place of ImageData
-const ImageData = MockImageData as any;
+const ImageData = MockImageData as unknown as typeof globalThis.ImageData;
 
 // Re-create the action types for testing
 type WizardAction =
@@ -692,7 +692,9 @@ describe("WizardContext", () => {
 
     describe("Edge Cases", () => {
       it("should handle unknown action type by returning current state", () => {
-        const unknownAction = { type: "UNKNOWN_ACTION" } as any;
+        const unknownAction = {
+          type: "UNKNOWN_ACTION",
+        } as unknown as WizardAction;
         const newState = wizardReducer(state, unknownAction);
         expect(newState).toBe(state);
       });

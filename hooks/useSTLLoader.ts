@@ -132,10 +132,9 @@ export function useSTLLoader(
       setError(err instanceof Error ? err : new Error("Failed to load STL"));
       setLoading(false);
     }
-    // biome-ignore lint/correctness/useExhaustiveDependencies: _retryCount triggers reload on retry
-  }, [url, center, computeNormals, _retryCount]);
+  }, [url, center, computeNormals]);
 
-  // Load STL when URL changes or on retry
+  // Load STL when URL changes
   useEffect(() => {
     loadSTL();
 
@@ -157,7 +156,8 @@ export function useSTLLoader(
 
   const retry = useCallback(() => {
     setRetryCount((prev) => prev + 1);
-  }, []);
+    loadSTL();
+  }, [loadSTL]);
 
   return { geometry, loading, error, progress, retry };
 }
