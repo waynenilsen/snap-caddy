@@ -132,7 +132,7 @@ export function useSTLLoader(
       setError(err instanceof Error ? err : new Error("Failed to load STL"));
       setLoading(false);
     }
-  }, [url, center, computeNormals]);
+  }, [url, center, computeNormals, _retryCount]);
 
   // Load STL when URL changes or on retry
   useEffect(() => {
