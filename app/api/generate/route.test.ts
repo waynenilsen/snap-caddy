@@ -162,7 +162,7 @@ const routeModule = await import("./route");
 function createMockRequest(
   method: string,
   body?: unknown,
-  url: string = "http://localhost:3000/api/generate",
+  url: string = "http://localhost:56577/api/generate",
 ): NextRequest {
   const request = new Request(url, {
     method,
@@ -709,7 +709,7 @@ describe("GET /api/generate", () => {
     const request = createMockRequest(
       "GET",
       undefined,
-      "http://localhost:3000/api/generate",
+      "http://localhost:56577/api/generate",
     );
 
     const response = await routeModule.GET(request);
@@ -752,7 +752,7 @@ describe("GET /api/generate", () => {
     const getRequest = createMockRequest(
       "GET",
       undefined,
-      `http://localhost:3000/api/generate?id=${generationId}`,
+      `http://localhost:56577/api/generate?id=${generationId}`,
     );
     const getResponse = await routeModule.GET(getRequest);
     expect(getResponse.status).toBe(200);
@@ -782,7 +782,7 @@ describe("GET /api/generate", () => {
     const getRequest = createMockRequest(
       "GET",
       undefined,
-      "http://localhost:3000/api/generate?id=test-id",
+      "http://localhost:56577/api/generate?id=test-id",
     );
 
     // Mock URL constructor to throw

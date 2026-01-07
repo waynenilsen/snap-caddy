@@ -26,7 +26,7 @@ mock.module("@/lib/logger", () => ({
 // Helper function to create mock NextRequest
 function createMockRequest(
   headers: Record<string, string> = {},
-  url = "http://localhost:3000/api/test",
+  url = "http://localhost:56577/api/test",
 ): NextRequest {
   const request = new Request(url, {
     method: "GET",

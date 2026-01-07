@@ -76,7 +76,7 @@ describe("APIError", () => {
 describe("withErrorHandler", () => {
   // Helper to create mock NextRequest
   const createMockRequest = (
-    url = "http://localhost:3000/api/test",
+    url = "http://localhost:56577/api/test",
     method = "GET",
   ) => {
     return {
@@ -142,7 +142,7 @@ describe("withErrorHandler", () => {
 
   it("should catch APIError and return proper JSON response with status", async () => {
     const mockRequest = createMockRequest(
-      "http://localhost:3000/api/test",
+      "http://localhost:56577/api/test",
       "POST",
     );
     const apiError = new APIError(
@@ -255,7 +255,7 @@ describe("withErrorHandler", () => {
 
   it("should log APIError properly", async () => {
     const mockRequest = createMockRequest(
-      "http://localhost:3000/api/users",
+      "http://localhost:56577/api/users",
       "DELETE",
     );
     const apiError = new APIError("Unauthorized", "UNAUTHORIZED", 401);
@@ -273,14 +273,14 @@ describe("withErrorHandler", () => {
     expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
     expect(loggerErrorSpy).toHaveBeenCalledWith("API error", {
       error: "Unauthorized",
-      url: "http://localhost:3000/api/users",
+      url: "http://localhost:56577/api/users",
       method: "DELETE",
     });
   });
 
   it("should log non-APIError properly", async () => {
     const mockRequest = createMockRequest(
-      "http://localhost:3000/api/test",
+      "http://localhost:56577/api/test",
       "GET",
     );
     const genericError = new Error("Database connection failed");
@@ -297,7 +297,7 @@ describe("withErrorHandler", () => {
     expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
     expect(loggerErrorSpy).toHaveBeenCalledWith("API error", {
       error: "Database connection failed",
-      url: "http://localhost:3000/api/test",
+      url: "http://localhost:56577/api/test",
       method: "GET",
     });
   });
@@ -324,7 +324,7 @@ describe("withErrorHandler", () => {
 
   it("should record APIError in metrics", async () => {
     const mockRequest = createMockRequest(
-      "http://localhost:3000/api/items",
+      "http://localhost:56577/api/items",
       "PUT",
     );
     const apiError = new APIError("Conflict", "CONFLICT", 409);
@@ -340,7 +340,7 @@ describe("withErrorHandler", () => {
 
     expect(metricsRecordErrorSpy).toHaveBeenCalledTimes(1);
     expect(metricsRecordErrorSpy).toHaveBeenCalledWith(apiError, {
-      url: "http://localhost:3000/api/items",
+      url: "http://localhost:56577/api/items",
       method: "PUT",
     });
   });
@@ -387,7 +387,7 @@ describe("withErrorHandler", () => {
 
   it("should handle both logging and metrics recording for APIError", async () => {
     const mockRequest = createMockRequest(
-      "http://localhost:3000/api/data",
+      "http://localhost:56577/api/data",
       "PATCH",
     );
     const apiError = new APIError("Bad request", "BAD_REQUEST", 400, {
@@ -408,14 +408,14 @@ describe("withErrorHandler", () => {
     expect(loggerErrorSpy).toHaveBeenCalledTimes(1);
     expect(loggerErrorSpy).toHaveBeenCalledWith("API error", {
       error: "Bad request",
-      url: "http://localhost:3000/api/data",
+      url: "http://localhost:56577/api/data",
       method: "PATCH",
     });
 
     // Check metrics
     expect(metricsRecordErrorSpy).toHaveBeenCalledTimes(1);
     expect(metricsRecordErrorSpy).toHaveBeenCalledWith(apiError, {
-      url: "http://localhost:3000/api/data",
+      url: "http://localhost:56577/api/data",
       method: "PATCH",
     });
 
