@@ -325,6 +325,12 @@ export function downloadSVG(
   svg: string,
   filename: string = "cutout.svg",
 ): void {
+  // Check if we're in a browser environment
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    console.warn("downloadSVG: Cannot download in server environment");
+    return;
+  }
+
   const blob = new Blob([svg], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
 

@@ -46,19 +46,50 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN npm run build
 
 
-# Stage 3: Production Runner
+# Stage 3: Production Runner  
 FROM node:20-alpine AS runner
 WORKDIR /app
 
-# Install system dependencies for OpenSCAD and headless rendering
+# Install runtime dependencies for OpenSCAD and headless rendering
+# Add gcompat for glibc compatibility on Alpine (musl)
 RUN apk add --no-cache \
-  openscad \
   xvfb \
   xvfb-run \
   mesa-gl \
   mesa-dri-gallium \
   git \
+  wget \
+  bash \
+  fuse \
+  gcompat \
+  libstdc++ \
+  libgcc \
+  glib \
+  cairo \
+  pango \
+  gdk-pixbuf \
+  libx11 \
+  libxext \
+  libxrender \
+  fontconfig \
+  freetype \
   && rm -rf /var/cache/apk/*
+
+# Download and extract OpenSCAD AppImage
+# Extract manually since --appimage-extract-and-run needs glibc
+RUN mkdir -p /tmp/openscad-extract \
+  && wget -q https://github.com/openscad/openscad/releases/download/openscad-2021.01/openscad-2021.01-x86_64.AppImage -O /tmp/openscad.AppImage \
+  && chmod +x /tmp/openscad.AppImage \
+  && cd /tmp/openscad-extract \
+  && /tmp/openscad.AppImage --appimage-extract 2>&1 | head -20 || true \
+  && if [ -d squashfs-root ]; then \
+       mv squashfs-root /opt/openscad && \
+       ln -s /opt/openscad/AppRun /usr/local/bin/openscad; \
+     else \
+       # Fallback: try direct execution with gcompat \
+       ln -s /tmp/openscad.AppImage /usr/local/bin/openscad; \
+     fi \
+  && rm -rf /tmp/openscad-extract /tmp/openscad.AppImage || true
 
 # Clone Gridfinity Extended library
 RUN git clone --depth 1 https://github.com/ostat/gridfinity_extended_openscad.git /opt/gridfinity_extended_openscad
@@ -76,7 +107,7 @@ ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 
 # OpenSCAD configuration
-ENV OPENSCAD_PATH=/usr/bin/openscad
+ENV OPENSCAD_PATH=/usr/local/bin/openscad
 ENV GRIDFINITY_LIB_PATH=/opt/gridfinity_extended_openscad
 ENV OPENSCAD_USE_XVFB=true
 ENV OPENSCAD_TIMEOUT=300000
@@ -98,9 +129,10 @@ ENV ENABLE_ASYNC_GENERATION=false
 ENV LOG_LEVEL=info
 
 # Copy built application from builder
-COPY --from=builder /app/public ./public
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+# Create public directory (Next.js standalone includes public files, but ensure dir exists)
+RUN mkdir -p ./public
 
 # Switch to non-root user
 USER nextjs

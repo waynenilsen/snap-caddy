@@ -124,6 +124,9 @@ export function disposeResources(
  * Check if WebGL is available in the browser
  */
 export function isWebGLAvailable(): boolean {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return false;
+  }
   try {
     const canvas = document.createElement("canvas");
     return !!(
@@ -139,6 +142,9 @@ export function isWebGLAvailable(): boolean {
  * Check if WebGL2 is available in the browser
  */
 export function isWebGL2Available(): boolean {
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    return false;
+  }
   try {
     const canvas = document.createElement("canvas");
     return !!(window.WebGL2RenderingContext && canvas.getContext("webgl2"));
@@ -152,6 +158,9 @@ export function isWebGL2Available(): boolean {
  * Based on available memory and hardware concurrency
  */
 export function isLowEndDevice(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
   // Check device memory (in GB, only available in some browsers)
   const deviceMemory = (navigator as Navigator & { deviceMemory?: number })
     .deviceMemory;
@@ -187,6 +196,16 @@ export function getRecommendedQuality(): "low" | "medium" | "high" {
 }
 
 /**
+ * Get device pixel ratio safely (works in SSR)
+ */
+function getDevicePixelRatio(): number {
+  if (typeof window === "undefined") {
+    return 1;
+  }
+  return window.devicePixelRatio || 1;
+}
+
+/**
  * Quality settings presets
  */
 export const QUALITY_PRESETS = {
@@ -200,13 +219,17 @@ export const QUALITY_PRESETS = {
     antialias: true,
     shadowMapEnabled: true,
     shadowMapSize: 1024,
-    pixelRatio: Math.min(window.devicePixelRatio || 1, 1.5),
+    get pixelRatio() {
+      return Math.min(getDevicePixelRatio(), 1.5);
+    },
   },
   high: {
     antialias: true,
     shadowMapEnabled: true,
     shadowMapSize: 2048,
-    pixelRatio: Math.min(window.devicePixelRatio || 1, 2),
+    get pixelRatio() {
+      return Math.min(getDevicePixelRatio(), 2);
+    },
   },
 } as const;
 

@@ -4,12 +4,35 @@
 # Build and run: docker compose up -d --build
 
 services:
+  redis:
+    image: redis:7-alpine
+    container_name: snap-caddy-redis
+    ports:
+      - "6397:6379"
+    command: >
+      redis-server
+      --appendonly no
+      --save ""
+      --maxmemory 100mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - snap-caddy-redis-data:/data
+
   snap-caddy:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: snap-caddy
     restart: unless-stopped
+    depends_on:
+      redis:
+        condition: service_healthy
     ports:
       - "3000:3000"
     environment:
@@ -17,12 +40,15 @@ services:
       - NODE_ENV=production
       - PORT=3000
 
+      # Redis Configuration (connects to redis service in same network)
+      - REDIS_URL=redis://redis:6379
+
       # SAM Segmentation (Required - set your Replicate API token)
       - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN:-}
       - SAM_MODEL_VERSION=${SAM_MODEL_VERSION:-meta/sam-2-hiera-large}
 
       # OpenSCAD Configuration
-      - OPENSCAD_PATH=/usr/bin/openscad
+      - OPENSCAD_PATH=/usr/local/bin/openscad
       - GRIDFINITY_LIB_PATH=/opt/gridfinity_extended_openscad
       - OPENSCAD_USE_XVFB=true
       - OPENSCAD_TIMEOUT=${OPENSCAD_TIMEOUT:-300000}
@@ -46,7 +72,15 @@ services:
       # Persistent storage for generated STL files and job data
       - snap-caddy-data:/data/snap-caddy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -54,4 +88,6 @@ services:
 
 volumes:
   snap-caddy-data:
+    driver: local
+  snap-caddy-redis-data:
     driver: local

@@ -47,6 +47,15 @@ export function CameraCapture({
 
   // Get available cameras on mount
   useEffect(() => {
+    // Check if mediaDevices API is available (requires HTTPS or localhost)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
+      const errorMsg =
+        "Camera API not available. Please use HTTPS or localhost.";
+      setError(errorMsg);
+      onError?.(new Error(errorMsg));
+      return;
+    }
+
     navigator.mediaDevices
       .enumerateDevices()
       .then((deviceList) => {
@@ -58,8 +67,10 @@ export function CameraCapture({
       })
       .catch((err) => {
         console.error("Error enumerating devices:", err);
+        setError("Failed to access camera devices. Please check permissions.");
+        onError?.(err as Error);
       });
-  }, []);
+  }, [onError]);
 
   // Cleanup stream on unmount
   useEffect(() => {
@@ -69,6 +80,15 @@ export function CameraCapture({
   }, []);
 
   const startCamera = async () => {
+    // Check if mediaDevices API is available (requires HTTPS or localhost)
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      const errorMessage =
+        "Camera API not available. Please use HTTPS or access via localhost. For local network access, use the Upload tab instead.";
+      setError(errorMessage);
+      onError?.(new Error(errorMessage));
+      return;
+    }
+
     try {
       const constraints: MediaStreamConstraints = {
         video: {
