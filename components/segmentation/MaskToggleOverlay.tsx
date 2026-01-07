@@ -1,7 +1,7 @@
 "use client";
 
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { MaskData } from "@/types/segmentation";
 
 /**
@@ -37,38 +37,39 @@ export function getMaskSolidColor(index: number): string {
   return MASK_COLORS[index % MASK_COLORS.length].replace("0.4)", "1)");
 }
 
-interface MaskToggleOverlayProps {
+interface MaskPreviewOverlayProps {
   /** URL of the original image */
   imageUrl: string;
   /** Array of mask data with selection state */
   masks: MaskData[];
-  /** Callback when a mask is toggled */
-  onMaskToggle: (index: number) => void;
   /** Whether masks are still loading */
   isLoading?: boolean;
   /** Image dimensions */
   imageWidth: number;
   imageHeight: number;
+  /** Optional: show compact version */
+  compact?: boolean;
 }
 
 /**
- * MaskToggleOverlay - Interactive overlay for toggling SAM 2 masks
+ * MaskPreviewOverlay - Preview display for SAM 2 masks (no interaction)
  *
  * Displays the original image with all detected masks overlaid.
- * Each mask has a distinct color. Tap/click anywhere on a mask
- * to toggle its selection state.
+ * Each mask has a distinct color.
  *
  * Selected masks: Full opacity color
  * Unselected masks: Dimmed/grayed out
+ *
+ * Note: This component is now view-only. Use SegmentList for selection.
  */
 export function MaskToggleOverlay({
   imageUrl,
   masks,
-  onMaskToggle,
   isLoading = false,
   imageWidth,
   imageHeight,
-}: MaskToggleOverlayProps) {
+  compact = false,
+}: MaskPreviewOverlayProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [loadedImage, setLoadedImage] = useState<HTMLImageElement | null>(null);
@@ -103,7 +104,9 @@ export function MaskToggleOverlay({
       if (!container) return;
 
       const containerWidth = container.clientWidth;
-      const maxHeight = window.innerHeight * 0.6; // Max 60vh
+      const maxHeight = compact
+        ? window.innerHeight * 0.35
+        : window.innerHeight * 0.5;
 
       const aspectRatio = imageWidth / imageHeight;
       let displayWidth = containerWidth;
@@ -123,7 +126,7 @@ export function MaskToggleOverlay({
     updateSize();
     window.addEventListener("resize", updateSize);
     return () => window.removeEventListener("resize", updateSize);
-  }, [loadedImage, imageWidth, imageHeight]);
+  }, [loadedImage, imageWidth, imageHeight, compact]);
 
   // Render the canvas with image and masks
   useEffect(() => {
@@ -199,67 +202,6 @@ export function MaskToggleOverlay({
     }
   }, [loadedImage, masks, displaySize, imageWidth, imageHeight]);
 
-  // Handle click/tap to toggle masks
-  const handleCanvasClick = useCallback(
-    (event: React.MouseEvent<HTMLCanvasElement>) => {
-      const canvas = canvasRef.current;
-      if (!canvas || masks.length === 0) return;
-
-      // Get click position relative to canvas
-      const rect = canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
-
-      // Scale to image coordinates
-      const scaleX = imageWidth / displaySize.width;
-      const scaleY = imageHeight / displaySize.height;
-      const imgX = Math.floor(x * scaleX);
-      const imgY = Math.floor(y * scaleY);
-
-      // Find which mask(s) contain this pixel
-      // Check from top (last rendered) to bottom (first rendered)
-      for (let i = masks.length - 1; i >= 0; i--) {
-        const mask = masks[i];
-        if (!mask.imageData) continue;
-
-        const pixelIndex = (imgY * imageWidth + imgX) * 4;
-        const data = mask.imageData.data;
-
-        // Check if pixel is part of this mask (non-black)
-        if (
-          pixelIndex < data.length &&
-          (data[pixelIndex] > 10 ||
-            data[pixelIndex + 1] > 10 ||
-            data[pixelIndex + 2] > 10)
-        ) {
-          onMaskToggle(mask.index);
-          return; // Only toggle one mask per click
-        }
-      }
-    },
-    [masks, onMaskToggle, displaySize, imageWidth, imageHeight],
-  );
-
-  // Handle touch events for mobile
-  const handleTouchEnd = useCallback(
-    (event: React.TouchEvent<HTMLCanvasElement>) => {
-      event.preventDefault();
-      const touch = event.changedTouches[0];
-      const canvas = canvasRef.current;
-      if (!canvas || !touch) return;
-
-      const _rect = canvas.getBoundingClientRect();
-      const mouseEvent = {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-      } as React.MouseEvent<HTMLCanvasElement>;
-
-      // Reuse click handler logic
-      handleCanvasClick(mouseEvent);
-    },
-    [handleCanvasClick],
-  );
-
   const showLoading = isLoading || isImageLoading;
 
   return (
@@ -277,11 +219,9 @@ export function MaskToggleOverlay({
 
       <canvas
         ref={canvasRef}
-        onClick={handleCanvasClick}
-        onTouchEnd={handleTouchEnd}
-        className="w-full rounded-lg border cursor-pointer touch-manipulation"
+        className="w-full rounded-lg border"
         style={{
-          maxHeight: "60vh",
+          maxHeight: compact ? "35vh" : "50vh",
           objectFit: "contain",
         }}
       />

@@ -1,12 +1,20 @@
 "use client";
 
-import { AlertCircle, Check, Info, RefreshCw } from "lucide-react";
+import {
+  AlertCircle,
+  Check,
+  CheckSquare,
+  Info,
+  RefreshCw,
+  Square,
+} from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { APIClientError, api } from "@/lib/api/client";
 import type { MaskData } from "@/types/segmentation";
 import { getMaskColor, MaskToggleOverlay } from "./MaskToggleOverlay";
+import { SegmentList } from "./SegmentList";
 
 interface SelectStepProps {
   /** URL of the image to segment (base64 data URI) */
@@ -21,8 +29,8 @@ interface SelectStepProps {
  * Flow:
  * 1. When imageUrl is provided, automatically calls SAM 2 API
  * 2. Loads all individual masks from returned URLs
- * 3. Displays masks overlaid on image with different colors
- * 4. User taps/clicks to toggle masks on/off
+ * 3. Displays image preview with mask overlays
+ * 4. Shows segment list below for easy selection/deselection
  * 5. User confirms selection to proceed to next step
  */
 export function SelectStep({ imageUrl, onMasksSelected }: SelectStepProps) {
@@ -162,18 +170,10 @@ export function SelectStep({ imageUrl, onMasksSelected }: SelectStepProps) {
 
   const selectedCount = masks.filter((m) => m.selected).length;
   const hasLoaded = masks.length > 0 && masks.some((m) => m.imageData !== null);
+  const isLoading = isSegmenting || masksLoading;
 
   return (
     <div className="space-y-4">
-      {/* Instructions */}
-      <Alert>
-        <Info className="h-4 w-4" />
-        <AlertDescription>
-          Tap on any region to include or exclude it from your cutout. Selected
-          regions are shown in color, unselected regions are grayed out.
-        </AlertDescription>
-      </Alert>
-
       {/* Error alert */}
       {error && (
         <Alert variant="destructive">
@@ -193,47 +193,85 @@ export function SelectStep({ imageUrl, onMasksSelected }: SelectStepProps) {
         </Alert>
       )}
 
-      {/* Main overlay */}
+      {/* Preview with mask overlay - compact mode */}
       {imageDimensions && (
         <MaskToggleOverlay
           imageUrl={imageUrl}
           masks={masks}
-          onMaskToggle={handleMaskToggle}
-          isLoading={isSegmenting || masksLoading}
+          isLoading={isLoading}
           imageWidth={imageDimensions.width}
           imageHeight={imageDimensions.height}
+          compact
         />
       )}
 
-      {/* Controls */}
+      {/* Instructions */}
       {hasLoaded && (
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex gap-2">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSelectAll}
-              disabled={selectedCount === masks.length}
-            >
-              Select All
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleDeselectAll}
-              disabled={selectedCount === 0}
-            >
-              Deselect All
-            </Button>
-          </div>
+        <Alert>
+          <Info className="h-4 w-4" />
+          <AlertDescription>
+            Tap segments below to include or exclude them from your cutout.
+            Selected segments are highlighted, unselected are dimmed.
+          </AlertDescription>
+        </Alert>
+      )}
 
+      {/* Segment selection list */}
+      {imageDimensions && (
+        <div className="space-y-3">
+          {/* Quick actions bar */}
+          {hasLoaded && (
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm text-muted-foreground">
+                {masks.length} segment{masks.length !== 1 ? "s" : ""} detected
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSelectAll}
+                  disabled={selectedCount === masks.length}
+                  className="gap-1.5"
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  <span className="hidden sm:inline">Select All</span>
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeselectAll}
+                  disabled={selectedCount === 0}
+                  className="gap-1.5"
+                >
+                  <Square className="h-4 w-4" />
+                  <span className="hidden sm:inline">Deselect All</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {/* Segment grid */}
+          <SegmentList
+            masks={masks}
+            onMaskToggle={handleMaskToggle}
+            imageWidth={imageDimensions.width}
+            imageHeight={imageDimensions.height}
+            isLoading={isLoading}
+          />
+        </div>
+      )}
+
+      {/* Confirm button - sticky on mobile */}
+      {hasLoaded && (
+        <div className="sticky bottom-0 pt-4 pb-2 bg-gradient-to-t from-background via-background to-transparent -mx-4 px-4 sm:static sm:bg-transparent sm:pt-2 sm:pb-0 sm:mx-0 sm:px-0">
           <Button
             onClick={handleConfirm}
             disabled={selectedCount === 0}
-            className="gap-2"
+            className="w-full sm:w-auto gap-2"
+            size="lg"
           >
-            <Check className="h-4 w-4" />
-            Confirm Selection ({selectedCount})
+            <Check className="h-5 w-5" />
+            Confirm Selection ({selectedCount} selected)
           </Button>
         </div>
       )}
