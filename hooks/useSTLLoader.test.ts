@@ -1,5 +1,5 @@
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { renderHook, act, waitFor } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import * as THREE from "three";
 
 // Mock STLLoader
@@ -68,7 +68,7 @@ describe("useSTLLoader", () => {
     it("parses STL data and returns geometry", async () => {
       // Create mock STL binary data
       const mockArrayBuffer = new ArrayBuffer(84); // Minimum STL header size
-      const mockBlob = new Blob([mockArrayBuffer]);
+      const _mockBlob = new Blob([mockArrayBuffer]);
 
       // Mock readable stream for progress tracking
       const mockReader = {

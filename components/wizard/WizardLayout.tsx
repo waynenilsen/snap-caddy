@@ -1,4 +1,4 @@
-import React from "react";
+import type React from "react";
 import { cn } from "@/lib/utils";
 
 interface WizardLayoutProps {
@@ -8,7 +8,7 @@ interface WizardLayoutProps {
 }
 
 export function WizardLayout({
-  currentStep,
+  currentStep: _currentStep,
   children,
   className,
 }: WizardLayoutProps) {

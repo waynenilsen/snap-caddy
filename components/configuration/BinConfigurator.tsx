@@ -1,5 +1,7 @@
 "use client";
 
+import { ChevronDown, Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -7,18 +9,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Separator } from "@/components/ui/separator";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { Button } from "@/components/ui/button";
-import { Settings, ChevronDown } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import { Slider } from "@/components/ui/slider";
+import { Switch } from "@/components/ui/switch";
 
 export interface BinConfig {
   gridUnitsX: number;
@@ -134,7 +134,7 @@ export function BinConfigurator({
                 type="number"
                 value={config.binHeight}
                 onChange={(e) =>
-                  updateConfig({ binHeight: parseInt(e.target.value) || 7 })
+                  updateConfig({ binHeight: parseInt(e.target.value, 10) || 7 })
                 }
                 className="w-20"
                 min={7}
@@ -162,7 +162,9 @@ export function BinConfigurator({
                 type="number"
                 value={config.cutoutDepth}
                 onChange={(e) =>
-                  updateConfig({ cutoutDepth: parseInt(e.target.value) || 1 })
+                  updateConfig({
+                    cutoutDepth: parseInt(e.target.value, 10) || 1,
+                  })
                 }
                 className="w-20"
                 min={1}

@@ -1,10 +1,10 @@
-import { describe, it, expect, afterEach, mock, beforeEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import * as THREE from "three";
 import {
   calculateCameraPosition,
-  getGeometryDimensions,
   calculateGridSize,
   disposeResources,
+  getGeometryDimensions,
   QUALITY_PRESETS,
 } from "./utils";
 

@@ -3,11 +3,11 @@
  * GET /api/preview/[id] - Get preview image for a generated job
  */
 
+import { promises as fs } from "node:fs";
 import { type NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
 import { z } from "zod";
-import { stlFileManager } from "@/lib/openscad";
 import { logger } from "@/lib/logger";
+import { stlFileManager } from "@/lib/openscad";
 
 // UUID validation schema
 const UUIDSchema = z.string().uuid();
@@ -22,7 +22,7 @@ interface RouteParams {
  * GET handler for retrieving preview images
  */
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: RouteParams,
 ): Promise<NextResponse> {
   const { id } = await params;

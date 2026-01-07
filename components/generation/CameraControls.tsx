@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useCallback } from "react";
-import { useThree, useFrame } from "@react-three/fiber";
+import { useFrame, useThree } from "@react-three/fiber";
+import { useCallback, useEffect } from "react";
 import * as THREE from "three";
 
 interface KeyboardCameraControlsProps {
@@ -27,7 +27,7 @@ export function KeyboardCameraControls({
   zoomSpeed = 5,
   panSpeed = 2,
 }: KeyboardCameraControlsProps) {
-  const { camera, gl } = useThree();
+  const { camera } = useThree();
 
   // Track pressed keys
   const keysPressed = new Set<string>();
@@ -57,12 +57,15 @@ export function KeyboardCameraControls({
         event.preventDefault();
       }
     },
-    [enabled],
+    [enabled, keysPressed.add],
   );
 
-  const handleKeyUp = useCallback((event: KeyboardEvent) => {
-    keysPressed.delete(event.key);
-  }, []);
+  const handleKeyUp = useCallback(
+    (event: KeyboardEvent) => {
+      keysPressed.delete(event.key);
+    },
+    [keysPressed.delete],
+  );
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
@@ -156,9 +159,6 @@ interface ViewerControlsOverlayProps {
  * This is a DOM overlay, not a Three.js component
  */
 export function ViewerControlsOverlay({
-  onResetCamera,
-  onToggleAutoRotate,
-  autoRotate = false,
   showKeyboardHint = false,
 }: ViewerControlsOverlayProps) {
   return (

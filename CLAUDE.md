@@ -32,6 +32,7 @@ bun start            # Start production server
 
 # Code Quality
 bun lint             # Check code with Biome
+bun lint:fix         # Auto-fix lint issues
 bun format           # Auto-format code
 
 # Testing
@@ -164,6 +165,41 @@ LOG_LEVEL=info                              # Logging level
 4. **Review** - Adjust SVG outline with padding
 5. **Configure** - Set Gridfinity bin parameters
 6. **Generate** - Create and download STL file
+
+## Pre-commit Workflow
+
+A pre-commit hook is installed automatically when you run `bun install`. The hook runs Biome checks on staged files before each commit.
+
+### Before Staging/Committing
+
+**Always format and lint your code before staging:**
+```bash
+bun format           # Auto-format code
+bun lint:fix         # Auto-fix lint issues
+git add .            # Stage changes
+git commit -m "..."  # Commit
+```
+
+Or use this one-liner:
+```bash
+bun format && bun lint:fix && git add . && git commit -m "your message"
+```
+
+### Manual Hook Installation
+
+If the hook wasn't installed automatically:
+```bash
+./scripts/install-hooks.sh
+```
+
+### Bypassing the Hook (Emergency Only)
+
+In rare cases where you need to bypass the pre-commit check:
+```bash
+git commit --no-verify -m "your message"
+```
+
+**Note:** This should only be used in emergencies. Always fix lint issues before pushing.
 
 ## Code Patterns & Conventions
 

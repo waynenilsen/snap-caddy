@@ -4,12 +4,12 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { SegmentRequestSchema } from "@/schemas/segment";
-import { validateBase64Image, decodeBase64Image } from "@/lib/validation/image";
-import { runSAMSegmentation } from "@/lib/sam/inference";
+import { APIError, withErrorHandler } from "@/lib/api/errors";
 import { withRateLimit } from "@/lib/api/rateLimit";
-import { withErrorHandler, APIError } from "@/lib/api/errors";
 import { logger, metrics } from "@/lib/logger";
+import { runSAMSegmentation } from "@/lib/sam/inference";
+import { decodeBase64Image, validateBase64Image } from "@/lib/validation/image";
+import { SegmentRequestSchema } from "@/schemas/segment";
 import type { SegmentResponse } from "@/types/api";
 
 // Runtime configuration

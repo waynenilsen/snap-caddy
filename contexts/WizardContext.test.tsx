@@ -1,9 +1,9 @@
-import { describe, it, expect, beforeEach } from "bun:test";
+import { beforeEach, describe, expect, it } from "bun:test";
 import type {
-  WizardState,
   CalibrationData,
-  GridfinityConfig,
   GenerationStatus,
+  GridfinityConfig,
+  WizardState,
 } from "./WizardContext";
 
 // Mock ImageData for testing environment

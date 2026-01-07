@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { RotateCcw, ZoomIn, ZoomOut } from "lucide-react";
+import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -140,6 +140,7 @@ export function ImagePreview({
             onTouchEnd={handleTouchEnd}
           >
             <div
+              role="application"
               className={cn(
                 "w-full h-full flex items-center justify-center",
                 isDragging && "cursor-grabbing",
@@ -150,6 +151,7 @@ export function ImagePreview({
               onMouseUp={handleMouseUp}
               onMouseLeave={handleMouseUp}
             >
+              {/* biome-ignore lint/performance/noImgElement: Dynamic image preview with transforms, next/image not suitable */}
               <img
                 ref={imageRef}
                 src={src}

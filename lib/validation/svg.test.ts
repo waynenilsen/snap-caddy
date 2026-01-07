@@ -1,5 +1,5 @@
-import { describe, it, expect } from "bun:test";
-import { validateSVG, sanitizeSVG, MAX_SVG_SIZE, DANGEROUS_TAGS } from "./svg";
+import { describe, expect, it } from "bun:test";
+import { DANGEROUS_TAGS, MAX_SVG_SIZE, sanitizeSVG, validateSVG } from "./svg";
 
 describe("validateSVG", () => {
   describe("empty and whitespace input", () => {

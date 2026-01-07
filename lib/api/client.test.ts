@@ -1,11 +1,11 @@
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { APIClientError, SnapCaddyAPI } from "./client";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import type {
-  SegmentResponse,
   GenerateResponse,
   GenerationStatusResponse,
+  SegmentResponse,
 } from "@/types/api";
 import type { GridfinityConfig } from "@/types/gridfinity";
+import { APIClientError, SnapCaddyAPI } from "./client";
 
 // Helper to create a valid GridfinityConfig for tests
 const createTestConfig = (
@@ -156,7 +156,7 @@ describe("SnapCaddyAPI", () => {
         processingTimeMs: 500,
       };
 
-      const fetchMock = mock(async (url: string, options: RequestInit) => {
+      const fetchMock = mock(async (_url: string, options: RequestInit) => {
         const body = JSON.parse(options.body as string);
         expect(body.returnMultipleMasks).toBeUndefined();
 
@@ -790,7 +790,7 @@ describe("SnapCaddyAPI", () => {
       });
 
       const mockBlob = new Blob(["STL data"], { type: "model/stl" });
-      const startTime = Date.now();
+      const _startTime = Date.now();
 
       const fetchMock = mock(async (url: string) => {
         if (url.includes("/api/generate") && !url.includes("?id=")) {
@@ -847,7 +847,7 @@ describe("SnapCaddyAPI", () => {
       api = new SnapCaddyAPI();
       originalCreateObjectURL = URL.createObjectURL;
 
-      mockCreateObjectURL = mock((blob: Blob) => {
+      mockCreateObjectURL = mock((_blob: Blob) => {
         return `blob:http://localhost/${Math.random()}`;
       });
 
@@ -935,7 +935,7 @@ describe("SnapCaddyAPI", () => {
       const blob = new Blob(["STL data"], { type: "model/stl" });
       let anchorElement: any;
 
-      mockDocument.createElement = mock((tag: string) => {
+      mockDocument.createElement = mock((_tag: string) => {
         anchorElement = {
           href: "",
           download: "",

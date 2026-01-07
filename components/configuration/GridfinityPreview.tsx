@@ -7,7 +7,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { BinConfig } from "./BinConfigurator";
+import type { BinConfig } from "./BinConfigurator";
 
 interface GridfinityPreviewProps {
   config: BinConfig;
@@ -36,7 +36,13 @@ export function GridfinityPreview({
           <svg
             viewBox={`0 0 ${viewWidth} ${viewHeight}`}
             className="w-full h-auto"
+            role="img"
+            aria-labelledby="gridfinity-preview-title"
           >
+            <title id="gridfinity-preview-title">
+              Gridfinity bin preview: {config.gridUnitsX} by {config.gridUnitsY}{" "}
+              units
+            </title>
             {/* Grid pattern */}
             <defs>
               <pattern
@@ -148,7 +154,7 @@ export function GridfinityPreview({
             {/* Grid unit labels */}
             {Array.from({ length: config.gridUnitsX }).map((_, i) => (
               <text
-                key={`x-${i}`}
+                key={`x-label-${i}`}
                 x={(i + 0.5) * GRID_SIZE}
                 y={viewHeight - 5}
                 textAnchor="middle"
@@ -161,7 +167,7 @@ export function GridfinityPreview({
             ))}
             {Array.from({ length: config.gridUnitsY }).map((_, i) => (
               <text
-                key={`y-${i}`}
+                key={`y-label-${i}`}
                 x={5}
                 y={(i + 0.5) * GRID_SIZE + 3}
                 fontSize="8"

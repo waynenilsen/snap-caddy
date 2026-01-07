@@ -1,6 +1,8 @@
 "use client";
 
+import { Ruler } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Card,
   CardContent,
@@ -8,8 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Ruler } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Point {
@@ -38,9 +38,9 @@ export function RulerSelector({
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  const distance = (p1: Point, p2: Point): number => {
+  const distance = useCallback((p1: Point, p2: Point): number => {
     return Math.sqrt((p2.x - p1.x) ** 2 + (p2.y - p1.y) ** 2);
-  };
+  }, []);
 
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
@@ -112,7 +112,7 @@ export function RulerSelector({
       ctx.setLineDash([]);
       ctx.stroke();
     });
-  }, [points, hoveredEndpoint, isImageLoaded]);
+  }, [points, hoveredEndpoint, isImageLoaded, distance]);
 
   useEffect(() => {
     drawCanvas();
@@ -238,6 +238,7 @@ export function RulerSelector({
             )}
           />
 
+          {/* biome-ignore lint/performance/noImgElement: Hidden img element used for canvas drawing, next/image not suitable */}
           <img
             ref={imageRef}
             src={imageUrl}

@@ -4,22 +4,21 @@
  */
 
 import type {
-  SegmentRequest,
-  SegmentResponse,
   GenerateRequest,
   GenerateResponse,
   GenerationStatusResponse,
   PreviewRequest,
+  SegmentRequest,
+  SegmentResponse,
 } from "@/types/api";
-import type { GridfinityConfig, BinConfigState } from "@/types/gridfinity";
+import type { BinConfigState, GridfinityConfig } from "@/types/gridfinity";
 
 /**
  * Convert frontend BinConfigState to API GridfinityConfig
  * Removes frontend-only fields (tolerance, error) for API requests
  */
 function binConfigToApiConfig(config: BinConfigState): GridfinityConfig {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { tolerance, error, ...apiConfig } = config;
+  const { tolerance: _tolerance, error: _error, ...apiConfig } = config;
   return apiConfig;
 }
 
@@ -281,7 +280,7 @@ export class SnapCaddyAPI {
    * @param filename - Optional filename (not used for object URL)
    * @returns Object URL string
    */
-  createDownloadLink(blob: Blob, filename?: string): string {
+  createDownloadLink(blob: Blob, _filename?: string): string {
     return URL.createObjectURL(blob);
   }
 

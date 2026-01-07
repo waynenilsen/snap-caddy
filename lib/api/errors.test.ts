@@ -1,7 +1,7 @@
-import { describe, it, expect, mock, spyOn, beforeEach } from "bun:test";
-import { NextRequest, NextResponse } from "next/server";
-import { APIError, withErrorHandler } from "./errors";
+import { beforeEach, describe, expect, it, mock, spyOn } from "bun:test";
+import { type NextRequest, NextResponse } from "next/server";
 import { logger, metrics } from "@/lib/logger";
+import { APIError, withErrorHandler } from "./errors";
 
 // Mock the logger module
 mock.module("@/lib/logger", () => ({
@@ -124,7 +124,7 @@ describe("withErrorHandler", () => {
     const extraArgs = { id: "123" };
 
     const mockHandler = mock(
-      async (req: NextRequest, args: typeof extraArgs) => {
+      async (_req: NextRequest, args: typeof extraArgs) => {
         expect(args).toBe(extraArgs);
         return expectedResponse;
       },

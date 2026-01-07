@@ -2,17 +2,17 @@
 
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
+import type { GridfinityConfig } from "@/types/gridfinity";
+import { DownloadButton } from "./DownloadButton";
 import { GenerateButton } from "./GenerateButton";
 import { ProgressIndicator } from "./ProgressIndicator";
 import { STLPreview } from "./STLPreview";
-import { DownloadButton } from "./DownloadButton";
-import type { GridfinityConfig } from "@/types/gridfinity";
 
 interface GenerateStepProps {
   config: GridfinityConfig;
@@ -35,8 +35,8 @@ export function GenerateStep({
   generationId,
   generationError,
   progress = 0,
-  downloadUrl,
-  previewUrl,
+  downloadUrl: _downloadUrl,
+  previewUrl: _previewUrl,
   onDismissError,
 }: GenerateStepProps) {
   const GRID_UNIT_SIZE = 42; // mm per Gridfinity unit

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useRef, useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface MaskOverlayProps {
@@ -41,7 +41,7 @@ export function MaskOverlay({
       }
     };
 
-    const handleError = (e: ErrorEvent | Event) => {
+    const handleError = (_e: ErrorEvent | Event) => {
       setError("Failed to load image or mask");
       setIsLoading(false);
     };

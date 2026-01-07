@@ -1,10 +1,9 @@
 "use client";
 
-import React from "react";
-import { Button } from "@/components/ui/button";
+import { Loader2, Sparkles, Trash2, Undo } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import { Loader2, Trash2, Undo, Sparkles } from "lucide-react";
 
 interface SegmentationControlsProps {
   pointCount: number;

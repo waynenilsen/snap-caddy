@@ -5,7 +5,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { api } from "@/lib/api/client";
-import type { GenerationStatusResponse, GenerationStatus } from "@/types/api";
+import type { GenerationStatus, GenerationStatusResponse } from "@/types/api";
 
 export interface UseGenerationPollingResult {
   status: GenerationStatus | null;

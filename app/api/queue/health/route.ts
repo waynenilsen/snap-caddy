@@ -4,8 +4,8 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { getQueueHealth, initializeQueue } from "@/lib/queue";
 import { logger } from "@/lib/logger";
+import { getQueueHealth, initializeQueue } from "@/lib/queue";
 
 export const runtime = "nodejs";
 

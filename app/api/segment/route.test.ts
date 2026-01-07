@@ -2,13 +2,10 @@
  * Unit tests for Segment API Route
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { NextRequest, NextResponse } from "next/server";
-import { POST } from "./route";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { NextRequest } from "next/server";
 import type { SegmentResponse } from "@/types/api";
-
-// Import rate limit reset function
-import { resetRateLimit } from "@/lib/api/rateLimit";
+import { POST } from "./route";
 
 // Mock modules
 const mockRunSAMSegmentation = mock(() =>

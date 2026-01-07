@@ -1,6 +1,9 @@
 "use client";
 
-import React, { useRef, useEffect, useState, useCallback } from "react";
+import { X } from "lucide-react";
+import type React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -8,8 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface SegmentPoint {
@@ -35,7 +36,7 @@ export function ClickToSegment({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
   const [hoveredPointId, setHoveredPointId] = useState<string | null>(null);
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const [_dimensions, setDimensions] = useState({ width: 0, height: 0 });
   const [isRightClick, setIsRightClick] = useState(false);
 
   // Draw the canvas with image and points
@@ -117,7 +118,7 @@ export function ClickToSegment({
       image.addEventListener("load", handleLoad);
       return () => image.removeEventListener("load", handleLoad);
     }
-  }, [imageUrl, drawCanvas]);
+  }, [drawCanvas]);
 
   // Redraw when points or hover state changes
   useEffect(() => {
@@ -214,7 +215,7 @@ export function ClickToSegment({
             )}
           />
 
-          {/* Hidden image element */}
+          {/* biome-ignore lint/performance/noImgElement: Hidden img for canvas drawing, next/image not suitable */}
           <img ref={imageRef} src={imageUrl} alt="Source" className="hidden" />
 
           {/* Cursor indicator */}

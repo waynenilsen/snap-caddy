@@ -2,14 +2,14 @@
  * Unit tests for segment schemas
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
-  PointSchema,
-  SegmentRequestSchema,
   BoundingBoxSchema,
   MaskOptionSchema,
-  SegmentResponseSchema,
+  PointSchema,
   SegmentErrorResponseSchema,
+  SegmentRequestSchema,
+  SegmentResponseSchema,
 } from "./segment";
 
 describe("PointSchema", () => {

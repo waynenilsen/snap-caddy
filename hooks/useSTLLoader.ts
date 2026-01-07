@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
-import * as THREE from "three";
+import { useCallback, useEffect, useRef, useState } from "react";
+import type * as THREE from "three";
 import { STLLoader } from "three/addons/loaders/STLLoader.js";
 
 interface UseSTLLoaderOptions {
@@ -31,7 +31,7 @@ export function useSTLLoader(
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const [progress, setProgress] = useState(0);
-  const [retryCount, setRetryCount] = useState(0);
+  const [_retryCount, setRetryCount] = useState(0);
 
   const loaderRef = useRef<STLLoader | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -143,7 +143,7 @@ export function useSTLLoader(
         abortControllerRef.current.abort();
       }
     };
-  }, [loadSTL, retryCount]);
+  }, [loadSTL]);
 
   // Cleanup geometry on unmount
   useEffect(() => {

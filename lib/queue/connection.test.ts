@@ -6,18 +6,18 @@
  *   ./scripts/start-redis.sh
  */
 
-import { describe, test, expect, afterAll } from "bun:test";
+import { afterAll, describe, expect, test } from "bun:test";
 import {
+  closeRedisConnections,
   getRedisConnection,
+  getRedisInfo,
+  getRedisUrl,
   getSubscriberConnection,
   isRedisConnected,
-  getRedisInfo,
-  closeRedisConnections,
-  getRedisUrl,
 } from "./connection";
 
 describe("Redis Connection Integration Tests", () => {
-  let redisAvailable = false;
+  let _redisAvailable = false;
 
   afterAll(async () => {
     await closeRedisConnections();
@@ -58,7 +58,7 @@ describe("Redis Connection Integration Tests", () => {
   describe("Redis Connection", () => {
     test("should check if Redis is connected", async () => {
       const connected = await isRedisConnected();
-      redisAvailable = connected;
+      _redisAvailable = connected;
 
       // Just verify the function runs without error
       expect(typeof connected).toBe("boolean");

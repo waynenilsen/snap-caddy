@@ -5,12 +5,12 @@
  * Creates a simple PNG image for upload testing
  */
 
-const fs = require("fs");
-const path = require("path");
+const fs = require("node:fs");
+const path = require("node:path");
 
 // Simple 100x100 red PNG (minimal valid PNG)
 // This is a pre-generated base64 encoded 100x100 solid red PNG
-const TEST_IMAGE_BASE64 =
+const _TEST_IMAGE_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAGQAAABkCAIAAAD/gAIDAAAA" +
   "GklEQVR42u3BAQEAAACC/F8t/9YIAAAAAK4GBQAACAABF18v" +
   "BAAAAABJRU5ErkJggg==";
@@ -61,7 +61,7 @@ function createTestPNG() {
   }
 
   // Use zlib to compress the data
-  const zlib = require("zlib");
+  const zlib = require("node:zlib");
   const compressedData = zlib.deflateSync(Buffer.from(rawData), { level: 9 });
   const idatChunk = createChunk("IDAT", compressedData);
 

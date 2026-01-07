@@ -3,13 +3,13 @@
  * POST /api/preview - Generate quick preview of STL design
  */
 
+import { promises as fs } from "node:fs";
 import { type NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
-import { promises as fs } from "fs";
-import { stlFileManager, openscadExecutor } from "@/lib/openscad";
-import { withRateLimit } from "@/lib/api/rateLimit";
 import { withErrorHandler } from "@/lib/api/errors";
+import { withRateLimit } from "@/lib/api/rateLimit";
 import { logger } from "@/lib/logger";
+import { openscadExecutor, stlFileManager } from "@/lib/openscad";
 
 // Request validation schema (similar to generate route but for preview)
 const PreviewRequestSchema = z.object({

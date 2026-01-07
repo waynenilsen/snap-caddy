@@ -3,11 +3,11 @@
  * Public API for SAM segmentation functionality
  */
 
-export { runSAMSegmentation, analyzeMask, encodeRLE } from "./inference";
+export { analyzeMask, encodeRLE, runSAMSegmentation } from "./inference";
 export type {
-  SAMSegmentationParams,
-  SAMResult,
+  MaskAnalysis,
   ReplicatePrediction,
   ReplicateRequest,
-  MaskAnalysis,
+  SAMResult,
+  SAMSegmentationParams,
 } from "./types";

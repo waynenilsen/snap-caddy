@@ -1,5 +1,5 @@
-import { describe, it, expect } from "bun:test";
-import { validateBase64Image, decodeBase64Image } from "./image";
+import { describe, expect, it } from "bun:test";
+import { decodeBase64Image, validateBase64Image } from "./image";
 
 describe("validateBase64Image", () => {
   // Helper: Create a base64 string of a specific size (in bytes)

@@ -1,11 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
-import { Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { AlertCircle, Image as ImageIcon, Loader2, Upload } from "lucide-react";
+import { useRef, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
@@ -107,7 +106,10 @@ export function ImageUpload({
     <div className="w-full max-w-2xl mx-auto">
       <Card>
         <CardContent className="p-8">
+          {/* biome-ignore lint/a11y/useSemanticElements: Drop zone needs div for styling */}
           <div
+            role="region"
+            aria-label="Image upload drop zone"
             className={cn(
               "border-2 border-dashed rounded-lg p-12 transition-colors",
               isDragging ? "border-primary bg-primary/5" : "border-muted",

@@ -7,28 +7,28 @@
  */
 
 import {
-  describe,
-  test,
-  expect,
-  beforeAll,
   afterAll,
+  beforeAll,
   beforeEach,
+  describe,
+  expect,
+  test,
 } from "bun:test";
 import {
-  getSTLQueue,
-  addSTLJob,
-  getJobStatus,
-  getQueueHealth,
-  startSTLWorker,
-  stopSTLWorker,
-  closeQueue,
-  cleanupOldJobs,
-} from "./stl-queue";
-import {
-  getRedisConnection,
   closeRedisConnections,
+  getRedisConnection,
   isRedisConnected,
 } from "./connection";
+import {
+  addSTLJob,
+  cleanupOldJobs,
+  closeQueue,
+  getJobStatus,
+  getQueueHealth,
+  getSTLQueue,
+  startSTLWorker,
+  stopSTLWorker,
+} from "./stl-queue";
 import type { STLJobData } from "./types";
 
 // Test configuration

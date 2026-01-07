@@ -3,19 +3,19 @@
  * BullMQ-based queue for async STL file generation
  */
 
-import { Queue, Worker, Job, QueueEvents } from "bullmq";
-import { getBullMQConnectionOptions, getRedisConnection } from "./connection";
+import { type Job, Queue, QueueEvents, Worker } from "bullmq";
+import { logger, metrics } from "@/lib/logger";
+import { openscadExecutor } from "@/lib/openscad/executor";
 import { stlFileManager } from "@/lib/openscad/fileManager";
 import { openscadGenerator } from "@/lib/openscad/generator";
-import { openscadExecutor } from "@/lib/openscad/executor";
-import { logger, metrics } from "@/lib/logger";
+import type { GenerationStatusResponse } from "@/types/api";
+import { getBullMQConnectionOptions, getRedisConnection } from "./connection";
 import type {
+  JobProgress,
+  QueueHealth,
   STLJobData,
   STLJobResult,
-  QueueHealth,
-  JobProgress,
 } from "./types";
-import type { GenerationStatusResponse } from "@/types/api";
 
 // Queue name
 const QUEUE_NAME = "stl-generation";
@@ -427,9 +427,6 @@ function mapBullStateToStatus(
       return "error";
     case "active":
       return "processing";
-    case "waiting":
-    case "delayed":
-    case "prioritized":
     default:
       return "queued";
   }

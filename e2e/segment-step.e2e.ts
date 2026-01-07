@@ -1,5 +1,5 @@
-import { test, expect, Page } from "@playwright/test";
-import path from "path";
+import path from "node:path";
+import { expect, type Page, test } from "@playwright/test";
 
 /**
  * E2E tests for the Segment Step (Step 1) - the second step in the wizard flow.
@@ -228,15 +228,15 @@ test.describe("Segment Step - Point Interactions", () => {
 
     // Add three points at different positions (spread out to avoid overlap)
     await canvas.click({
-      position: { x: box!.width * 0.2, y: box!.height * 0.2 },
+      position: { x: box?.width * 0.2, y: box?.height * 0.2 },
     });
     await page.waitForTimeout(500);
     await canvas.click({
-      position: { x: box!.width * 0.5, y: box!.height * 0.5 },
+      position: { x: box?.width * 0.5, y: box?.height * 0.5 },
     });
     await page.waitForTimeout(500);
     await canvas.click({
-      position: { x: box!.width * 0.8, y: box!.height * 0.8 },
+      position: { x: box?.width * 0.8, y: box?.height * 0.8 },
     });
     await page.waitForTimeout(500);
 
@@ -260,7 +260,7 @@ test.describe("Segment Step - Point Interactions", () => {
 
     // Right-click to add exclude point
     await canvas.click({
-      position: { x: box!.width * 0.5, y: box!.height * 0.5 },
+      position: { x: box?.width * 0.5, y: box?.height * 0.5 },
       button: "right",
     });
     await page.waitForTimeout(500);
@@ -299,11 +299,11 @@ test.describe("Segment Step - Point Interactions", () => {
 
     // Add two points at spread positions
     await canvas.click({
-      position: { x: box!.width * 0.3, y: box!.height * 0.3 },
+      position: { x: box?.width * 0.3, y: box?.height * 0.3 },
     });
     await page.waitForTimeout(500);
     await canvas.click({
-      position: { x: box!.width * 0.7, y: box!.height * 0.7 },
+      position: { x: box?.width * 0.7, y: box?.height * 0.7 },
     });
     await page.waitForTimeout(500);
 
@@ -329,11 +329,11 @@ test.describe("Segment Step - Point Interactions", () => {
 
     // Add multiple points at spread positions
     await canvas.click({
-      position: { x: box!.width * 0.3, y: box!.height * 0.3 },
+      position: { x: box?.width * 0.3, y: box?.height * 0.3 },
     });
     await page.waitForTimeout(500);
     await canvas.click({
-      position: { x: box!.width * 0.7, y: box!.height * 0.7 },
+      position: { x: box?.width * 0.7, y: box?.height * 0.7 },
     });
     await page.waitForTimeout(500);
 

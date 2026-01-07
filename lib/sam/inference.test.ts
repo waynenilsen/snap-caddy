@@ -2,16 +2,8 @@
  * Unit tests for SAM (Segment Anything Model) Inference
  */
 
-import {
-  describe,
-  it,
-  expect,
-  mock,
-  beforeEach,
-  afterEach,
-  spyOn,
-} from "bun:test";
-import type { SAMSegmentationParams, ReplicatePrediction } from "./types";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import type { SAMSegmentationParams } from "./types";
 
 // Mock the env module
 const mockEnv = {
@@ -715,7 +707,7 @@ describe("runSAMSegmentation", () => {
         if (callCount === 1) {
           expect(url).toBe("https://api.replicate.com/v1/predictions");
           expect(options.method).toBe("POST");
-          expect(options.headers["Authorization"]).toBe("Token test-token");
+          expect(options.headers.Authorization).toBe("Token test-token");
 
           const body = JSON.parse(options.body);
           expect(body.input.point_coords).toEqual([[50, 50]]);
@@ -792,7 +784,7 @@ describe("runSAMSegmentation", () => {
       mockEnv.REPLICATE_API_TOKEN = "test-token";
 
       let callCount = 0;
-      const mockFetch = mock(async (url: string, options?: any) => {
+      const mockFetch = mock(async (_url: string, options?: any) => {
         callCount++;
 
         if (callCount === 1) {
@@ -853,7 +845,7 @@ describe("runSAMSegmentation", () => {
       mockEnv.REPLICATE_API_TOKEN = "test-token";
 
       let callCount = 0;
-      const mockFetch = mock(async (url: string, options?: any) => {
+      const mockFetch = mock(async (_url: string, _options?: any) => {
         callCount++;
 
         if (callCount === 1) {
@@ -1210,7 +1202,7 @@ describe("runSAMSegmentation", () => {
       mockEnv.REPLICATE_API_TOKEN = "test-token";
 
       let callCount = 0;
-      const mockFetch = mock(async (url: string) => {
+      const mockFetch = mock(async (_url: string) => {
         callCount++;
 
         if (callCount === 1) {

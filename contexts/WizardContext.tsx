@@ -1,13 +1,8 @@
 "use client";
 
-import React, {
-  createContext,
-  useReducer,
-  useCallback,
-  type ReactNode,
-} from "react";
-import type { BinConfigState } from "@/types/gridfinity";
+import { createContext, type ReactNode, useCallback, useReducer } from "react";
 import type { GenerationStatus as APIGenerationStatus } from "@/types/api";
+import type { BinConfigState } from "@/types/gridfinity";
 
 // Types
 /**

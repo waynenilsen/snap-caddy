@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
-import { Camera, X, Zap } from "lucide-react";
+import { AlertCircle, Camera, X, Zap } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
@@ -12,7 +12,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { AlertCircle } from "lucide-react";
 
 interface CameraMetadata {
   timestamp: number;
@@ -44,6 +43,17 @@ export function CameraCapture({
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  // Stop camera function - defined before useEffect that uses it
+  const stopCamera = useCallback(() => {
+    if (stream) {
+      for (const track of stream.getTracks()) {
+        track.stop();
+      }
+      setStream(null);
+      setIsStreaming(false);
+    }
+  }, [stream]);
 
   // Get available cameras on mount
   useEffect(() => {
@@ -77,7 +87,7 @@ export function CameraCapture({
     return () => {
       stopCamera();
     };
-  }, []);
+  }, [stopCamera]);
 
   const startCamera = async () => {
     // Check if mediaDevices API is available (requires HTTPS or localhost)
@@ -115,14 +125,6 @@ export function CameraCapture({
         "Camera access denied or not available. Please ensure you have granted camera permissions.";
       setError(errorMessage);
       onError?.(err as Error);
-    }
-  };
-
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-      setIsStreaming(false);
     }
   };
 

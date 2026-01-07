@@ -5,9 +5,9 @@
  */
 
 import type {
-  Point as SchemaPoint,
-  MaskOption as SchemaMaskOption,
   BoundingBox,
+  MaskOption as SchemaMaskOption,
+  Point as SchemaPoint,
 } from "@/schemas/segment";
 
 /**

@@ -1,14 +1,14 @@
-import React from "react";
-import { cn } from "@/lib/utils";
 import {
   Camera,
+  Check,
+  Download,
+  Eye,
   MousePointer,
   Ruler,
-  Eye,
   Settings,
-  Download,
-  Check,
 } from "lucide-react";
+import React from "react";
+import { cn } from "@/lib/utils";
 
 interface StepIndicatorProps {
   currentStep: number;
@@ -87,11 +87,7 @@ export function StepIndicator({
   };
 
   return (
-    <nav
-      className="w-full border-b bg-background"
-      aria-label="Progress"
-      role="navigation"
-    >
+    <nav className="w-full border-b bg-background" aria-label="Progress">
       {/* Mobile view - compact dots */}
       <div className="md:hidden px-4 py-4">
         <div className="flex items-center justify-between mb-2">
@@ -103,7 +99,7 @@ export function StepIndicator({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {STEPS.map((step, index) => (
+          {STEPS.map((step, _index) => (
             <React.Fragment key={step.id}>
               <button
                 onClick={() => handleStepClick(step.id)}

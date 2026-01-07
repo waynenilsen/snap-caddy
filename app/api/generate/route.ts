@@ -4,19 +4,19 @@
  */
 
 import { type NextRequest, NextResponse } from "next/server";
-import { GenerateRequestSchema } from "@/schemas/generate";
-import { validateSVG } from "@/lib/validation/svg";
-import { validateBinConfig } from "@/types/configuration";
+import { APIError, withErrorHandler } from "@/lib/api/errors";
+import { withRateLimit } from "@/lib/api/rateLimit";
+import { logger, metrics } from "@/lib/logger";
+import { openscadExecutor } from "@/lib/openscad/executor";
 import { stlFileManager } from "@/lib/openscad/fileManager";
 import { openscadGenerator } from "@/lib/openscad/generator";
-import { openscadExecutor } from "@/lib/openscad/executor";
-import { withRateLimit } from "@/lib/api/rateLimit";
-import { withErrorHandler, APIError } from "@/lib/api/errors";
-import { logger, metrics } from "@/lib/logger";
 import { addSTLJob, getJobStatus, initializeQueue } from "@/lib/queue";
+import type { STLJobData } from "@/lib/queue/types";
+import { validateSVG } from "@/lib/validation/svg";
+import { GenerateRequestSchema } from "@/schemas/generate";
 import type { GenerateResponse, GenerationStatusResponse } from "@/types/api";
 import type { GridfinityBinConfig } from "@/types/configuration";
-import type { STLJobData } from "@/lib/queue/types";
+import { validateBinConfig } from "@/types/configuration";
 
 // Runtime configuration
 export const runtime = "nodejs";

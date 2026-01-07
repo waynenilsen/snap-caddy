@@ -1,16 +1,16 @@
 "use client";
 
-import * as React from "react";
-import { useState, useRef, useCallback, useEffect } from "react";
+import type * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
 import { cn } from "@/lib/utils";
 
 interface SVGPreviewProps {
@@ -40,13 +40,16 @@ export function SVGPreview({
 
   // Use controlled zoom if provided, otherwise use internal state
   const zoom = controlledZoom ?? internalZoom;
-  const setZoom = (value: number) => {
-    if (onZoomChange) {
-      onZoomChange(value);
-    } else {
-      setInternalZoom(value);
-    }
-  };
+  const setZoom = useCallback(
+    (value: number) => {
+      if (onZoomChange) {
+        onZoomChange(value);
+      } else {
+        setInternalZoom(value);
+      }
+    },
+    [onZoomChange],
+  );
 
   // Parse SVG to get dimensions
   useEffect(() => {
@@ -151,6 +154,7 @@ export function SVGPreview({
       <CardContent>
         <div
           ref={containerRef}
+          role="application"
           className={cn(
             "relative border rounded-lg overflow-hidden",
             "bg-muted/30",
@@ -187,6 +191,7 @@ export function SVGPreview({
             }}
           >
             <div
+              // biome-ignore lint/security/noDangerouslySetInnerHtml: SVG rendering requires innerHTML
               dangerouslySetInnerHTML={{ __html: svgContent }}
               className="select-none [&_svg]:max-w-full [&_svg]:h-auto"
             />

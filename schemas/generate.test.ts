@@ -2,14 +2,14 @@
  * Unit tests for generate.ts Zod schemas
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
-  GridfinityConfigSchema,
-  GenerateRequestSchema,
-  GenerationStatusSchema,
-  GenerateResponseSchema,
   GenerateErrorResponseSchema,
+  GenerateRequestSchema,
+  GenerateResponseSchema,
   GenerationStatusResponseSchema,
+  GenerationStatusSchema,
+  GridfinityConfigSchema,
 } from "./generate";
 
 describe("GridfinityConfigSchema", () => {

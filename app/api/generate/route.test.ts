@@ -3,13 +3,13 @@
  * Tests POST and GET handlers, validation, and configuration mapping
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { NextRequest, NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { type NextRequest, NextResponse } from "next/server";
 import type { GridfinityBinConfig } from "@/types/configuration";
 
 // Mock dependencies before importing the route
-const mockValidateSVG = mock((svg: string) => ({ valid: true as boolean }));
-const mockValidateBinConfig = mock((config: GridfinityBinConfig) => ({
+const mockValidateSVG = mock((_svg: string) => ({ valid: true as boolean }));
+const mockValidateBinConfig = mock((_config: GridfinityBinConfig) => ({
   valid: true as boolean,
   errors: [] as string[],
   warnings: [] as string[],
@@ -22,10 +22,14 @@ const mockCreateJobPaths = mock(async () => ({
   stlPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl",
 }));
 
-const mockWriteSVG = mock(async (path: string, content: string) => {});
+const mockWriteSVG = mock(async (_path: string, _content: string) => {});
 
 const mockGenerate = mock(
-  async (svgPath: string, config: GridfinityBinConfig, scadPath: string) => ({
+  async (
+    _svgPath: string,
+    _config: GridfinityBinConfig,
+    _scadPath: string,
+  ) => ({
     success: true as boolean,
     scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad" as
       | string
@@ -34,7 +38,7 @@ const mockGenerate = mock(
   }),
 );
 
-const mockRender = mock(async (scadPath: string, stlPath: string) => ({
+const mockRender = mock(async (_scadPath: string, _stlPath: string) => ({
   success: true as boolean,
   outputPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl" as
     | string
@@ -102,6 +106,7 @@ mock.module("@/lib/logger", () => ({
 }));
 
 mock.module("@/lib/api/rateLimit", () => ({
+  // biome-ignore lint/complexity/noBannedTypes: Test mock, function type is acceptable
   withRateLimit: (handler: Function) => handler,
 }));
 
@@ -119,6 +124,7 @@ class APIError extends Error {
 }
 
 mock.module("@/lib/api/errors", () => ({
+  // biome-ignore lint/complexity/noBannedTypes: Test mock, function type is acceptable
   withErrorHandler: (handler: Function) => {
     return async (req: NextRequest) => {
       try {
@@ -155,7 +161,7 @@ const mockAddSTLJob = mock(async (data: { generationId: string }) => ({
 
 const mockGetJobStatus = mock(
   async (
-    id: string,
+    _id: string,
   ): Promise<{
     id: string;
     status: string;
@@ -422,7 +428,7 @@ beforeEach(() => {
     scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad",
     stlPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl",
   }));
-  mockWriteSVG.mockImplementation(async (path: string, content: string) => {
+  mockWriteSVG.mockImplementation(async (_path: string, _content: string) => {
     // Default: do nothing, just succeed
   });
   mockGenerate.mockImplementation(async () => ({
@@ -448,7 +454,7 @@ beforeEach(() => {
   }));
   mockGetJobStatus.mockImplementation(
     async (
-      id: string,
+      _id: string,
     ): Promise<{
       id: string;
       status: string;

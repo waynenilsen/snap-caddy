@@ -1,0 +1,29 @@
+#!/bin/bash
+# Pre-commit hook for snap-caddy
+# Runs Biome lint and format checks on staged files
+
+set -e
+
+echo "Running pre-commit checks..."
+
+# Get the list of staged files (excluding deleted files)
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=d)
+
+if [ -z "$STAGED_FILES" ]; then
+    echo "No files staged for commit."
+    exit 0
+fi
+
+# Filter to only include files Biome can check (excluding components/ui)
+BIOME_FILES=$(echo "$STAGED_FILES" | grep -E '\.(js|jsx|ts|tsx|json|jsonc)$' | grep -v 'components/ui/' || true)
+
+if [ -z "$BIOME_FILES" ]; then
+    echo "No files to lint."
+    exit 0
+fi
+
+# Run Biome check on staged files
+echo "Checking code with Biome..."
+echo "$BIOME_FILES" | xargs bunx biome check --no-errors-on-unmatched
+
+echo "Pre-commit checks passed!"
