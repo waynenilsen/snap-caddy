@@ -259,6 +259,28 @@ Feature tickets in `/tickets`:
 - Implementation specs for planned features
 - Technical requirements and acceptance criteria
 
+### Ticket Workflow
+
+Tickets follow a simple lifecycle:
+
+1. **Open tickets** live in `/tickets/` root directory
+2. **When completing a ticket:**
+   - Update the ticket's `**Status:**` field to `Done`
+   - Move the ticket file to `/tickets/done/`
+   - Reference the ticket number in your commit message (e.g., "Implement feature X (ticket #0001)")
+3. **Completed tickets** are archived in `/tickets/done/` for reference
+
+```
+tickets/
+├── 0004-auto-scale-detection.md      # Open - pending work
+├── 0005-onnx-sam-offline.md          # Open - pending work
+├── ...
+└── done/
+    ├── 0001-mask-to-svg-pipeline.md  # Completed
+    ├── 0002-async-job-queue.md       # Completed
+    └── 0003-threejs-stl-preview.md   # Completed
+```
+
 ## Debugging Tips
 
 ### OpenSCAD Issues
