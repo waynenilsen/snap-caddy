@@ -1,6 +1,6 @@
 # Ticket #0002: Implement Async Job Queue for Background STL Generation
 
-**Status:** Open
+**Status:** Done
 **Priority:** High
 **Created:** 2026-01-06
 **Assignee:** TBD
