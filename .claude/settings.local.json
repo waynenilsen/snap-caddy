@@ -1,5 +1,12 @@
 {
   "permissions": {
-    "allow": ["Bash(bun lint:*)", "Bash(bunx tsc:*)", "Bash(git checkout:*)"]
+    "allow": [
+      "Bash(bun lint:*)",
+      "Bash(bunx tsc:*)",
+      "Bash(git checkout:*)",
+      "Bash(docker compose:*)",
+      "WebSearch",
+      "WebFetch(domain:replicate.com)"
+    ]
   }
 }
