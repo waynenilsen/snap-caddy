@@ -8,8 +8,10 @@
     "start": "next start",
     "typecheck": "tsc --noEmit",
     "lint": "biome check",
+    "lint:fix": "biome check --write",
     "format": "biome format --write",
     "format:check": "biome format",
+    "precommit": "biome check",
     "test": "bun test",
     "test:coverage": "bun test --coverage",
     "test:watch": "bun test --watch",
@@ -17,7 +19,8 @@
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:debug": "playwright test --debug",
-    "test:fixtures": "node scripts/generate-test-fixtures.js"
+    "test:fixtures": "node scripts/generate-test-fixtures.js",
+    "prepare": "./scripts/install-hooks.sh"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
