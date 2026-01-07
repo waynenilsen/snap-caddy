@@ -8,8 +8,6 @@ import type {
   GenerateResponse,
   GenerationStatusResponse,
   PreviewRequest,
-  SegmentRequest,
-  SegmentResponse,
 } from "@/types/api";
 import type { BinConfigState, GridfinityConfig } from "@/types/gridfinity";
 
@@ -117,52 +115,6 @@ export class SnapCaddyAPI {
   }
 
   /**
-   * Segment an image using SAM 2 (Segment Anything Model 2)
-   * SAM 2 auto-generates all masks - no point prompts needed.
-   * Returns URLs to all detected masks.
-   *
-   * @param params - Segmentation parameters
-   * @returns Segmentation response with mask URLs
-   */
-  async segment(params: {
-    image: string;
-    imageWidth: number;
-    imageHeight: number;
-    /** Points per side for mask generation (default: 32) */
-    pointsPerSide?: number;
-    /** Predicted IOU threshold (default: 0.88) */
-    predIouThresh?: number;
-    /** Stability score threshold (default: 0.95) */
-    stabilityScoreThresh?: number;
-    /** Use M2M refinement (default: true) */
-    useM2M?: boolean;
-  }): Promise<SegmentResponse> {
-    const request: Partial<SegmentRequest> = {
-      image: params.image,
-      imageWidth: params.imageWidth,
-      imageHeight: params.imageHeight,
-    };
-
-    if (params.pointsPerSide !== undefined) {
-      request.pointsPerSide = params.pointsPerSide;
-    }
-    if (params.predIouThresh !== undefined) {
-      request.predIouThresh = params.predIouThresh;
-    }
-    if (params.stabilityScoreThresh !== undefined) {
-      request.stabilityScoreThresh = params.stabilityScoreThresh;
-    }
-    if (params.useM2M !== undefined) {
-      request.useM2M = params.useM2M;
-    }
-
-    return this.fetch<SegmentResponse>("/api/segment", {
-      method: "POST",
-      body: JSON.stringify(request),
-    });
-  }
-
-  /**
    * Generate a Gridfinity bin from SVG
    * @param params - Generation parameters
    * @returns Generation response with ID and status
@@ -170,7 +122,6 @@ export class SnapCaddyAPI {
   async generate(params: {
     svg: string;
     config: GridfinityConfig | BinConfigState;
-    async?: boolean;
   }): Promise<GenerateResponse> {
     // Convert BinConfigState to API format if needed
     const apiConfig =
@@ -178,14 +129,10 @@ export class SnapCaddyAPI {
         ? binConfigToApiConfig(params.config as BinConfigState)
         : params.config;
 
-    const request: Partial<GenerateRequest> = {
+    const request: GenerateRequest = {
       svg: params.svg,
       config: apiConfig,
     };
-
-    if (params.async !== undefined) {
-      request.async = params.async;
-    }
 
     return this.fetch<GenerateResponse>("/api/generate", {
       method: "POST",
@@ -258,7 +205,6 @@ export class SnapCaddyAPI {
     const generateResponse = await this.generate({
       svg: params.svg,
       config: params.config,
-      async: true,
     });
 
     const generationId = generateResponse.generationId;

@@ -27,7 +27,7 @@ type WizardAction =
   | { type: "SET_STEP"; payload: number }
   | { type: "COMPLETE_STEP"; payload: number }
   | { type: "SET_IMAGE_DATA"; payload: string | null }
-  | { type: "SET_SEGMENTATION_MASK"; payload: ImageData | null }
+  | { type: "SET_PAINT_MASK"; payload: ImageData | null }
   | { type: "SET_CALIBRATION"; payload: Partial<CalibrationData> }
   | { type: "SET_SVG_OUTLINE"; payload: string | null }
   | { type: "SET_GRIDFINITY_CONFIG"; payload: Partial<GridfinityConfig> }
@@ -60,8 +60,7 @@ const initialState: WizardState = {
   currentStep: 0,
   completedSteps: new Set(),
   imageData: null,
-  selectedMasks: [],
-  segmentationMask: null,
+  paintMask: null,
   calibration: {
     pixelsPerMm: null,
     unit: "mm",
@@ -96,10 +95,10 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
         error: null,
       };
 
-    case "SET_SEGMENTATION_MASK":
+    case "SET_PAINT_MASK":
       return {
         ...state,
-        segmentationMask: action.payload,
+        paintMask: action.payload,
         error: null,
       };
 
@@ -175,8 +174,8 @@ describe("WizardContext", () => {
       expect(initialState.imageData).toBeNull();
     });
 
-    it("should have null segmentationMask", () => {
-      expect(initialState.segmentationMask).toBeNull();
+    it("should have null paintMask", () => {
+      expect(initialState.paintMask).toBeNull();
     });
 
     it("should have correct calibration defaults", () => {
@@ -366,30 +365,30 @@ describe("WizardContext", () => {
       });
     });
 
-    describe("SET_SEGMENTATION_MASK", () => {
-      it("should update segmentationMask with ImageData value", () => {
+    describe("SET_PAINT_MASK", () => {
+      it("should update paintMask with ImageData value", () => {
         const mockImageData = new ImageData(100, 100);
         const newState = wizardReducer(state, {
-          type: "SET_SEGMENTATION_MASK",
+          type: "SET_PAINT_MASK",
           payload: mockImageData,
         });
-        expect(newState.segmentationMask).toBe(mockImageData);
+        expect(newState.paintMask).toBe(mockImageData);
       });
 
-      it("should update segmentationMask with null value", () => {
+      it("should update paintMask with null value", () => {
         const mockImageData = new ImageData(100, 100);
-        const stateWithMask = { ...state, segmentationMask: mockImageData };
+        const stateWithMask = { ...state, paintMask: mockImageData };
         const newState = wizardReducer(stateWithMask, {
-          type: "SET_SEGMENTATION_MASK",
+          type: "SET_PAINT_MASK",
           payload: null,
         });
-        expect(newState.segmentationMask).toBeNull();
+        expect(newState.paintMask).toBeNull();
       });
 
-      it("should clear error when setting segmentation mask", () => {
-        const stateWithError = { ...state, error: "Segmentation error" };
+      it("should clear error when setting paint mask", () => {
+        const stateWithError = { ...state, error: "Paint error" };
         const newState = wizardReducer(stateWithError, {
-          type: "SET_SEGMENTATION_MASK",
+          type: "SET_PAINT_MASK",
           payload: new ImageData(50, 50),
         });
         expect(newState.error).toBeNull();
@@ -649,8 +648,7 @@ describe("WizardContext", () => {
           currentStep: 3,
           completedSteps: new Set([0, 1, 2]),
           imageData: "data:image/png;base64,xyz",
-          selectedMasks: [],
-          segmentationMask: new ImageData(100, 100),
+          paintMask: new ImageData(100, 100),
           calibration: { pixelsPerMm: 10, unit: "cm" },
           svgOutline: "<svg></svg>",
           gridfinityConfig: {
@@ -668,7 +666,7 @@ describe("WizardContext", () => {
         expect(newState.currentStep).toBe(0);
         expect(newState.completedSteps.size).toBe(0);
         expect(newState.imageData).toBeNull();
-        expect(newState.segmentationMask).toBeNull();
+        expect(newState.paintMask).toBeNull();
         expect(newState.calibration).toEqual({ pixelsPerMm: null, unit: "mm" });
         expect(newState.svgOutline).toBeNull();
         expect(newState.gridfinityConfig).toEqual(initialGridfinityConfig);
@@ -756,9 +754,9 @@ describe("WizardContext", () => {
           payload: 1,
         });
 
-        // Step 2: Set segmentation
+        // Step 2: Set paint mask
         currentState = wizardReducer(currentState, {
-          type: "SET_SEGMENTATION_MASK",
+          type: "SET_PAINT_MASK",
           payload: new ImageData(100, 100),
         });
         currentState = wizardReducer(currentState, {
@@ -785,7 +783,7 @@ describe("WizardContext", () => {
         expect(currentState.completedSteps.has(1)).toBe(true);
         expect(currentState.completedSteps.has(2)).toBe(true);
         expect(currentState.imageData).toBe("data:image/png;base64,abc");
-        expect(currentState.segmentationMask).toBeInstanceOf(ImageData);
+        expect(currentState.paintMask).toBeInstanceOf(ImageData);
         expect(currentState.calibration.pixelsPerMm).toBe(10);
       });
 

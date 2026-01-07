@@ -22,7 +22,7 @@ export interface UseWizardReturn extends WizardContextValue {
 
 const STEP_NAMES = [
   "Capture", // 0
-  "Segment", // 1
+  "Paint", // 1
   "Calibrate", // 2
   "Review", // 3
   "Configure", // 4
@@ -55,18 +55,17 @@ export function useWizard(): UseWizardReturn {
     const {
       currentStep,
       imageData,
-      segmentationMask,
       calibration,
       svgOutline,
       gridfinityConfig,
     } = state;
 
     switch (currentStep) {
-      case 0: // Capture -> Segment
+      case 0: // Capture -> Paint
         return imageData !== null;
 
-      case 1: // Segment -> Calibrate
-        return segmentationMask !== null;
+      case 1: // Paint -> Calibrate
+        return state.paintMask !== null;
 
       case 2: // Calibrate -> Review
         return calibration.pixelsPerMm !== null;

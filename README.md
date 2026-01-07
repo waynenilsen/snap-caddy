@@ -21,14 +21,14 @@ Snap Caddy reduces this to a simple wizard-based workflow.
 
 ```
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   CAPTURE    │───▶│   SEGMENT    │───▶│   CALIBRATE  │───▶│   GENERATE   │
+│   CAPTURE    │───▶│     PAINT    │───▶│   CALIBRATE  │───▶│   GENERATE   │
 │              │    │              │    │              │    │              │
-│ Camera/Upload│    │ SAM Model    │    │ Ruler Scale  │    │ OpenSCAD STL │
+│ Camera/Upload│    │  Paintbrush  │    │ Ruler Scale  │    │ OpenSCAD STL │
 └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
 ```
 
 1. **Capture** - Take a photo or upload an image of your object with a ruler
-2. **Segment** - AI (SAM) automatically extracts the object silhouette
+2. **Paint** - Use the paintbrush tool to paint over the object silhouette
 3. **Calibrate** - Mark ruler points to set the real-world scale
 4. **Configure** - Choose bin size, depth, and Gridfinity options
 5. **Generate** - Download the 3D-printable STL file
@@ -36,7 +36,6 @@ Snap Caddy reduces this to a simple wizard-based workflow.
 ## Tech Stack
 
 - **Frontend**: Next.js 16, React 19, Tailwind CSS v4, shadcn/ui
-- **AI Segmentation**: Meta SAM (Segment Anything Model)
 - **3D Generation**: OpenSCAD CLI with Gridfinity Extended library
 - **Validation**: Zod schemas
 
@@ -91,14 +90,14 @@ GRIDFINITY_LIB_PATH=/path/to/gridfinity_extended_openscad
 - Zod validation schemas
 
 ### In Progress
-- SAM model integration
+- Paintbrush tool refinement
 - Camera capture component
 - Scale calibration UI
 - 3D preview rendering
 
 ### Planned
 - Mobile responsiveness
-- Offline support (client-side SAM via ONNX)
+- Advanced brush features (size, opacity, eraser)
 - Batch processing
 - Custom bin presets
 
@@ -120,7 +119,7 @@ Detailed architecture docs are in the `/docs` directory:
 - `00-MASTER-ARCHITECTURE.md` - System overview
 - `01-FRONTEND-UI.md` - Component specifications
 - `02-IMAGE-PROCESSING.md` - Canvas and contour detection
-- `03-SAM-INTEGRATION.md` - AI segmentation setup
+- `03-PAINTBRUSH-TOOL.md` - Paintbrush implementation
 - `04-OPENSCAD-GENERATION.md` - STL generation
 - `05-API-ARCHITECTURE.md` - Backend endpoints
 - `06-STATE-MANAGEMENT.md` - React state flow

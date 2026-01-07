@@ -9,19 +9,6 @@ const envSchema = z.object({
   // Stage/Environment
   STAGE: z.enum(["dev", "staging", "production"]).default("dev"),
 
-  // SAM 2 Segmentation (auto-mask generation)
-  REPLICATE_API_TOKEN: z.string().min(1).optional(),
-  // SAM 2 version hash from replicate.com/meta/sam-2
-  SAM_MODEL_VERSION: z
-    .string()
-    .default(
-      "fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
-    ),
-  // Base URL for Replicate API (can be overridden for mocking/testing)
-  REPLICATE_BASE_URL: z.string().url().optional(),
-  // Enable record/replay mode for Replicate API calls
-  REPLICATE_RECORD_MODE: z.enum(["off", "record", "replay"]).default("off"),
-
   // OpenSCAD
   OPENSCAD_PATH: z.string().default("openscad"),
   GRIDFINITY_LIB_PATH: z.string().default("/usr/local/share/gridfinity"),
@@ -67,47 +54,6 @@ const envSchema = z.object({
     .pipe(z.number().int().positive())
     .catch(60000),
 
-  // Features
-  GENERATE_PREVIEWS: z
-    .string()
-    .optional()
-    .transform((v) => v === "true")
-    .pipe(z.boolean())
-    .catch(false),
-  ENABLE_ASYNC_GENERATION: z
-    .string()
-    .optional()
-    .transform((v) => v === "true")
-    .pipe(z.boolean())
-    .catch(false),
-
-  // Redis/Queue Configuration
-  REDIS_URL: z.string().default("redis://localhost:6397"),
-  QUEUE_CONCURRENCY: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Number(v) : 3))
-    .pipe(z.number().int().positive())
-    .catch(3),
-  QUEUE_JOB_TIMEOUT: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Number(v) : 300000))
-    .pipe(z.number().positive())
-    .catch(300000),
-  QUEUE_MAX_RETRIES: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Number(v) : 3))
-    .pipe(z.number().int().min(0))
-    .catch(3),
-  QUEUE_CLEANUP_INTERVAL: z
-    .string()
-    .optional()
-    .transform((v) => (v ? Number(v) : 3600000))
-    .pipe(z.number().positive())
-    .catch(3600000),
-
   // Logging
   LOG_LEVEL: z.enum(["debug", "info", "warn", "error"]).default("info"),
 
@@ -135,11 +81,6 @@ function parseEnv() {
 
 // Apply dev-specific defaults after parsing
 function applyDevDefaults(config: z.infer<typeof envSchema>) {
-  // In dev mode, default to replay mode for cost savings (acts as caching proxy)
-  // Only apply if REPLICATE_RECORD_MODE wasn't explicitly set
-  if (config.STAGE === "dev" && !process.env.REPLICATE_RECORD_MODE) {
-    config.REPLICATE_RECORD_MODE = "replay";
-  }
   return config;
 }
 

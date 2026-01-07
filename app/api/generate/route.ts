@@ -10,8 +10,6 @@ import { logger, metrics } from "@/lib/logger";
 import { openscadExecutor } from "@/lib/openscad/executor";
 import { stlFileManager } from "@/lib/openscad/fileManager";
 import { openscadGenerator } from "@/lib/openscad/generator";
-import { addSTLJob, getJobStatus, initializeQueue } from "@/lib/queue";
-import type { STLJobData } from "@/lib/queue/types";
 import { validateSVG } from "@/lib/validation/svg";
 import { GenerateRequestSchema } from "@/schemas/generate";
 import type { GenerateResponse, GenerationStatusResponse } from "@/types/api";
@@ -22,22 +20,7 @@ import { validateBinConfig } from "@/types/configuration";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
-// Initialize queue on module load (for async processing)
-let queueInitialized = false;
-function ensureQueueInitialized() {
-  if (!queueInitialized) {
-    try {
-      initializeQueue();
-      queueInitialized = true;
-    } catch (error) {
-      logger.error("Failed to initialize queue", {
-        error: error instanceof Error ? error.message : String(error),
-      });
-    }
-  }
-}
-
-// In-memory job status store (for sync jobs only - async uses Redis)
+// In-memory job status store
 const syncJobStatusStore = new Map<string, GenerationStatusResponse>();
 
 /**
@@ -174,59 +157,8 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     }
 
     logger.info("Processing generation request", {
-      async: request.async,
       config: binConfig,
     });
-
-    // If async, queue the job and return immediately
-    if (request.async) {
-      // Ensure queue is initialized
-      ensureQueueInitialized();
-
-      // Generate unique job ID
-      const generationId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
-      const createdAt = new Date().toISOString();
-
-      // Create job data
-      const jobData: STLJobData = {
-        generationId,
-        svg: request.svg,
-        binConfig,
-        webhookUrl: request.webhookUrl,
-        createdAt,
-      };
-
-      try {
-        // Add job to queue
-        const { queuePosition } = await addSTLJob(jobData);
-
-        logger.info("Queued async generation", { generationId, queuePosition });
-
-        const response: GenerateResponse = {
-          success: true,
-          generationId,
-          status: "queued",
-          queuePosition,
-          estimatedTimeMs: 30000 + (queuePosition - 1) * 15000, // Estimate based on queue position
-        };
-
-        return NextResponse.json(response);
-      } catch (error) {
-        logger.error("Failed to queue job", {
-          error: error instanceof Error ? error.message : String(error),
-        });
-
-        throw new APIError(
-          "Failed to queue generation job",
-          "SERVER_ERROR",
-          500,
-          {
-            originalError:
-              error instanceof Error ? error.message : String(error),
-          },
-        );
-      }
-    }
 
     // Synchronous processing - create job paths and process immediately
     const jobPaths = await stlFileManager.createJobPaths();
@@ -368,15 +300,8 @@ async function getStatusHandler(req: NextRequest): Promise<NextResponse> {
       throw new APIError("Missing id query parameter", "INVALID_INPUT", 400);
     }
 
-    // First check sync job status store
-    let jobStatus: GenerationStatusResponse | undefined =
-      syncJobStatusStore.get(id);
-
-    // If not in sync store, check async queue
-    if (!jobStatus) {
-      ensureQueueInitialized();
-      jobStatus = (await getJobStatus(id)) ?? undefined;
-    }
+    // Check sync job status store
+    const jobStatus = syncJobStatusStore.get(id);
 
     if (!jobStatus) {
       throw new APIError("Generation not found", "INVALID_INPUT", 404);

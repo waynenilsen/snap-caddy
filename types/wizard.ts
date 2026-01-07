@@ -7,7 +7,7 @@
  */
 export type Step =
   | "capture" // Image capture (camera/upload)
-  | "segment" // Object selection (SAM segmentation)
+  | "paint" // Paint shape (paintbrush tool)
   | "calibrate" // Scale calibration (ruler measurement)
   | "review" // Outline review (SVG preview)
   | "configure" // Bin configuration (Gridfinity params)
@@ -50,7 +50,7 @@ export interface WizardState {
  */
 export const STEP_ORDER: Step[] = [
   "capture",
-  "segment",
+  "paint",
   "calibrate",
   "review",
   "configure",
@@ -68,11 +68,11 @@ export const STEP_METADATA: Record<Step, StepMetadata> = {
     icon: "camera",
     requiresCompletion: [],
   },
-  segment: {
-    id: "segment",
-    title: "Select Object",
-    description: "Click on the object to segment",
-    icon: "mouse-pointer",
+  paint: {
+    id: "paint",
+    title: "Paint Shape",
+    description: "Paint the shape you want",
+    icon: "paintbrush",
     requiresCompletion: ["capture"],
   },
   calibrate: {
@@ -80,21 +80,21 @@ export const STEP_METADATA: Record<Step, StepMetadata> = {
     title: "Set Scale",
     description: "Calibrate using a ruler",
     icon: "ruler",
-    requiresCompletion: ["capture", "segment"],
+    requiresCompletion: ["capture", "paint"],
   },
   review: {
     id: "review",
     title: "Review Outline",
     description: "Preview and adjust the SVG",
     icon: "eye",
-    requiresCompletion: ["capture", "segment", "calibrate"],
+    requiresCompletion: ["capture", "paint", "calibrate"],
   },
   configure: {
     id: "configure",
     title: "Configure Bin",
     description: "Set Gridfinity parameters",
     icon: "settings",
-    requiresCompletion: ["capture", "segment", "calibrate", "review"],
+    requiresCompletion: ["capture", "paint", "calibrate", "review"],
   },
   generate: {
     id: "generate",
@@ -103,7 +103,7 @@ export const STEP_METADATA: Record<Step, StepMetadata> = {
     icon: "download",
     requiresCompletion: [
       "capture",
-      "segment",
+      "paint",
       "calibrate",
       "review",
       "configure",
