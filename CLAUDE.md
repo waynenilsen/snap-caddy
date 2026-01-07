@@ -38,7 +38,7 @@ This script automatically:
 ```bash
 # Development
 bun install          # Install dependencies
-bun dev              # Start dev server (http://localhost:3000)
+bun dev              # Start dev server (http://localhost:56577)
 bun build            # Production build
 bun start            # Start production server
 

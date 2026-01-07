@@ -61,7 +61,7 @@ bun install
 bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) to view the app.
+Open [http://localhost:56577](http://localhost:56577) to view the app.
 
 ### OpenSCAD Setup
 

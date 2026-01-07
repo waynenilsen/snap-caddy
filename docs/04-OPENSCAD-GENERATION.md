@@ -1826,7 +1826,7 @@ cat > /tmp/test-shape.svg << 'EOF'
 EOF
 
 # 2. Test API endpoint
-curl -X POST http://localhost:3000/api/generate \
+curl -X POST http://localhost:56577/api/generate \
   -H "Content-Type: application/json" \
   -d @- << 'EOF'
 {
@@ -1849,7 +1849,7 @@ EOF
 
 # 3. Download generated STL
 # (use jobId from response)
-curl http://localhost:3000/api/download/{jobId} -o output.stl
+curl http://localhost:56577/api/download/{jobId} -o output.stl
 
 # 4. Verify STL
 file output.stl

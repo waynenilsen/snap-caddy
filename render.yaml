@@ -37,7 +37,7 @@ services:
       - key: NODE_ENV
         value: production
       - key: PORT
-        value: "3000"
+        value: "56577"
 
       # SAM Segmentation - REQUIRED
       - key: REPLICATE_API_TOKEN

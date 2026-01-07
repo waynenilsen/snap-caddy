@@ -240,12 +240,12 @@ To test the implementation:
 
 2. Test download endpoint (requires a valid job ID):
    ```bash
-   curl http://localhost:3000/api/download/[valid-uuid]
+   curl http://localhost:56577/api/download/[valid-uuid]
    ```
 
 3. Test preview generation:
    ```bash
-   curl -X POST http://localhost:3000/api/preview \
+   curl -X POST http://localhost:56577/api/preview \
      -H "Content-Type: application/json" \
      -d '{
        "svg": "<?xml version=\"1.0\"?><svg xmlns=\"http://www.w3.org/2000/svg\" width=\"30mm\" height=\"20mm\" viewBox=\"0 0 30 20\"><path d=\"M 5,5 L 25,5 L 25,15 L 5,15 Z\" fill=\"black\"/></svg>",

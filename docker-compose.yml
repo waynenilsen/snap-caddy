@@ -11,11 +11,11 @@ services:
     container_name: snap-caddy
     restart: unless-stopped
     ports:
-      - "3000:3000"
+      - "56577:56577"
     environment:
       # Application
       - NODE_ENV=production
-      - PORT=3000
+      - PORT=56577
 
       # SAM Segmentation (Required - set your Replicate API token)
       - REPLICATE_API_TOKEN=${REPLICATE_API_TOKEN:-}
@@ -53,7 +53,7 @@ services:
           "--no-verbose",
           "--tries=1",
           "--spider",
-          "http://localhost:3000/",
+          "http://localhost:56577/",
         ]
       interval: 30s
       timeout: 10s

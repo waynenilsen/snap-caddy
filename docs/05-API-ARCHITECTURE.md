@@ -1232,7 +1232,7 @@ async function loadTest() {
 
     await Promise.all(
       Array.from({ length: concurrentRequests }, async () => {
-        const response = await fetch('http://localhost:3000/api/segment', {
+        const response = await fetch('http://localhost:56577/api/segment', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
