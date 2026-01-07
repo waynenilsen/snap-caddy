@@ -6,6 +6,7 @@ import { APIError, withErrorHandler } from "./errors";
 // Mock the logger module
 mock.module("@/lib/logger", () => ({
   logger: {
+    debug: mock(() => {}),
     error: mock(() => {}),
     info: mock(() => {}),
     warn: mock(() => {}),
