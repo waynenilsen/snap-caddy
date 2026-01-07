@@ -8,6 +8,11 @@
 
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import {
+  createRecordedFetch,
+  getReplicateBaseUrl,
+  getRecordMode,
+} from "@/lib/replicate";
 import type {
   ReplicatePrediction,
   SAMResult,
@@ -15,9 +20,22 @@ import type {
 } from "./types";
 
 // Use the models API for named models (meta/sam-2)
-const REPLICATE_API_URL = "https://api.replicate.com/v1/models";
+// Base URL is now configurable via REPLICATE_BASE_URL env var
+const getModelsApiUrl = () => `${getReplicateBaseUrl()}/v1/models`;
+const getPredictionsApiUrl = () => `${getReplicateBaseUrl()}/v1/predictions`;
+
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second
 const MAX_POLL_ATTEMPTS = 120; // Maximum 120 seconds (SAM 2 can take longer)
+
+// Get fetch function based on record mode
+const getRecordableFetch = () => {
+  const mode = getRecordMode();
+  if (mode === "off") {
+    return globalThis.fetch;
+  }
+  logger.debug("Using recorded fetch", { mode });
+  return createRecordedFetch(globalThis.fetch);
+};
 
 /**
  * Main function to run SAM 2 segmentation
@@ -136,9 +154,10 @@ async function createPrediction(
 
   // Use the models API endpoint: /v1/models/meta/sam-2/predictions
   const modelName = env.SAM_MODEL_VERSION; // e.g., "meta/sam-2"
-  const apiUrl = `${REPLICATE_API_URL}/${modelName}/predictions`;
+  const apiUrl = `${getModelsApiUrl()}/${modelName}/predictions`;
 
-  const response = await fetch(apiUrl, {
+  const recordableFetch = getRecordableFetch();
+  const response = await recordableFetch(apiUrl, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -206,9 +225,10 @@ async function getPrediction(
   predictionId: string,
 ): Promise<ReplicatePrediction> {
   // The predictions endpoint is separate from the models endpoint
-  const predictionsUrl = `https://api.replicate.com/v1/predictions/${predictionId}`;
+  const predictionsUrl = `${getPredictionsApiUrl()}/${predictionId}`;
 
-  const response = await fetch(predictionsUrl, {
+  const recordableFetch = getRecordableFetch();
+  const response = await recordableFetch(predictionsUrl, {
     headers: {
       Authorization: `Bearer ${env.REPLICATE_API_TOKEN}`,
     },

@@ -6,10 +6,17 @@
 import { z } from "zod";
 
 const envSchema = z.object({
+  // Stage/Environment
+  STAGE: z.enum(["dev", "staging", "production"]).default("dev"),
+
   // SAM 2 Segmentation (auto-mask generation)
   REPLICATE_API_TOKEN: z.string().min(1).optional(),
   // SAM 2 model ID from replicate.com/meta/sam-2
   SAM_MODEL_VERSION: z.string().default("meta/sam-2"),
+  // Base URL for Replicate API (can be overridden for mocking/testing)
+  REPLICATE_BASE_URL: z.string().url().optional(),
+  // Enable record/replay mode for Replicate API calls
+  REPLICATE_RECORD_MODE: z.enum(["off", "record", "replay"]).default("off"),
 
   // OpenSCAD
   OPENSCAD_PATH: z.string().default("openscad"),
@@ -126,3 +133,8 @@ export const env = parseEnv();
 
 // Export typed environment access
 export type Env = z.infer<typeof envSchema>;
+
+// Helper functions for stage checks
+export const isDev = () => env.STAGE === "dev";
+export const isProduction = () => env.STAGE === "production";
+export const isStaging = () => env.STAGE === "staging";
