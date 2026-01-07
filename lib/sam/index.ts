@@ -1,13 +1,16 @@
 /**
- * SAM (Segment Anything Model) Integration
- * Public API for SAM segmentation functionality
+ * SAM 2 (Segment Anything Model 2) Integration
+ * Public API for SAM 2 segmentation functionality
+ *
+ * SAM 2 uses automatic mask generation - returns all detected masks
+ * which users can then toggle on/off to select what to include.
  */
 
-export { analyzeMask, encodeRLE, runSAMSegmentation } from "./inference";
+export { runSAMSegmentation } from "./inference";
 export type {
-  MaskAnalysis,
   ReplicatePrediction,
   ReplicateRequest,
+  SAM2Mask,
   SAMResult,
   SAMSegmentationParams,
 } from "./types";

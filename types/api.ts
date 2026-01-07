@@ -190,8 +190,9 @@ export function isSegmentResponse(
     response !== null &&
     "success" in response &&
     response.success === true &&
-    "masks" in response &&
-    Array.isArray((response as SegmentResponse).masks)
+    "combinedMaskUrl" in response &&
+    "individualMaskUrls" in response &&
+    Array.isArray((response as SegmentResponse).individualMaskUrls)
   );
 }
 

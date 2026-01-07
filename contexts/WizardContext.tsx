@@ -3,6 +3,7 @@
 import { createContext, type ReactNode, useCallback, useReducer } from "react";
 import type { GenerationStatus as APIGenerationStatus } from "@/types/api";
 import type { BinConfigState } from "@/types/gridfinity";
+import type { MaskData } from "@/types/segmentation";
 
 // Types
 /**
@@ -27,6 +28,9 @@ export interface WizardState {
   currentStep: number; // 0-5 (capture, segment, calibrate, review, configure, generate)
   completedSteps: Set<number>;
   imageData: string | null;
+  /** Selected masks from SAM 2 segmentation */
+  selectedMasks: MaskData[];
+  /** Combined mask from selected masks (for downstream processing) */
   segmentationMask: ImageData | null;
   calibration: CalibrationData;
   svgOutline: string | null;
@@ -40,6 +44,7 @@ type WizardAction =
   | { type: "SET_STEP"; payload: number }
   | { type: "COMPLETE_STEP"; payload: number }
   | { type: "SET_IMAGE_DATA"; payload: string | null }
+  | { type: "SET_SELECTED_MASKS"; payload: MaskData[] }
   | { type: "SET_SEGMENTATION_MASK"; payload: ImageData | null }
   | { type: "SET_CALIBRATION"; payload: Partial<CalibrationData> }
   | { type: "SET_SVG_OUTLINE"; payload: string | null }
@@ -54,6 +59,7 @@ export interface WizardContextValue {
   setStep: (step: number) => void;
   completeStep: (step: number) => void;
   setImageData: (data: string | null) => void;
+  setSelectedMasks: (masks: MaskData[]) => void;
   setSegmentationMask: (mask: ImageData | null) => void;
   setCalibration: (calibration: Partial<CalibrationData>) => void;
   setSvgOutline: (svg: string | null) => void;
@@ -88,6 +94,7 @@ const initialState: WizardState = {
   currentStep: 0,
   completedSteps: new Set(),
   imageData: null,
+  selectedMasks: [],
   segmentationMask: null,
   calibration: {
     pixelsPerMm: null,
@@ -120,6 +127,13 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return {
         ...state,
         imageData: action.payload,
+        error: null,
+      };
+
+    case "SET_SELECTED_MASKS":
+      return {
+        ...state,
+        selectedMasks: action.payload,
         error: null,
       };
 
@@ -180,6 +194,7 @@ function wizardReducer(state: WizardState, action: WizardAction): WizardState {
       return {
         ...initialState,
         completedSteps: new Set(), // Reset the Set
+        selectedMasks: [], // Reset the selected masks array
       };
 
     default:
@@ -204,6 +219,10 @@ export function WizardProvider({ children }: { children: ReactNode }) {
 
   const setImageData = useCallback((data: string | null) => {
     dispatch({ type: "SET_IMAGE_DATA", payload: data });
+  }, []);
+
+  const setSelectedMasks = useCallback((masks: MaskData[]) => {
+    dispatch({ type: "SET_SELECTED_MASKS", payload: masks });
   }, []);
 
   const setSegmentationMask = useCallback((mask: ImageData | null) => {
@@ -249,6 +268,7 @@ export function WizardProvider({ children }: { children: ReactNode }) {
     setStep,
     completeStep,
     setImageData,
+    setSelectedMasks,
     setSegmentationMask,
     setCalibration,
     setSvgOutline,

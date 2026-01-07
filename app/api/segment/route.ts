@@ -1,6 +1,9 @@
 /**
  * Segment API Route
- * Handles SAM (Segment Anything Model) segmentation requests
+ * Handles SAM 2 (Segment Anything Model 2) segmentation requests
+ *
+ * SAM 2 uses automatic mask generation - returns all detected masks as URLs.
+ * No point prompts needed - users toggle masks on/off in the UI.
  */
 
 import { type NextRequest, NextResponse } from "next/server";
@@ -14,11 +17,11 @@ import type { SegmentResponse } from "@/types/api";
 
 // Runtime configuration
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 120; // SAM 2 can take longer
 
 /**
  * POST /api/segment
- * Segment an image using SAM
+ * Segment an image using SAM 2 auto-mask generation
  */
 async function segmentHandler(req: NextRequest): Promise<NextResponse> {
   const startTime = Date.now();
@@ -75,24 +78,28 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    logger.info("Processing segmentation request", {
+    logger.info("Processing SAM 2 segmentation request", {
       imageWidth: request.imageWidth,
       imageHeight: request.imageHeight,
-      pointCount: request.points.length,
+      pointsPerSide: request.pointsPerSide,
+      predIouThresh: request.predIouThresh,
+      stabilityScoreThresh: request.stabilityScoreThresh,
+      useM2M: request.useM2M,
       imageSize: imageValidation.size,
     });
 
     // Decode image to buffer
     const imageBuffer = decodeBase64Image(request.image);
 
-    // Run SAM segmentation
+    // Run SAM 2 segmentation
     const samResult = await runSAMSegmentation({
       imageBuffer,
-      points: request.points,
       imageWidth: request.imageWidth,
       imageHeight: request.imageHeight,
-      returnMultiple: request.returnMultipleMasks,
-      outputFormat: request.maskFormat,
+      pointsPerSide: request.pointsPerSide,
+      predIouThresh: request.predIouThresh,
+      stabilityScoreThresh: request.stabilityScoreThresh,
+      useM2M: request.useM2M,
     });
 
     const processingTimeMs = Date.now() - startTime;
@@ -100,17 +107,19 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
     // Record metrics
     metrics.recordSegmentation(processingTimeMs);
 
-    // Build response
+    // Build response with mask URLs
     const response: SegmentResponse = {
       success: true,
-      masks: samResult.masks,
+      combinedMaskUrl: samResult.combinedMaskUrl,
+      individualMaskUrls: samResult.individualMaskUrls,
+      maskCount: samResult.individualMaskUrls.length,
       imageWidth: request.imageWidth,
       imageHeight: request.imageHeight,
       processingTimeMs,
     };
 
-    logger.info("Segmentation completed successfully", {
-      maskCount: samResult.masks.length,
+    logger.info("SAM 2 segmentation completed successfully", {
+      maskCount: samResult.individualMaskUrls.length,
       processingTimeMs,
     });
 
@@ -125,7 +134,7 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
-    logger.error("Segmentation error", {
+    logger.error("SAM 2 segmentation error", {
       error: errorMessage,
       duration: Date.now() - startTime,
     });
@@ -135,7 +144,7 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
       errorMessage.includes("Replicate") ||
       errorMessage.includes("prediction")
     ) {
-      throw new APIError("SAM segmentation service error", "SAM_ERROR", 503, {
+      throw new APIError("SAM 2 segmentation service error", "SAM_ERROR", 503, {
         originalError: errorMessage,
       });
     }
