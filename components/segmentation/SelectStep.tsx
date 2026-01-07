@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState, useRef, useEffect } from 'react';
-import { ClickToSegment, SegmentPoint } from './ClickToSegment';
-import { MaskOverlay } from './MaskOverlay';
-import { SegmentationControls } from './SegmentationControls';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { Info, AlertCircle, X, RefreshCw } from 'lucide-react';
-import { api, APIClientError } from '@/lib/api/client';
-import type { ClickPoint } from '@/types/segmentation';
+import React, { useState, useRef, useEffect } from "react";
+import { ClickToSegment, SegmentPoint } from "./ClickToSegment";
+import { MaskOverlay } from "./MaskOverlay";
+import { SegmentationControls } from "./SegmentationControls";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Info, AlertCircle, X, RefreshCw } from "lucide-react";
+import { api, APIClientError } from "@/lib/api/client";
+import type { ClickPoint } from "@/types/segmentation";
 
 interface SelectStepProps {
   imageUrl: string;
@@ -20,7 +20,10 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
   const [isSegmenting, setIsSegmenting] = useState(false);
   const [maskData, setMaskData] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number } | null>(null);
+  const [imageDimensions, setImageDimensions] = useState<{
+    width: number;
+    height: number;
+  } | null>(null);
   const imageRef = useRef<HTMLImageElement | null>(null);
 
   const handlePointAdd = (point: SegmentPoint) => {
@@ -44,7 +47,7 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
   const handleSegment = async () => {
     if (points.length === 0) return;
     if (!imageDimensions) {
-      setError('Image dimensions not loaded. Please try again.');
+      setError("Image dimensions not loaded. Please try again.");
       return;
     }
 
@@ -76,35 +79,47 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
         setMaskData(maskDataUrl);
         onMaskGenerated(maskDataUrl);
       } else {
-        throw new Error('No masks returned from segmentation');
+        throw new Error("No masks returned from segmentation");
       }
     } catch (error) {
-      console.error('Segmentation failed:', error);
+      console.error("Segmentation failed:", error);
 
       // Transform technical errors into user-friendly messages
-      let errorMessage = "Unable to identify the object. Please try clicking on a different part of the image.";
+      let errorMessage =
+        "Unable to identify the object. Please try clicking on a different part of the image.";
 
       if (error instanceof APIClientError) {
-        if (error.status === 429) {
-          errorMessage = "Too many requests. Please wait a moment before trying again.";
-        } else if (error.status === 413) {
+        if (error.statusCode === 429) {
+          errorMessage =
+            "Too many requests. Please wait a moment before trying again.";
+        } else if (error.statusCode === 413) {
           errorMessage = "Image is too large. Please use a smaller image.";
-        } else if (error.status === 400) {
-          errorMessage = "Invalid request. Please make sure you've clicked on the object and try again.";
-        } else if (error.status >= 500) {
+        } else if (error.statusCode === 400) {
+          errorMessage =
+            "Invalid request. Please make sure you've clicked on the object and try again.";
+        } else if (error.statusCode >= 500) {
           errorMessage = "Server error. Please try again in a moment.";
-        } else if (error.message.includes("network") || error.message.includes("fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
         } else if (error.message) {
           errorMessage = `Segmentation failed: ${error.message}`;
         }
       } else if (error instanceof Error) {
         if (error.message.includes("No masks")) {
-          errorMessage = "Unable to detect the object. Please try adding more points or clicking on different areas.";
+          errorMessage =
+            "Unable to detect the object. Please try adding more points or clicking on different areas.";
         } else if (error.message.includes("timeout")) {
           errorMessage = "Request timed out. Please try again.";
-        } else if (error.message.includes("network") || error.message.includes("fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
+        } else if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
         }
       }
 
@@ -127,7 +142,7 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
   // Load image to get dimensions
   useEffect(() => {
     const img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = "anonymous";
 
     img.onload = () => {
       setImageDimensions({
@@ -137,7 +152,7 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
     };
 
     img.onerror = () => {
-      setError('Failed to load image');
+      setError("Failed to load image");
     };
 
     img.src = imageUrl;
@@ -150,8 +165,9 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          Click on the object you want to extract. Add include points (left-click) on the object
-          and exclude points (right-click) on the background to refine the selection.
+          Click on the object you want to extract. Add include points
+          (left-click) on the object and exclude points (right-click) on the
+          background to refine the selection.
         </AlertDescription>
       </Alert>
 
@@ -213,7 +229,8 @@ export function SelectStep({ imageUrl, onMaskGenerated }: SelectStepProps) {
         <Alert>
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Segmentation complete! Click "Clear All" to start over or adjust points to refine the mask.
+            Segmentation complete! Click "Clear All" to start over or adjust
+            points to refine the mask.
           </AlertDescription>
         </Alert>
       )}

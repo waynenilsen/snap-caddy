@@ -1,8 +1,8 @@
-import { describe, it, expect, mock, beforeEach } from 'bun:test';
-import { renderHook, act } from '@testing-library/react';
-import { useWizard } from './useWizard';
-import { WizardProvider, type WizardState } from '@/contexts/WizardContext';
-import React from 'react';
+import { describe, it, expect, mock, beforeEach } from "bun:test";
+import { renderHook, act } from "@testing-library/react";
+import { useWizard } from "./useWizard";
+import { WizardProvider, type WizardState } from "@/contexts/WizardContext";
+import React from "react";
 
 // Helper function to create a wrapper with WizardProvider
 function createWrapper() {
@@ -10,23 +10,23 @@ function createWrapper() {
     React.createElement(WizardProvider, null, children);
 }
 
-describe('useWizard', () => {
-  describe('Context validation', () => {
-    it('throws error when used outside WizardProvider', () => {
+describe("useWizard", () => {
+  describe("Context validation", () => {
+    it("throws error when used outside WizardProvider", () => {
       // Suppress console.error for this test since we expect an error
       const originalError = console.error;
       console.error = mock(() => {});
 
       expect(() => {
         renderHook(() => useWizard());
-      }).toThrow('useWizard must be used within WizardProvider');
+      }).toThrow("useWizard must be used within WizardProvider");
 
       console.error = originalError;
     });
   });
 
-  describe('canGoBack', () => {
-    it('returns false on step 0', () => {
+  describe("canGoBack", () => {
+    it("returns false on step 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -35,7 +35,7 @@ describe('useWizard', () => {
       expect(result.current.canGoBack).toBe(false);
     });
 
-    it('returns true on step > 0', () => {
+    it("returns true on step > 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -49,7 +49,7 @@ describe('useWizard', () => {
       expect(result.current.canGoBack).toBe(true);
     });
 
-    it('returns true on any step greater than 0', () => {
+    it("returns true on any step greater than 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -65,18 +65,18 @@ describe('useWizard', () => {
     });
   });
 
-  describe('progress calculation', () => {
-    it('calculates correct progress for each step', () => {
+  describe("progress calculation", () => {
+    it("calculates correct progress for each step", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       const expectedProgress = [
-        { step: 0, progress: 17 },  // (1/6) * 100 = 16.67 -> 17
-        { step: 1, progress: 33 },  // (2/6) * 100 = 33.33 -> 33
-        { step: 2, progress: 50 },  // (3/6) * 100 = 50
-        { step: 3, progress: 67 },  // (4/6) * 100 = 66.67 -> 67
-        { step: 4, progress: 83 },  // (5/6) * 100 = 83.33 -> 83
+        { step: 0, progress: 17 }, // (1/6) * 100 = 16.67 -> 17
+        { step: 1, progress: 33 }, // (2/6) * 100 = 33.33 -> 33
+        { step: 2, progress: 50 }, // (3/6) * 100 = 50
+        { step: 3, progress: 67 }, // (4/6) * 100 = 66.67 -> 67
+        { step: 4, progress: 83 }, // (5/6) * 100 = 83.33 -> 83
         { step: 5, progress: 100 }, // (6/6) * 100 = 100
       ];
 
@@ -90,19 +90,19 @@ describe('useWizard', () => {
     });
   });
 
-  describe('stepName', () => {
-    it('returns correct name for each step', () => {
+  describe("stepName", () => {
+    it("returns correct name for each step", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       const stepNames = [
-        { step: 0, name: 'Capture' },
-        { step: 1, name: 'Segment' },
-        { step: 2, name: 'Calibrate' },
-        { step: 3, name: 'Review' },
-        { step: 4, name: 'Configure' },
-        { step: 5, name: 'Generate' },
+        { step: 0, name: "Capture" },
+        { step: 1, name: "Segment" },
+        { step: 2, name: "Calibrate" },
+        { step: 3, name: "Review" },
+        { step: 4, name: "Configure" },
+        { step: 5, name: "Generate" },
       ];
 
       stepNames.forEach(({ step, name }) => {
@@ -122,12 +122,12 @@ describe('useWizard', () => {
       // Manually set an invalid step by manipulating state
       // Since setStep clamps to 0-5, we can't test this through normal means
       // But we can verify the current implementation returns Unknown for out of bounds
-      expect(result.current.stepName).toBe('Capture'); // Step 0 is valid
+      expect(result.current.stepName).toBe("Capture"); // Step 0 is valid
     });
   });
 
-  describe('canProceedToNext', () => {
-    it('checks for imageData on step 0', () => {
+  describe("canProceedToNext", () => {
+    it("checks for imageData on step 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -136,13 +136,13 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(false);
 
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
       });
 
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('checks for segmentationMask on step 1', () => {
+    it("checks for segmentationMask on step 1", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -161,7 +161,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('checks for calibration pixelsPerMm on step 2', () => {
+    it("checks for calibration pixelsPerMm on step 2", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -179,7 +179,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('checks for svgOutline on step 3', () => {
+    it("checks for svgOutline on step 3", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -191,13 +191,13 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(false);
 
       act(() => {
-        result.current.setSvgOutline('<svg>test</svg>');
+        result.current.setSvgOutline("<svg>test</svg>");
       });
 
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('checks for valid grid config on step 4', () => {
+    it("checks for valid grid config on step 4", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -231,7 +231,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('returns false on step 5 (final step)', () => {
+    it("returns false on step 5 (final step)", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -243,7 +243,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(false);
     });
 
-    it('returns false for invalid/default step', () => {
+    it("returns false for invalid/default step", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -257,8 +257,8 @@ describe('useWizard', () => {
     });
   });
 
-  describe('isStepCompleted', () => {
-    it('returns false for uncompleted steps', () => {
+  describe("isStepCompleted", () => {
+    it("returns false for uncompleted steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -267,7 +267,7 @@ describe('useWizard', () => {
       expect(result.current.isStepCompleted(1)).toBe(false);
     });
 
-    it('returns true for completed steps', () => {
+    it("returns true for completed steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -283,8 +283,8 @@ describe('useWizard', () => {
     });
   });
 
-  describe('goToStep', () => {
-    it('validates step range - rejects negative steps', () => {
+  describe("goToStep", () => {
+    it("validates step range - rejects negative steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -298,14 +298,14 @@ describe('useWizard', () => {
       });
 
       expect(consoleWarnMock).toHaveBeenCalledWith(
-        'Invalid step: -1. Must be between 0 and 5.'
+        "Invalid step: -1. Must be between 0 and 5.",
       );
       expect(result.current.state.currentStep).toBe(0); // Should not change
 
       console.warn = originalWarn;
     });
 
-    it('validates step range - rejects steps > 5', () => {
+    it("validates step range - rejects steps > 5", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -319,14 +319,14 @@ describe('useWizard', () => {
       });
 
       expect(consoleWarnMock).toHaveBeenCalledWith(
-        'Invalid step: 6. Must be between 0 and 5.'
+        "Invalid step: 6. Must be between 0 and 5.",
       );
       expect(result.current.state.currentStep).toBe(0); // Should not change
 
       console.warn = originalWarn;
     });
 
-    it('validates previous steps are completed', () => {
+    it("validates previous steps are completed", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -341,14 +341,14 @@ describe('useWizard', () => {
       });
 
       expect(consoleWarnMock).toHaveBeenCalledWith(
-        'Cannot navigate to step 2: step 0 is not completed.'
+        "Cannot navigate to step 2: step 0 is not completed.",
       );
       expect(result.current.state.currentStep).toBe(0); // Should not change
 
       console.warn = originalWarn;
     });
 
-    it('allows navigation when previous steps are completed', () => {
+    it("allows navigation when previous steps are completed", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -367,7 +367,7 @@ describe('useWizard', () => {
       expect(result.current.state.currentStep).toBe(2);
     });
 
-    it('allows navigation to step 0 without completing any steps', () => {
+    it("allows navigation to step 0 without completing any steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -384,7 +384,7 @@ describe('useWizard', () => {
       expect(result.current.state.currentStep).toBe(0);
     });
 
-    it('prevents skipping incomplete steps', () => {
+    it("prevents skipping incomplete steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -404,7 +404,7 @@ describe('useWizard', () => {
       });
 
       expect(consoleWarnMock).toHaveBeenCalledWith(
-        'Cannot navigate to step 3: step 1 is not completed.'
+        "Cannot navigate to step 3: step 1 is not completed.",
       );
       expect(result.current.state.currentStep).toBe(0);
 
@@ -412,8 +412,8 @@ describe('useWizard', () => {
     });
   });
 
-  describe('goToNextStep', () => {
-    it('does not advance when canProceedToNext is false', () => {
+  describe("goToNextStep", () => {
+    it("does not advance when canProceedToNext is false", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -429,14 +429,14 @@ describe('useWizard', () => {
       expect(result.current.isStepCompleted(0)).toBe(false); // Should not mark as completed
     });
 
-    it('advances and marks step as completed when canProceedToNext is true', () => {
+    it("advances and marks step as completed when canProceedToNext is true", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       // Set imageData to allow proceeding from step 0
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
       });
 
       expect(result.current.canProceedToNext()).toBe(true);
@@ -449,14 +449,14 @@ describe('useWizard', () => {
       expect(result.current.isStepCompleted(0)).toBe(true);
     });
 
-    it('advances through multiple steps when data is valid', () => {
+    it("advances through multiple steps when data is valid", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       // Step 0 -> 1
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
       });
 
       act(() => {
@@ -492,7 +492,7 @@ describe('useWizard', () => {
       expect(result.current.isStepCompleted(2)).toBe(true);
     });
 
-    it('does not advance from final step', () => {
+    it("does not advance from final step", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -511,8 +511,8 @@ describe('useWizard', () => {
     });
   });
 
-  describe('goToPreviousStep', () => {
-    it('does not go back from step 0', () => {
+  describe("goToPreviousStep", () => {
+    it("does not go back from step 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -527,7 +527,7 @@ describe('useWizard', () => {
       expect(result.current.state.currentStep).toBe(0);
     });
 
-    it('goes back from step 1 to step 0', () => {
+    it("goes back from step 1 to step 0", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -545,7 +545,7 @@ describe('useWizard', () => {
       expect(result.current.state.currentStep).toBe(0);
     });
 
-    it('navigates backwards through multiple steps', () => {
+    it("navigates backwards through multiple steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -581,26 +581,26 @@ describe('useWizard', () => {
     });
   });
 
-  describe('Integration - Full wizard flow', () => {
-    it('completes full wizard flow with all data', () => {
+  describe("Integration - Full wizard flow", () => {
+    it("completes full wizard flow with all data", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       // Start at step 0
       expect(result.current.state.currentStep).toBe(0);
-      expect(result.current.stepName).toBe('Capture');
+      expect(result.current.stepName).toBe("Capture");
       expect(result.current.progress).toBe(17);
 
       // Complete step 0
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
       });
       act(() => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(1);
-      expect(result.current.stepName).toBe('Segment');
+      expect(result.current.stepName).toBe("Segment");
 
       // Complete step 1
       const mockImageData = new ImageData(100, 100);
@@ -611,7 +611,7 @@ describe('useWizard', () => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(2);
-      expect(result.current.stepName).toBe('Calibrate');
+      expect(result.current.stepName).toBe("Calibrate");
 
       // Complete step 2
       act(() => {
@@ -621,24 +621,24 @@ describe('useWizard', () => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(3);
-      expect(result.current.stepName).toBe('Review');
+      expect(result.current.stepName).toBe("Review");
 
       // Complete step 3
       act(() => {
-        result.current.setSvgOutline('<svg>test</svg>');
+        result.current.setSvgOutline("<svg>test</svg>");
       });
       act(() => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(4);
-      expect(result.current.stepName).toBe('Configure');
+      expect(result.current.stepName).toBe("Configure");
 
       // Complete step 4 (default config is valid)
       act(() => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(5);
-      expect(result.current.stepName).toBe('Generate');
+      expect(result.current.stepName).toBe("Generate");
       expect(result.current.progress).toBe(100);
 
       // Verify all steps are completed
@@ -649,14 +649,14 @@ describe('useWizard', () => {
       expect(result.current.isStepCompleted(4)).toBe(true);
     });
 
-    it('allows navigation back and forth with completed steps', () => {
+    it("allows navigation back and forth with completed steps", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       // Complete first 3 steps
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
       });
       act(() => {
         result.current.goToNextStep();
@@ -697,15 +697,15 @@ describe('useWizard', () => {
     });
   });
 
-  describe('Edge cases', () => {
-    it('handles reset correctly', () => {
+  describe("Edge cases", () => {
+    it("handles reset correctly", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
 
       // Set some data and advance
       act(() => {
-        result.current.setImageData('data:image/png;base64,test');
+        result.current.setImageData("data:image/png;base64,test");
         result.current.completeStep(0);
         result.current.setStep(2);
       });
@@ -718,11 +718,11 @@ describe('useWizard', () => {
       expect(result.current.state.currentStep).toBe(0);
       expect(result.current.state.imageData).toBe(null);
       expect(result.current.isStepCompleted(0)).toBe(false);
-      expect(result.current.stepName).toBe('Capture');
+      expect(result.current.stepName).toBe("Capture");
       expect(result.current.progress).toBe(17);
     });
 
-    it('handles null values correctly for canProceedToNext', () => {
+    it("handles null values correctly for canProceedToNext", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -746,7 +746,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(false);
     });
 
-    it('handles partial calibration data correctly', () => {
+    it("handles partial calibration data correctly", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -760,7 +760,7 @@ describe('useWizard', () => {
 
       // Set only unit (pixelsPerMm still null)
       act(() => {
-        result.current.setCalibration({ unit: 'cm' });
+        result.current.setCalibration({ unit: "cm" });
       });
       expect(result.current.canProceedToNext()).toBe(false);
 
@@ -771,7 +771,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('handles zero pixels per mm as valid', () => {
+    it("handles zero pixels per mm as valid", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -786,7 +786,7 @@ describe('useWizard', () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it('handles boundary values for grid config', () => {
+    it("handles boundary values for grid config", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });

@@ -2,7 +2,7 @@
  * Unit tests for generate.ts Zod schemas
  */
 
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from "bun:test";
 import {
   GridfinityConfigSchema,
   GenerateRequestSchema,
@@ -10,11 +10,11 @@ import {
   GenerateResponseSchema,
   GenerateErrorResponseSchema,
   GenerationStatusResponseSchema,
-} from './generate';
+} from "./generate";
 
-describe('GridfinityConfigSchema', () => {
-  describe('valid configurations', () => {
-    it('should validate a config with all fields explicitly set', () => {
+describe("GridfinityConfigSchema", () => {
+  describe("valid configurations", () => {
+    it("should validate a config with all fields explicitly set", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 3,
@@ -39,7 +39,7 @@ describe('GridfinityConfigSchema', () => {
       }
     });
 
-    it('should validate a minimal config with only required fields', () => {
+    it("should validate a minimal config with only required fields", () => {
       const config = {
         gridUnitsX: 1,
         gridUnitsY: 1,
@@ -52,8 +52,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('default values', () => {
-    it('should apply default value for wallThickness', () => {
+  describe("default values", () => {
+    it("should apply default value for wallThickness", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -65,7 +65,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.wallThickness).toBe(1.2);
     });
 
-    it('should apply default values for padding fields', () => {
+    it("should apply default values for padding fields", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -80,7 +80,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.paddingRight).toBe(2);
     });
 
-    it('should apply default values for base options', () => {
+    it("should apply default values for base options", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -94,7 +94,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.stackingLip).toBe(true);
     });
 
-    it('should apply default values for advanced options', () => {
+    it("should apply default values for advanced options", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -107,7 +107,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.baseThickness).toBe(5);
     });
 
-    it('should not override explicitly set values', () => {
+    it("should not override explicitly set values", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -127,8 +127,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('gridUnitsX validation', () => {
-    it('should accept gridUnitsX at minimum bound (1)', () => {
+  describe("gridUnitsX validation", () => {
+    it("should accept gridUnitsX at minimum bound (1)", () => {
       const config = {
         gridUnitsX: 1,
         gridUnitsY: 2,
@@ -140,7 +140,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept gridUnitsX at maximum bound (10)', () => {
+    it("should accept gridUnitsX at maximum bound (10)", () => {
       const config = {
         gridUnitsX: 10,
         gridUnitsY: 2,
@@ -152,7 +152,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject gridUnitsX below minimum (0)', () => {
+    it("should reject gridUnitsX below minimum (0)", () => {
       const config = {
         gridUnitsX: 0,
         gridUnitsY: 2,
@@ -164,7 +164,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject gridUnitsX above maximum (11)', () => {
+    it("should reject gridUnitsX above maximum (11)", () => {
       const config = {
         gridUnitsX: 11,
         gridUnitsY: 2,
@@ -176,7 +176,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject non-integer gridUnitsX', () => {
+    it("should reject non-integer gridUnitsX", () => {
       const config = {
         gridUnitsX: 2.5,
         gridUnitsY: 2,
@@ -189,8 +189,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('gridUnitsY validation', () => {
-    it('should accept gridUnitsY at minimum bound (1)', () => {
+  describe("gridUnitsY validation", () => {
+    it("should accept gridUnitsY at minimum bound (1)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 1,
@@ -202,7 +202,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept gridUnitsY at maximum bound (10)', () => {
+    it("should accept gridUnitsY at maximum bound (10)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 10,
@@ -214,7 +214,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject gridUnitsY below minimum (0)', () => {
+    it("should reject gridUnitsY below minimum (0)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 0,
@@ -226,7 +226,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject gridUnitsY above maximum (11)', () => {
+    it("should reject gridUnitsY above maximum (11)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 11,
@@ -238,7 +238,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject non-integer gridUnitsY', () => {
+    it("should reject non-integer gridUnitsY", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2.5,
@@ -251,8 +251,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('binHeight validation', () => {
-    it('should accept binHeight at minimum bound (7)', () => {
+  describe("binHeight validation", () => {
+    it("should accept binHeight at minimum bound (7)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -264,7 +264,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept binHeight at maximum bound (100)', () => {
+    it("should accept binHeight at maximum bound (100)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -276,7 +276,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject binHeight below minimum (6)', () => {
+    it("should reject binHeight below minimum (6)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -288,7 +288,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject binHeight above maximum (101)', () => {
+    it("should reject binHeight above maximum (101)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -300,7 +300,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should accept decimal binHeight within range', () => {
+    it("should accept decimal binHeight within range", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -313,8 +313,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('cutoutDepth validation', () => {
-    it('should accept cutoutDepth at minimum bound (1)', () => {
+  describe("cutoutDepth validation", () => {
+    it("should accept cutoutDepth at minimum bound (1)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -326,7 +326,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept cutoutDepth at maximum bound (50)', () => {
+    it("should accept cutoutDepth at maximum bound (50)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -338,7 +338,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject cutoutDepth below minimum (0)', () => {
+    it("should reject cutoutDepth below minimum (0)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -350,7 +350,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject cutoutDepth above maximum (51)', () => {
+    it("should reject cutoutDepth above maximum (51)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -362,7 +362,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should accept decimal cutoutDepth within range', () => {
+    it("should accept decimal cutoutDepth within range", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -375,8 +375,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('wallThickness validation', () => {
-    it('should accept wallThickness at minimum bound (0.5)', () => {
+  describe("wallThickness validation", () => {
+    it("should accept wallThickness at minimum bound (0.5)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -389,7 +389,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept wallThickness at maximum bound (5)', () => {
+    it("should accept wallThickness at maximum bound (5)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -402,7 +402,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject wallThickness below minimum (0.4)', () => {
+    it("should reject wallThickness below minimum (0.4)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -415,7 +415,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject wallThickness above maximum (5.1)', () => {
+    it("should reject wallThickness above maximum (5.1)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -429,8 +429,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('padding validation', () => {
-    it('should accept padding values at minimum bound (0)', () => {
+  describe("padding validation", () => {
+    it("should accept padding values at minimum bound (0)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -446,7 +446,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept padding values at maximum bound (20)', () => {
+    it("should accept padding values at maximum bound (20)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -462,7 +462,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject negative padding values', () => {
+    it("should reject negative padding values", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -475,7 +475,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject padding values above maximum', () => {
+    it("should reject padding values above maximum", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -489,8 +489,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('cornerRadius validation', () => {
-    it('should accept cornerRadius at minimum bound (0)', () => {
+  describe("cornerRadius validation", () => {
+    it("should accept cornerRadius at minimum bound (0)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -503,7 +503,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept cornerRadius at maximum bound (5)', () => {
+    it("should accept cornerRadius at maximum bound (5)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -516,7 +516,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject cornerRadius below minimum', () => {
+    it("should reject cornerRadius below minimum", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -529,7 +529,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject cornerRadius above maximum', () => {
+    it("should reject cornerRadius above maximum", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -543,8 +543,8 @@ describe('GridfinityConfigSchema', () => {
     });
   });
 
-  describe('baseThickness validation', () => {
-    it('should accept baseThickness at minimum bound (2)', () => {
+  describe("baseThickness validation", () => {
+    it("should accept baseThickness at minimum bound (2)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -557,7 +557,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should accept baseThickness at maximum bound (10)', () => {
+    it("should accept baseThickness at maximum bound (10)", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -570,7 +570,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject baseThickness below minimum', () => {
+    it("should reject baseThickness below minimum", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -583,7 +583,7 @@ describe('GridfinityConfigSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject baseThickness above maximum', () => {
+    it("should reject baseThickness above maximum", () => {
       const config = {
         gridUnitsX: 2,
         gridUnitsY: 2,
@@ -598,7 +598,7 @@ describe('GridfinityConfigSchema', () => {
   });
 });
 
-describe('GenerateRequestSchema', () => {
+describe("GenerateRequestSchema", () => {
   const validConfig = {
     gridUnitsX: 2,
     gridUnitsY: 2,
@@ -606,8 +606,8 @@ describe('GenerateRequestSchema', () => {
     cutoutDepth: 5,
   };
 
-  describe('valid requests', () => {
-    it('should validate a request with svg and config', () => {
+  describe("valid requests", () => {
+    it("should validate a request with svg and config", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
@@ -617,12 +617,12 @@ describe('GenerateRequestSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate a request with all optional fields', () => {
+    it("should validate a request with all optional fields", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
         async: true,
-        webhookUrl: 'https://example.com/webhook',
+        webhookUrl: "https://example.com/webhook",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
@@ -630,10 +630,10 @@ describe('GenerateRequestSchema', () => {
     });
   });
 
-  describe('svg validation', () => {
-    it('should accept svg at minimum length (10 characters)', () => {
+  describe("svg validation", () => {
+    it("should accept svg at minimum length (10 characters)", () => {
       const request = {
-        svg: '1234567890', // Exactly 10 characters
+        svg: "1234567890", // Exactly 10 characters
         config: validConfig,
       };
 
@@ -641,9 +641,9 @@ describe('GenerateRequestSchema', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should reject svg below minimum length (9 characters)', () => {
+    it("should reject svg below minimum length (9 characters)", () => {
       const request = {
-        svg: '123456789', // Only 9 characters
+        svg: "123456789", // Only 9 characters
         config: validConfig,
       };
 
@@ -651,9 +651,9 @@ describe('GenerateRequestSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject empty svg string', () => {
+    it("should reject empty svg string", () => {
       const request = {
-        svg: '',
+        svg: "",
         config: validConfig,
       };
 
@@ -662,8 +662,8 @@ describe('GenerateRequestSchema', () => {
     });
   });
 
-  describe('async field', () => {
-    it('should default async to false when not provided', () => {
+  describe("async field", () => {
+    it("should default async to false when not provided", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
@@ -673,7 +673,7 @@ describe('GenerateRequestSchema', () => {
       expect(result.async).toBe(false);
     });
 
-    it('should accept explicit async true value', () => {
+    it("should accept explicit async true value", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
@@ -684,7 +684,7 @@ describe('GenerateRequestSchema', () => {
       expect(result.async).toBe(true);
     });
 
-    it('should accept explicit async false value', () => {
+    it("should accept explicit async false value", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
@@ -696,63 +696,63 @@ describe('GenerateRequestSchema', () => {
     });
   });
 
-  describe('webhookUrl validation', () => {
-    it('should accept valid HTTP URL', () => {
+  describe("webhookUrl validation", () => {
+    it("should accept valid HTTP URL", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
-        webhookUrl: 'http://example.com/webhook',
+        webhookUrl: "http://example.com/webhook",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(true);
     });
 
-    it('should accept valid HTTPS URL', () => {
+    it("should accept valid HTTPS URL", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
-        webhookUrl: 'https://example.com/webhook',
+        webhookUrl: "https://example.com/webhook",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(true);
     });
 
-    it('should accept URL with path and query parameters', () => {
+    it("should accept URL with path and query parameters", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
-        webhookUrl: 'https://example.com/api/webhook?token=abc123',
+        webhookUrl: "https://example.com/api/webhook?token=abc123",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(true);
     });
 
-    it('should reject invalid URL format', () => {
+    it("should reject invalid URL format", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
-        webhookUrl: 'not-a-valid-url',
+        webhookUrl: "not-a-valid-url",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(false);
     });
 
-    it('should reject empty string as webhookUrl', () => {
+    it("should reject empty string as webhookUrl", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
-        webhookUrl: '',
+        webhookUrl: "",
       };
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(false);
     });
 
-    it('should allow webhookUrl to be omitted', () => {
+    it("should allow webhookUrl to be omitted", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: validConfig,
@@ -763,8 +763,8 @@ describe('GenerateRequestSchema', () => {
     });
   });
 
-  describe('config validation', () => {
-    it('should reject request with invalid config', () => {
+  describe("config validation", () => {
+    it("should reject request with invalid config", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
         config: {
@@ -779,7 +779,7 @@ describe('GenerateRequestSchema', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should reject request with missing config', () => {
+    it("should reject request with missing config", () => {
       const request = {
         svg: '<svg><rect width="100" height="100"/></svg>',
       };
@@ -790,64 +790,64 @@ describe('GenerateRequestSchema', () => {
   });
 });
 
-describe('GenerationStatusSchema', () => {
+describe("GenerationStatusSchema", () => {
   it('should accept "queued" status', () => {
-    const result = GenerationStatusSchema.safeParse('queued');
+    const result = GenerationStatusSchema.safeParse("queued");
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toBe('queued');
+      expect(result.data).toBe("queued");
     }
   });
 
   it('should accept "processing" status', () => {
-    const result = GenerationStatusSchema.safeParse('processing');
+    const result = GenerationStatusSchema.safeParse("processing");
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toBe('processing');
+      expect(result.data).toBe("processing");
     }
   });
 
   it('should accept "complete" status', () => {
-    const result = GenerationStatusSchema.safeParse('complete');
+    const result = GenerationStatusSchema.safeParse("complete");
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toBe('complete');
+      expect(result.data).toBe("complete");
     }
   });
 
   it('should accept "error" status', () => {
-    const result = GenerationStatusSchema.safeParse('error');
+    const result = GenerationStatusSchema.safeParse("error");
     expect(result.success).toBe(true);
     if (result.success) {
-      expect(result.data).toBe('error');
+      expect(result.data).toBe("error");
     }
   });
 
-  it('should reject invalid status value', () => {
-    const result = GenerationStatusSchema.safeParse('invalid');
+  it("should reject invalid status value", () => {
+    const result = GenerationStatusSchema.safeParse("invalid");
     expect(result.success).toBe(false);
   });
 
-  it('should reject empty string', () => {
-    const result = GenerationStatusSchema.safeParse('');
+  it("should reject empty string", () => {
+    const result = GenerationStatusSchema.safeParse("");
     expect(result.success).toBe(false);
   });
 
-  it('should reject non-string values', () => {
+  it("should reject non-string values", () => {
     const result = GenerationStatusSchema.safeParse(123);
     expect(result.success).toBe(false);
   });
 });
 
-describe('GenerateResponseSchema', () => {
-  it('should validate a complete success response', () => {
+describe("GenerateResponseSchema", () => {
+  it("should validate a complete success response", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       estimatedTimeMs: 5000,
-      downloadUrl: 'https://example.com/download/model.stl',
-      previewUrl: 'https://example.com/preview/model.png',
+      downloadUrl: "https://example.com/download/model.stl",
+      previewUrl: "https://example.com/preview/model.png",
       queuePosition: 1,
     };
 
@@ -855,22 +855,22 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should validate a minimal success response', () => {
+  it("should validate a minimal success response", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
     };
 
     const result = GenerateResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate response with queued status', () => {
+  it("should validate response with queued status", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       queuePosition: 5,
       estimatedTimeMs: 30000,
     };
@@ -879,11 +879,11 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should validate response with processing status', () => {
+  it("should validate response with processing status", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'processing' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "processing" as const,
       estimatedTimeMs: 10000,
     };
 
@@ -891,44 +891,44 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject response with success: false', () => {
+  it("should reject response with success: false", () => {
     const response = {
       success: false,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
     };
 
     const result = GenerateResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject response with invalid UUID format', () => {
+  it("should reject response with invalid UUID format", () => {
     const response = {
       success: true,
-      generationId: 'not-a-uuid',
-      status: 'complete' as const,
+      generationId: "not-a-uuid",
+      status: "complete" as const,
     };
 
     const result = GenerateResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject response with invalid status', () => {
+  it("should reject response with invalid status", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'invalid',
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "invalid",
     };
 
     const result = GenerateResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative estimatedTimeMs', () => {
+  it("should reject negative estimatedTimeMs", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'processing' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "processing" as const,
       estimatedTimeMs: -100,
     };
 
@@ -936,23 +936,23 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid downloadUrl format', () => {
+  it("should reject invalid downloadUrl format", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
-      downloadUrl: 'not-a-url',
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
+      downloadUrl: "not-a-url",
     };
 
     const result = GenerateResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative queuePosition', () => {
+  it("should reject negative queuePosition", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       queuePosition: -1,
     };
 
@@ -960,11 +960,11 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero queuePosition', () => {
+  it("should reject zero queuePosition", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       queuePosition: 0,
     };
 
@@ -972,11 +972,11 @@ describe('GenerateResponseSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject non-integer queuePosition', () => {
+  it("should reject non-integer queuePosition", () => {
     const response = {
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       queuePosition: 1.5,
     };
 
@@ -985,12 +985,12 @@ describe('GenerateResponseSchema', () => {
   });
 });
 
-describe('GenerateErrorResponseSchema', () => {
-  it('should validate a complete error response', () => {
+describe("GenerateErrorResponseSchema", () => {
+  it("should validate a complete error response", () => {
     const response = {
       success: false,
-      error: 'Invalid SVG format',
-      code: 'INVALID_SVG' as const,
+      error: "Invalid SVG format",
+      code: "INVALID_SVG" as const,
       details: { line: 5, column: 10 },
     };
 
@@ -998,118 +998,118 @@ describe('GenerateErrorResponseSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should validate error response without details', () => {
+  it("should validate error response without details", () => {
     const response = {
       success: false,
-      error: 'Rate limit exceeded',
-      code: 'RATE_LIMIT' as const,
+      error: "Rate limit exceeded",
+      code: "RATE_LIMIT" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should accept INVALID_INPUT error code', () => {
+  it("should accept INVALID_INPUT error code", () => {
     const response = {
       success: false,
-      error: 'Invalid input provided',
-      code: 'INVALID_INPUT' as const,
+      error: "Invalid input provided",
+      code: "INVALID_INPUT" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should accept INVALID_SVG error code', () => {
+  it("should accept INVALID_SVG error code", () => {
     const response = {
       success: false,
-      error: 'SVG parsing failed',
-      code: 'INVALID_SVG' as const,
+      error: "SVG parsing failed",
+      code: "INVALID_SVG" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should accept OPENSCAD_ERROR error code', () => {
+  it("should accept OPENSCAD_ERROR error code", () => {
     const response = {
       success: false,
-      error: 'OpenSCAD compilation failed',
-      code: 'OPENSCAD_ERROR' as const,
+      error: "OpenSCAD compilation failed",
+      code: "OPENSCAD_ERROR" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should accept RATE_LIMIT error code', () => {
+  it("should accept RATE_LIMIT error code", () => {
     const response = {
       success: false,
-      error: 'Too many requests',
-      code: 'RATE_LIMIT' as const,
+      error: "Too many requests",
+      code: "RATE_LIMIT" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should accept SERVER_ERROR error code', () => {
+  it("should accept SERVER_ERROR error code", () => {
     const response = {
       success: false,
-      error: 'Internal server error',
-      code: 'SERVER_ERROR' as const,
+      error: "Internal server error",
+      code: "SERVER_ERROR" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should reject invalid error code', () => {
+  it("should reject invalid error code", () => {
     const response = {
       success: false,
-      error: 'Something went wrong',
-      code: 'UNKNOWN_ERROR',
+      error: "Something went wrong",
+      code: "UNKNOWN_ERROR",
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject response with success: true', () => {
+  it("should reject response with success: true", () => {
     const response = {
       success: true,
-      error: 'Error message',
-      code: 'SERVER_ERROR' as const,
+      error: "Error message",
+      code: "SERVER_ERROR" as const,
     };
 
     const result = GenerateErrorResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should accept various types for details field', () => {
+  it("should accept various types for details field", () => {
     const responses = [
       {
         success: false,
-        error: 'Error',
-        code: 'SERVER_ERROR' as const,
-        details: 'string details',
+        error: "Error",
+        code: "SERVER_ERROR" as const,
+        details: "string details",
       },
       {
         success: false,
-        error: 'Error',
-        code: 'SERVER_ERROR' as const,
-        details: { key: 'value' },
+        error: "Error",
+        code: "SERVER_ERROR" as const,
+        details: { key: "value" },
       },
       {
         success: false,
-        error: 'Error',
-        code: 'SERVER_ERROR' as const,
+        error: "Error",
+        code: "SERVER_ERROR" as const,
         details: [1, 2, 3],
       },
       {
         success: false,
-        error: 'Error',
-        code: 'SERVER_ERROR' as const,
+        error: "Error",
+        code: "SERVER_ERROR" as const,
         details: null,
       },
     ];
@@ -1121,177 +1121,177 @@ describe('GenerateErrorResponseSchema', () => {
   });
 });
 
-describe('GenerationStatusResponseSchema', () => {
-  it('should validate a complete status response', () => {
+describe("GenerationStatusResponseSchema", () => {
+  it("should validate a complete status response", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      downloadUrl: 'https://example.com/download/model.stl',
-      previewUrl: 'https://example.com/preview/model.png',
+      downloadUrl: "https://example.com/download/model.stl",
+      previewUrl: "https://example.com/preview/model.png",
       error: undefined,
-      createdAt: '2024-01-15T10:30:00Z',
-      completedAt: '2024-01-15T10:35:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
+      completedAt: "2024-01-15T10:35:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate a minimal status response', () => {
+  it("should validate a minimal status response", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       progress: 0,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate status response with error', () => {
+  it("should validate status response with error", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'error' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "error" as const,
       progress: 50,
-      error: 'Processing failed',
-      createdAt: '2024-01-15T10:30:00Z',
+      error: "Processing failed",
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate progress at minimum bound (0)', () => {
+  it("should validate progress at minimum bound (0)", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       progress: 0,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate progress at maximum bound (100)', () => {
+  it("should validate progress at maximum bound (100)", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should reject progress below minimum', () => {
+  it("should reject progress below minimum", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'queued' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "queued" as const,
       progress: -1,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject progress above maximum', () => {
+  it("should reject progress above maximum", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 101,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid UUID format', () => {
+  it("should reject invalid UUID format", () => {
     const response = {
-      id: 'not-a-uuid',
-      status: 'complete' as const,
+      id: "not-a-uuid",
+      status: "complete" as const,
       progress: 100,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid datetime format for createdAt', () => {
+  it("should reject invalid datetime format for createdAt", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      createdAt: 'not-a-datetime',
+      createdAt: "not-a-datetime",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid datetime format for completedAt', () => {
+  it("should reject invalid datetime format for completedAt", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      createdAt: '2024-01-15T10:30:00Z',
-      completedAt: 'not-a-datetime',
+      createdAt: "2024-01-15T10:30:00Z",
+      completedAt: "not-a-datetime",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should validate ISO 8601 datetime format with Z timezone', () => {
+  it("should validate ISO 8601 datetime format with Z timezone", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      createdAt: '2024-01-15T10:30:00Z',
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should validate ISO 8601 datetime format with milliseconds', () => {
+  it("should validate ISO 8601 datetime format with milliseconds", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      createdAt: '2024-01-15T10:30:00.123Z',
+      createdAt: "2024-01-15T10:30:00.123Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(true);
   });
 
-  it('should reject invalid URL format for downloadUrl', () => {
+  it("should reject invalid URL format for downloadUrl", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      downloadUrl: 'not-a-url',
-      createdAt: '2024-01-15T10:30:00Z',
+      downloadUrl: "not-a-url",
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);
     expect(result.success).toBe(false);
   });
 
-  it('should reject invalid URL format for previewUrl', () => {
+  it("should reject invalid URL format for previewUrl", () => {
     const response = {
-      id: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete' as const,
+      id: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete" as const,
       progress: 100,
-      previewUrl: 'not-a-url',
-      createdAt: '2024-01-15T10:30:00Z',
+      previewUrl: "not-a-url",
+      createdAt: "2024-01-15T10:30:00Z",
     };
 
     const result = GenerationStatusResponseSchema.safeParse(response);

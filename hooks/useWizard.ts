@@ -1,7 +1,10 @@
-'use client';
+"use client";
 
-import { useContext, useMemo, useCallback } from 'react';
-import { WizardContext, type WizardContextValue } from '@/contexts/WizardContext';
+import { useContext, useMemo, useCallback } from "react";
+import {
+  WizardContext,
+  type WizardContextValue,
+} from "@/contexts/WizardContext";
 
 export interface UseWizardReturn extends WizardContextValue {
   // Convenience computed values
@@ -18,12 +21,12 @@ export interface UseWizardReturn extends WizardContextValue {
 }
 
 const STEP_NAMES = [
-  'Capture',      // 0
-  'Segment',      // 1
-  'Calibrate',    // 2
-  'Review',       // 3
-  'Configure',    // 4
-  'Generate',     // 5
+  "Capture", // 0
+  "Segment", // 1
+  "Calibrate", // 2
+  "Review", // 3
+  "Configure", // 4
+  "Generate", // 5
 ];
 
 /**
@@ -34,7 +37,7 @@ export function useWizard(): UseWizardReturn {
   const context = useContext(WizardContext);
 
   if (!context) {
-    throw new Error('useWizard must be used within WizardProvider');
+    throw new Error("useWizard must be used within WizardProvider");
   }
 
   const { state } = context;
@@ -44,12 +47,19 @@ export function useWizard(): UseWizardReturn {
     (step: number): boolean => {
       return state.completedSteps.has(step);
     },
-    [state.completedSteps]
+    [state.completedSteps],
   );
 
   // Check if we can proceed to the next step
   const canProceedToNext = useCallback((): boolean => {
-    const { currentStep, imageData, segmentationMask, calibration, svgOutline, gridfinityConfig } = state;
+    const {
+      currentStep,
+      imageData,
+      segmentationMask,
+      calibration,
+      svgOutline,
+      gridfinityConfig,
+    } = state;
 
     switch (currentStep) {
       case 0: // Capture -> Segment
@@ -65,7 +75,9 @@ export function useWizard(): UseWizardReturn {
         return svgOutline !== null;
 
       case 4: // Configure -> Generate
-        return gridfinityConfig.gridUnitsX > 0 && gridfinityConfig.gridUnitsY > 0;
+        return (
+          gridfinityConfig.gridUnitsX > 0 && gridfinityConfig.gridUnitsY > 0
+        );
 
       case 5: // Generate (final step)
         return false;
@@ -87,7 +99,7 @@ export function useWizard(): UseWizardReturn {
 
   // Get current step name
   const stepName = useMemo(() => {
-    return STEP_NAMES[state.currentStep] || 'Unknown';
+    return STEP_NAMES[state.currentStep] || "Unknown";
   }, [state.currentStep]);
 
   // Navigate to next step
@@ -122,14 +134,16 @@ export function useWizard(): UseWizardReturn {
       // Check if all required previous steps are completed
       for (let i = 0; i < step; i++) {
         if (!isStepCompleted(i)) {
-          console.warn(`Cannot navigate to step ${step}: step ${i} is not completed.`);
+          console.warn(
+            `Cannot navigate to step ${step}: step ${i} is not completed.`,
+          );
           return;
         }
       }
 
       context.setStep(step);
     },
-    [isStepCompleted, context]
+    [isStepCompleted, context],
   );
 
   return {

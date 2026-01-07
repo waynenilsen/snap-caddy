@@ -1,12 +1,22 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Button } from "@/components/ui/button";
 import { Settings, ChevronDown } from "lucide-react";
 
@@ -30,7 +40,7 @@ interface BinConfiguratorProps {
 export function BinConfigurator({
   config,
   onChange,
-  objectDimensions
+  objectDimensions,
 }: BinConfiguratorProps) {
   const GRID_UNIT_SIZE = 42; // mm per Gridfinity unit
 
@@ -50,9 +60,7 @@ export function BinConfigurator({
     <Card>
       <CardHeader>
         <CardTitle>Bin Configuration</CardTitle>
-        <CardDescription>
-          Configure Gridfinity bin parameters
-        </CardDescription>
+        <CardDescription>Configure Gridfinity bin parameters</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         {/* Grid dimensions */}
@@ -61,7 +69,8 @@ export function BinConfigurator({
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="gridX">Grid Units (Width)</Label>
               <span className="text-sm text-muted-foreground">
-                {config.gridUnitsX} units = {config.gridUnitsX * GRID_UNIT_SIZE}mm
+                {config.gridUnitsX} units = {config.gridUnitsX * GRID_UNIT_SIZE}
+                mm
               </span>
             </div>
             <Slider
@@ -74,7 +83,8 @@ export function BinConfigurator({
             />
             {objectDimensions && config.gridUnitsX < minUnitsX + 1 && (
               <p className="text-xs text-amber-600 mt-1">
-                Minimum {minUnitsX} units needed for object ({objectDimensions.width.toFixed(0)}mm)
+                Minimum {minUnitsX} units needed for object (
+                {objectDimensions.width.toFixed(0)}mm)
               </p>
             )}
           </div>
@@ -83,7 +93,8 @@ export function BinConfigurator({
             <div className="flex items-center justify-between mb-2">
               <Label htmlFor="gridY">Grid Units (Depth)</Label>
               <span className="text-sm text-muted-foreground">
-                {config.gridUnitsY} units = {config.gridUnitsY * GRID_UNIT_SIZE}mm
+                {config.gridUnitsY} units = {config.gridUnitsY * GRID_UNIT_SIZE}
+                mm
               </span>
             </div>
             <Slider
@@ -96,7 +107,8 @@ export function BinConfigurator({
             />
             {objectDimensions && config.gridUnitsY < minUnitsY + 1 && (
               <p className="text-xs text-amber-600 mt-1">
-                Minimum {minUnitsY} units needed for object ({objectDimensions.height.toFixed(0)}mm)
+                Minimum {minUnitsY} units needed for object (
+                {objectDimensions.height.toFixed(0)}mm)
               </p>
             )}
           </div>
@@ -121,7 +133,9 @@ export function BinConfigurator({
               <Input
                 type="number"
                 value={config.binHeight}
-                onChange={(e) => updateConfig({ binHeight: parseInt(e.target.value) || 7 })}
+                onChange={(e) =>
+                  updateConfig({ binHeight: parseInt(e.target.value) || 7 })
+                }
                 className="w-20"
                 min={7}
                 max={100}
@@ -147,7 +161,9 @@ export function BinConfigurator({
               <Input
                 type="number"
                 value={config.cutoutDepth}
-                onChange={(e) => updateConfig({ cutoutDepth: parseInt(e.target.value) || 1 })}
+                onChange={(e) =>
+                  updateConfig({ cutoutDepth: parseInt(e.target.value) || 1 })
+                }
                 className="w-20"
                 min={1}
                 max={50}
@@ -173,7 +189,9 @@ export function BinConfigurator({
             <Switch
               id="magnetHoles"
               checked={config.magnetHoles}
-              onCheckedChange={(checked) => updateConfig({ magnetHoles: checked })}
+              onCheckedChange={(checked) =>
+                updateConfig({ magnetHoles: checked })
+              }
             />
           </div>
 
@@ -187,7 +205,9 @@ export function BinConfigurator({
             <Switch
               id="screwHoles"
               checked={config.screwHoles}
-              onCheckedChange={(checked) => updateConfig({ screwHoles: checked })}
+              onCheckedChange={(checked) =>
+                updateConfig({ screwHoles: checked })
+              }
             />
           </div>
 
@@ -201,7 +221,9 @@ export function BinConfigurator({
             <Switch
               id="stackingLip"
               checked={config.stackingLip}
-              onCheckedChange={(checked) => updateConfig({ stackingLip: checked })}
+              onCheckedChange={(checked) =>
+                updateConfig({ stackingLip: checked })
+              }
             />
           </div>
         </div>
@@ -222,7 +244,11 @@ export function BinConfigurator({
                 id="wallThickness"
                 type="number"
                 value={config.wallThickness}
-                onChange={(e) => updateConfig({ wallThickness: parseFloat(e.target.value) || 1.2 })}
+                onChange={(e) =>
+                  updateConfig({
+                    wallThickness: parseFloat(e.target.value) || 1.2,
+                  })
+                }
                 min={0.5}
                 max={5}
                 step={0.1}

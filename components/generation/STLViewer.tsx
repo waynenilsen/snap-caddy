@@ -1,12 +1,30 @@
 "use client";
 
-import { Suspense, useRef, useEffect, useMemo, useState, useCallback } from "react";
+import {
+  Suspense,
+  useRef,
+  useEffect,
+  useMemo,
+  useState,
+  useCallback,
+} from "react";
 import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import { OrbitControls, Grid, Environment, ContactShadows } from "@react-three/drei";
+import {
+  OrbitControls,
+  Grid,
+  Environment,
+  ContactShadows,
+} from "@react-three/drei";
 import * as THREE from "three";
 import { useSTLLoader } from "@/hooks/useSTLLoader";
 import { createBinMaterial } from "@/lib/three/materials";
-import { calculateCameraPosition, calculateGridSize, isWebGLAvailable, QUALITY_PRESETS, type QualityLevel } from "@/lib/three/utils";
+import {
+  calculateCameraPosition,
+  calculateGridSize,
+  isWebGLAvailable,
+  QUALITY_PRESETS,
+  type QualityLevel,
+} from "@/lib/three/utils";
 import { Loader2, AlertCircle, RotateCcw, Move3d } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -95,7 +113,11 @@ function CameraController({
   useEffect(() => {
     if (onReady) {
       const resetCamera = () => {
-        if (initialPositionRef.current && initialTargetRef.current && controlsRef.current) {
+        if (
+          initialPositionRef.current &&
+          initialTargetRef.current &&
+          controlsRef.current
+        ) {
           camera.position.copy(initialPositionRef.current);
           controlsRef.current.target.copy(initialTargetRef.current);
           controlsRef.current.update();
@@ -133,7 +155,7 @@ function CameraController({
 function GridFloor({ geometry }: { geometry: THREE.BufferGeometry }) {
   const { size, divisions } = useMemo(
     () => calculateGridSize(geometry),
-    [geometry]
+    [geometry],
   );
 
   // Get the bottom of the geometry for grid placement
@@ -277,7 +299,9 @@ function ControlsHint() {
     <div className="absolute bottom-3 left-3 right-3 text-center">
       <div className="inline-flex items-center gap-2 px-3 py-1.5 bg-background/80 backdrop-blur-sm rounded-full text-xs text-muted-foreground">
         <Move3d className="w-3.5 h-3.5" />
-        <span>Click and drag to rotate • Scroll to zoom • Right-click to pan</span>
+        <span>
+          Click and drag to rotate • Scroll to zoom • Right-click to pan
+        </span>
       </div>
     </div>
   );

@@ -11,12 +11,7 @@ interface GenerateButtonProps {
 
 export function GenerateButton({ disabled, onClick }: GenerateButtonProps) {
   return (
-    <Button
-      onClick={onClick}
-      disabled={disabled}
-      size="lg"
-      className="w-full"
-    >
+    <Button onClick={onClick} disabled={disabled} size="lg" className="w-full">
       <Box className="w-5 h-5 mr-2" />
       Generate STL
     </Button>

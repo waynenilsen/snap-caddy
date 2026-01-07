@@ -1,7 +1,13 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Box, Loader2, AlertCircle, Rotate3d, Image } from "lucide-react";
 import { api } from "@/lib/api/client";
@@ -140,7 +146,7 @@ export function STLPreview({
   const generatePreview = async (
     svgContent: string,
     gridfinityConfig: GridfinityConfig,
-    previewQuality: "low" | "medium" | "high"
+    previewQuality: "low" | "medium" | "high",
   ) => {
     // Create new abort controller for this request
     const abortController = new AbortController();
@@ -173,7 +179,9 @@ export function STLPreview({
       }
 
       console.error("Preview generation error:", err);
-      setError(err instanceof Error ? err.message : "Failed to generate preview");
+      setError(
+        err instanceof Error ? err.message : "Failed to generate preview",
+      );
       setLoading(false);
     }
   };

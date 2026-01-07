@@ -14,7 +14,7 @@ import * as THREE from "three";
 export function calculateCameraPosition(
   geometry: THREE.BufferGeometry,
   fov: number = 50,
-  aspect: number = 1
+  aspect: number = 1,
 ): { position: THREE.Vector3; target: THREE.Vector3 } {
   geometry.computeBoundingBox();
   const boundingBox = geometry.boundingBox;
@@ -47,7 +47,7 @@ export function calculateCameraPosition(
   const position = new THREE.Vector3(
     center.x + cameraDistance * 0.6,
     center.y + cameraDistance * 0.7,
-    center.z + cameraDistance * 0.6
+    center.z + cameraDistance * 0.6,
   );
 
   return { position, target: center };
@@ -56,9 +56,11 @@ export function calculateCameraPosition(
 /**
  * Get the bounding box dimensions of a geometry
  */
-export function getGeometryDimensions(
-  geometry: THREE.BufferGeometry
-): { width: number; height: number; depth: number } {
+export function getGeometryDimensions(geometry: THREE.BufferGeometry): {
+  width: number;
+  height: number;
+  depth: number;
+} {
   geometry.computeBoundingBox();
   const boundingBox = geometry.boundingBox;
 
@@ -84,7 +86,7 @@ export function getGeometryDimensions(
  */
 export function calculateGridSize(
   geometry: THREE.BufferGeometry,
-  padding: number = 1.5
+  padding: number = 1.5,
 ): { size: number; divisions: number } {
   const dims = getGeometryDimensions(geometry);
   const maxDim = Math.max(dims.width, dims.depth);
@@ -103,7 +105,7 @@ export function calculateGridSize(
  */
 export function disposeResources(
   geometry?: THREE.BufferGeometry | null,
-  material?: THREE.Material | THREE.Material[] | null
+  material?: THREE.Material | THREE.Material[] | null,
 ): void {
   if (geometry) {
     geometry.dispose();
@@ -151,7 +153,8 @@ export function isWebGL2Available(): boolean {
  */
 export function isLowEndDevice(): boolean {
   // Check device memory (in GB, only available in some browsers)
-  const deviceMemory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory;
+  const deviceMemory = (navigator as Navigator & { deviceMemory?: number })
+    .deviceMemory;
   if (deviceMemory && deviceMemory < 4) {
     return true;
   }

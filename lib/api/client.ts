@@ -10,8 +10,8 @@ import type {
   GenerateResponse,
   GenerationStatusResponse,
   PreviewRequest,
-} from '@/types/api';
-import type { GridfinityConfig, BinConfigState } from '@/types/gridfinity';
+} from "@/types/api";
+import type { GridfinityConfig, BinConfigState } from "@/types/gridfinity";
 
 /**
  * Convert frontend BinConfigState to API GridfinityConfig
@@ -32,7 +32,7 @@ export class APIClientError extends Error {
 
   constructor(message: string, code: string, statusCode: number) {
     super(message);
-    this.name = 'APIClientError';
+    this.name = "APIClientError";
     this.code = code;
     this.statusCode = statusCode;
 
@@ -49,7 +49,7 @@ export class APIClientError extends Error {
 export class SnapCaddyAPI {
   private baseUrl: string;
 
-  constructor(baseUrl: string = '') {
+  constructor(baseUrl: string = "") {
     this.baseUrl = baseUrl;
   }
 
@@ -58,21 +58,21 @@ export class SnapCaddyAPI {
    */
   private async fetch<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<T> {
     const url = `${this.baseUrl}${endpoint}`;
 
     const response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...options.headers,
       },
     });
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      let errorCode = 'UNKNOWN_ERROR';
+      let errorCode = "UNKNOWN_ERROR";
 
       try {
         const errorData = await response.json();
@@ -93,7 +93,7 @@ export class SnapCaddyAPI {
    */
   private async fetchBlob(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestInit = {},
   ): Promise<Blob> {
     const url = `${this.baseUrl}${endpoint}`;
 
@@ -101,7 +101,7 @@ export class SnapCaddyAPI {
 
     if (!response.ok) {
       let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
-      let errorCode = 'UNKNOWN_ERROR';
+      let errorCode = "UNKNOWN_ERROR";
 
       try {
         const errorData = await response.json();
@@ -140,8 +140,8 @@ export class SnapCaddyAPI {
       request.returnMultipleMasks = params.returnMultipleMasks;
     }
 
-    return this.fetch<SegmentResponse>('/api/segment', {
-      method: 'POST',
+    return this.fetch<SegmentResponse>("/api/segment", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -157,9 +157,10 @@ export class SnapCaddyAPI {
     async?: boolean;
   }): Promise<GenerateResponse> {
     // Convert BinConfigState to API format if needed
-    const apiConfig = 'tolerance' in params.config
-      ? binConfigToApiConfig(params.config as BinConfigState)
-      : params.config;
+    const apiConfig =
+      "tolerance" in params.config
+        ? binConfigToApiConfig(params.config as BinConfigState)
+        : params.config;
 
     const request: Partial<GenerateRequest> = {
       svg: params.svg,
@@ -170,8 +171,8 @@ export class SnapCaddyAPI {
       request.async = params.async;
     }
 
-    return this.fetch<GenerateResponse>('/api/generate', {
-      method: 'POST',
+    return this.fetch<GenerateResponse>("/api/generate", {
+      method: "POST",
       body: JSON.stringify(request),
     });
   }
@@ -202,12 +203,13 @@ export class SnapCaddyAPI {
   async getPreview(params: {
     svg: string;
     config: GridfinityConfig | BinConfigState;
-    quality?: 'low' | 'medium' | 'high';
+    quality?: "low" | "medium" | "high";
   }): Promise<Blob> {
     // Convert BinConfigState to API format if needed
-    const apiConfig = 'tolerance' in params.config
-      ? binConfigToApiConfig(params.config as BinConfigState)
-      : params.config;
+    const apiConfig =
+      "tolerance" in params.config
+        ? binConfigToApiConfig(params.config as BinConfigState)
+        : params.config;
 
     const request: PreviewRequest = {
       svg: params.svg,
@@ -215,11 +217,11 @@ export class SnapCaddyAPI {
       quality: params.quality,
     };
 
-    return this.fetchBlob('/api/preview', {
-      method: 'POST',
+    return this.fetchBlob("/api/preview", {
+      method: "POST",
       body: JSON.stringify(request),
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
       },
     });
   }
@@ -255,16 +257,16 @@ export class SnapCaddyAPI {
         params.onProgress(status);
       }
 
-      if (status.status === 'complete') {
+      if (status.status === "complete") {
         // Download the file
         return this.downloadSTL(generationId);
       }
 
-      if (status.status === 'error') {
+      if (status.status === "error") {
         throw new APIClientError(
-          status.error || 'Generation failed',
-          'GENERATION_ERROR',
-          500
+          status.error || "Generation failed",
+          "GENERATION_ERROR",
+          500,
         );
       }
 
@@ -292,10 +294,10 @@ export class SnapCaddyAPI {
     const url = this.createDownloadLink(blob);
 
     // Create a temporary anchor element and trigger download
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = filename;
-    a.style.display = 'none';
+    a.style.display = "none";
 
     document.body.appendChild(a);
     a.click();

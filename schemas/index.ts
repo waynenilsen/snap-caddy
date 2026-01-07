@@ -10,7 +10,7 @@ export {
   SegmentErrorResponseSchema,
   BoundingBoxSchema,
   MaskOptionSchema,
-} from './segment';
+} from "./segment";
 
 export type {
   Point,
@@ -19,7 +19,7 @@ export type {
   SegmentErrorResponse,
   MaskOption,
   BoundingBox,
-} from './segment';
+} from "./segment";
 
 // Generate schemas
 export {
@@ -29,7 +29,7 @@ export {
   GenerateErrorResponseSchema,
   GenerationStatusSchema,
   GenerationStatusResponseSchema,
-} from './generate';
+} from "./generate";
 
 export type {
   GridfinityConfig,
@@ -38,7 +38,7 @@ export type {
   GenerateErrorResponse,
   GenerationStatus,
   GenerationStatusResponse,
-} from './generate';
+} from "./generate";
 
 // Calibration schemas
 export {
@@ -46,17 +46,17 @@ export {
   CalibrationSchema,
   ScaleSchema,
   CalibrationRequestSchema,
-} from './calibration';
+} from "./calibration";
 
 export type {
   CalibrationPoint,
   Calibration,
   Scale,
   CalibrationRequest,
-} from './calibration';
+} from "./calibration";
 
 // Helper validation functions
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Validate and parse with custom error handling
@@ -64,14 +64,14 @@ import { z } from 'zod';
 export function validateSchema<T>(
   schema: z.ZodSchema<T>,
   data: unknown,
-  errorPrefix = 'Validation error'
+  errorPrefix = "Validation error",
 ): T {
   const result = schema.safeParse(data);
 
   if (!result.success) {
     const errors = result.error.issues
-      .map((err) => `${err.path.join('.')}: ${err.message}`)
-      .join(', ');
+      .map((err) => `${err.path.join(".")}: ${err.message}`)
+      .join(", ");
 
     throw new Error(`${errorPrefix}: ${errors}`);
   }
@@ -82,7 +82,10 @@ export function validateSchema<T>(
 /**
  * Safe validation that returns null on error
  */
-export function safeValidateSchema<T>(schema: z.ZodSchema<T>, data: unknown): T | null {
+export function safeValidateSchema<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+): T | null {
   const result = schema.safeParse(data);
   return result.success ? result.data : null;
 }
@@ -90,12 +93,17 @@ export function safeValidateSchema<T>(schema: z.ZodSchema<T>, data: unknown): T 
 /**
  * Get validation errors as array
  */
-export function getValidationErrors<T>(schema: z.ZodSchema<T>, data: unknown): string[] {
+export function getValidationErrors<T>(
+  schema: z.ZodSchema<T>,
+  data: unknown,
+): string[] {
   const result = schema.safeParse(data);
 
   if (result.success) {
     return [];
   }
 
-  return result.error.issues.map((err) => `${err.path.join('.')}: ${err.message}`);
+  return result.error.issues.map(
+    (err) => `${err.path.join(".")}: ${err.message}`,
+  );
 }

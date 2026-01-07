@@ -3,17 +3,22 @@
  * BullMQ-based queue for async STL file generation
  */
 
-import { Queue, Worker, Job, QueueEvents } from 'bullmq';
-import { getRedisConnection, getSubscriberConnection } from './connection';
-import { stlFileManager } from '@/lib/openscad/fileManager';
-import { openscadGenerator } from '@/lib/openscad/generator';
-import { openscadExecutor } from '@/lib/openscad/executor';
-import { logger, metrics } from '@/lib/logger';
-import type { STLJobData, STLJobResult, QueueHealth, JobProgress } from './types';
-import type { GenerationStatusResponse } from '@/types/api';
+import { Queue, Worker, Job, QueueEvents } from "bullmq";
+import { getBullMQConnectionOptions, getRedisConnection } from "./connection";
+import { stlFileManager } from "@/lib/openscad/fileManager";
+import { openscadGenerator } from "@/lib/openscad/generator";
+import { openscadExecutor } from "@/lib/openscad/executor";
+import { logger, metrics } from "@/lib/logger";
+import type {
+  STLJobData,
+  STLJobResult,
+  QueueHealth,
+  JobProgress,
+} from "./types";
+import type { GenerationStatusResponse } from "@/types/api";
 
 // Queue name
-const QUEUE_NAME = 'stl-generation';
+const QUEUE_NAME = "stl-generation";
 
 // Default configuration
 const DEFAULT_CONCURRENCY = 3;
@@ -33,14 +38,14 @@ let queueEvents: QueueEvents | null = null;
  */
 export function getSTLQueue(): Queue<STLJobData, STLJobResult> {
   if (!stlQueue) {
-    const connection = getRedisConnection();
+    const connectionOptions = getBullMQConnectionOptions();
 
     stlQueue = new Queue<STLJobData, STLJobResult>(QUEUE_NAME, {
-      connection,
+      connection: connectionOptions,
       defaultJobOptions: {
         attempts: DEFAULT_MAX_RETRIES,
         backoff: {
-          type: 'exponential',
+          type: "exponential",
           delay: 2000,
         },
         removeOnComplete: {
@@ -52,7 +57,7 @@ export function getSTLQueue(): Queue<STLJobData, STLJobResult> {
       },
     });
 
-    logger.info('STL queue initialized', { name: QUEUE_NAME });
+    logger.info("STL queue initialized", { name: QUEUE_NAME });
   }
 
   return stlQueue;
@@ -63,20 +68,22 @@ export function getSTLQueue(): Queue<STLJobData, STLJobResult> {
  */
 export function getQueueEvents(): QueueEvents {
   if (!queueEvents) {
-    const connection = getSubscriberConnection();
-    queueEvents = new QueueEvents(QUEUE_NAME, { connection });
+    const connectionOptions = getBullMQConnectionOptions();
+    queueEvents = new QueueEvents(QUEUE_NAME, {
+      connection: connectionOptions,
+    });
 
     // Listen for job events
-    queueEvents.on('completed', ({ jobId, returnvalue }) => {
-      logger.info('Job completed', { jobId, result: returnvalue });
+    queueEvents.on("completed", ({ jobId, returnvalue }) => {
+      logger.info("Job completed", { jobId, result: returnvalue });
     });
 
-    queueEvents.on('failed', ({ jobId, failedReason }) => {
-      logger.error('Job failed', { jobId, reason: failedReason });
+    queueEvents.on("failed", ({ jobId, failedReason }) => {
+      logger.error("Job failed", { jobId, reason: failedReason });
     });
 
-    queueEvents.on('progress', ({ jobId, data }) => {
-      logger.debug('Job progress', { jobId, progress: data });
+    queueEvents.on("progress", ({ jobId, data }) => {
+      logger.debug("Job progress", { jobId, progress: data });
     });
   }
 
@@ -87,70 +94,86 @@ export function getQueueEvents(): QueueEvents {
  * Process an STL generation job
  */
 async function processSTLJob(
-  job: Job<STLJobData, STLJobResult>
+  job: Job<STLJobData, STLJobResult>,
 ): Promise<STLJobResult> {
   const { generationId, svg, binConfig } = job.data;
   const startTime = Date.now();
 
-  logger.info('Processing STL job', { jobId: job.id, generationId });
+  logger.info("Processing STL job", { jobId: job.id, generationId });
 
   try {
     // Update progress: Starting
-    await job.updateProgress({ stage: 'writing_svg', percent: 10, message: 'Writing SVG file' } as JobProgress);
-    updateJobStatus(generationId, { status: 'processing', progress: 10 });
+    await job.updateProgress({
+      stage: "writing_svg",
+      percent: 10,
+      message: "Writing SVG file",
+    } as JobProgress);
+    updateJobStatus(generationId, { status: "processing", progress: 10 });
 
     // Create job paths with specific ID
     const jobPaths = await stlFileManager.createJobPathsWithId(generationId);
 
     // Write SVG file
     await stlFileManager.writeSVG(jobPaths.svgPath, svg);
-    logger.debug('SVG file written', { path: jobPaths.svgPath });
+    logger.debug("SVG file written", { path: jobPaths.svgPath });
 
     // Update progress: SVG written
-    await job.updateProgress({ stage: 'generating_scad', percent: 30, message: 'Generating OpenSCAD file' } as JobProgress);
+    await job.updateProgress({
+      stage: "generating_scad",
+      percent: 30,
+      message: "Generating OpenSCAD file",
+    } as JobProgress);
     updateJobStatus(generationId, { progress: 30 });
 
     // Generate OpenSCAD file
     const scadResult = await openscadGenerator.generate(
       jobPaths.svgPath,
       binConfig,
-      jobPaths.scadPath
+      jobPaths.scadPath,
     );
 
     if (!scadResult.success || !scadResult.scadPath) {
-      throw new Error(scadResult.error || 'Failed to generate OpenSCAD file');
+      throw new Error(scadResult.error || "Failed to generate OpenSCAD file");
     }
 
-    logger.debug('OpenSCAD file generated', { path: scadResult.scadPath });
+    logger.debug("OpenSCAD file generated", { path: scadResult.scadPath });
 
     // Update progress: SCAD generated
-    await job.updateProgress({ stage: 'rendering_stl', percent: 50, message: 'Rendering STL file' } as JobProgress);
+    await job.updateProgress({
+      stage: "rendering_stl",
+      percent: 50,
+      message: "Rendering STL file",
+    } as JobProgress);
     updateJobStatus(generationId, { progress: 50 });
 
     // Render STL file
     const renderResult = await openscadExecutor.render(
       scadResult.scadPath,
-      jobPaths.stlPath
+      jobPaths.stlPath,
     );
 
     if (!renderResult.success || !renderResult.outputPath) {
-      throw new Error(renderResult.error || 'Failed to render STL file');
+      throw new Error(renderResult.error || "Failed to render STL file");
     }
 
     const duration = Date.now() - startTime;
-    logger.info('STL file rendered successfully', {
+    logger.info("STL file rendered successfully", {
       path: renderResult.outputPath,
       duration,
     });
 
     // Update progress: Complete
-    await job.updateProgress({ stage: 'complete', percent: 100, message: 'Generation complete' } as JobProgress);
+    await job.updateProgress({
+      stage: "complete",
+      percent: 100,
+      message: "Generation complete",
+    } as JobProgress);
 
     const downloadUrl = `/api/download/${generationId}`;
 
     // Update job status
     updateJobStatus(generationId, {
-      status: 'complete',
+      status: "complete",
       progress: 100,
       downloadUrl,
       completedAt: new Date().toISOString(),
@@ -163,11 +186,11 @@ async function processSTLJob(
     if (job.data.webhookUrl) {
       sendWebhook(job.data.webhookUrl, {
         generationId,
-        status: 'complete',
+        status: "complete",
         downloadUrl,
         duration,
       }).catch((error) => {
-        logger.error('Webhook delivery failed', {
+        logger.error("Webhook delivery failed", {
           generationId,
           webhookUrl: job.data.webhookUrl,
           error: error instanceof Error ? error.message : String(error),
@@ -184,7 +207,7 @@ async function processSTLJob(
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
 
-    logger.error('STL job failed', {
+    logger.error("STL job failed", {
       jobId: job.id,
       generationId,
       error: errorMessage,
@@ -194,7 +217,7 @@ async function processSTLJob(
     // Update job status on final failure
     if (job.attemptsMade >= (job.opts.attempts || DEFAULT_MAX_RETRIES)) {
       updateJobStatus(generationId, {
-        status: 'error',
+        status: "error",
         error: errorMessage,
         completedAt: new Date().toISOString(),
       });
@@ -203,7 +226,7 @@ async function processSTLJob(
       if (job.data.webhookUrl) {
         sendWebhook(job.data.webhookUrl, {
           generationId,
-          status: 'error',
+          status: "error",
           error: errorMessage,
         }).catch(() => {
           // Ignore webhook errors for failed jobs
@@ -218,47 +241,50 @@ async function processSTLJob(
 /**
  * Start the STL worker
  */
-export function startSTLWorker(concurrency?: number): Worker<STLJobData, STLJobResult> {
+export function startSTLWorker(
+  concurrency?: number,
+): Worker<STLJobData, STLJobResult> {
   if (stlWorker) {
-    logger.warn('STL worker already running');
+    logger.warn("STL worker already running");
     return stlWorker;
   }
 
-  const connection = getRedisConnection();
-  const workerConcurrency = concurrency || Number.parseInt(process.env.QUEUE_CONCURRENCY || String(DEFAULT_CONCURRENCY), 10);
+  const connectionOptions = getBullMQConnectionOptions();
+  const workerConcurrency =
+    concurrency ||
+    Number.parseInt(
+      process.env.QUEUE_CONCURRENCY || String(DEFAULT_CONCURRENCY),
+      10,
+    );
 
-  stlWorker = new Worker<STLJobData, STLJobResult>(
-    QUEUE_NAME,
-    processSTLJob,
-    {
-      connection,
-      concurrency: workerConcurrency,
-      lockDuration: DEFAULT_JOB_TIMEOUT,
-      stalledInterval: 30000,
-    }
-  );
+  stlWorker = new Worker<STLJobData, STLJobResult>(QUEUE_NAME, processSTLJob, {
+    connection: connectionOptions,
+    concurrency: workerConcurrency,
+    lockDuration: DEFAULT_JOB_TIMEOUT,
+    stalledInterval: 30000,
+  });
 
-  stlWorker.on('completed', (job, result) => {
-    logger.info('Worker completed job', {
+  stlWorker.on("completed", (job, result) => {
+    logger.info("Worker completed job", {
       jobId: job.id,
       generationId: result.generationId,
       duration: result.duration,
     });
   });
 
-  stlWorker.on('failed', (job, error) => {
-    logger.error('Worker job failed', {
+  stlWorker.on("failed", (job, error) => {
+    logger.error("Worker job failed", {
       jobId: job?.id,
       error: error.message,
       attempts: job?.attemptsMade,
     });
   });
 
-  stlWorker.on('error', (error) => {
-    logger.error('Worker error', { error: error.message });
+  stlWorker.on("error", (error) => {
+    logger.error("Worker error", { error: error.message });
   });
 
-  logger.info('STL worker started', { concurrency: workerConcurrency });
+  logger.info("STL worker started", { concurrency: workerConcurrency });
 
   return stlWorker;
 }
@@ -268,10 +294,10 @@ export function startSTLWorker(concurrency?: number): Worker<STLJobData, STLJobR
  */
 export async function stopSTLWorker(): Promise<void> {
   if (stlWorker) {
-    logger.info('Stopping STL worker');
+    logger.info("Stopping STL worker");
     await stlWorker.close();
     stlWorker = null;
-    logger.info('STL worker stopped');
+    logger.info("STL worker stopped");
   }
 }
 
@@ -279,28 +305,28 @@ export async function stopSTLWorker(): Promise<void> {
  * Add a job to the STL queue
  */
 export async function addSTLJob(
-  data: STLJobData
+  data: STLJobData,
 ): Promise<{ jobId: string; queuePosition: number }> {
   const queue = getSTLQueue();
 
   // Initialize job status
   const jobStatus: GenerationStatusResponse = {
     id: data.generationId,
-    status: 'queued',
+    status: "queued",
     progress: 0,
     createdAt: data.createdAt,
   };
   jobStatusStore.set(data.generationId, jobStatus);
 
   // Add job to queue
-  const job = await queue.add('generate-stl', data, {
+  const job = await queue.add("generate-stl", data, {
     jobId: data.generationId,
   });
 
   // Get queue position
   const waiting = await queue.getWaitingCount();
 
-  logger.info('Job added to queue', {
+  logger.info("Job added to queue", {
     jobId: job.id,
     generationId: data.generationId,
     queuePosition: waiting,
@@ -316,13 +342,13 @@ export async function addSTLJob(
  * Get job status from store or Bull job
  */
 export async function getJobStatus(
-  generationId: string
+  generationId: string,
 ): Promise<GenerationStatusResponse | null> {
   // First check in-memory store
   const cached = jobStatusStore.get(generationId);
   if (cached) {
     // If not terminal state, refresh from Bull
-    if (cached.status !== 'complete' && cached.status !== 'error') {
+    if (cached.status !== "complete" && cached.status !== "error") {
       const queue = getSTLQueue();
       const job = await queue.getJob(generationId);
 
@@ -332,7 +358,10 @@ export async function getJobStatus(
 
         // Update cached status
         cached.status = mapBullStateToStatus(state);
-        cached.progress = typeof progress === 'number' ? progress : (progress?.percent || cached.progress);
+        cached.progress =
+          typeof progress === "number"
+            ? progress
+            : progress?.percent || cached.progress;
       }
     }
     return cached;
@@ -352,16 +381,16 @@ export async function getJobStatus(
   const status: GenerationStatusResponse = {
     id: generationId,
     status: mapBullStateToStatus(state),
-    progress: typeof progress === 'number' ? progress : (progress?.percent || 0),
+    progress: typeof progress === "number" ? progress : progress?.percent || 0,
     createdAt: new Date(job.timestamp).toISOString(),
   };
 
-  if (state === 'completed' && job.returnvalue) {
+  if (state === "completed" && job.returnvalue) {
     status.downloadUrl = job.returnvalue.downloadUrl;
     status.completedAt = new Date(job.finishedOn || Date.now()).toISOString();
   }
 
-  if (state === 'failed') {
+  if (state === "failed") {
     status.error = job.failedReason;
     status.completedAt = new Date(job.finishedOn || Date.now()).toISOString();
   }
@@ -377,7 +406,7 @@ export async function getJobStatus(
  */
 function updateJobStatus(
   generationId: string,
-  updates: Partial<GenerationStatusResponse>
+  updates: Partial<GenerationStatusResponse>,
 ): void {
   const current = jobStatusStore.get(generationId);
   if (current) {
@@ -389,20 +418,20 @@ function updateJobStatus(
  * Map Bull job state to our status enum
  */
 function mapBullStateToStatus(
-  state: string
-): 'queued' | 'processing' | 'complete' | 'error' {
+  state: string,
+): "queued" | "processing" | "complete" | "error" {
   switch (state) {
-    case 'completed':
-      return 'complete';
-    case 'failed':
-      return 'error';
-    case 'active':
-      return 'processing';
-    case 'waiting':
-    case 'delayed':
-    case 'prioritized':
+    case "completed":
+      return "complete";
+    case "failed":
+      return "error";
+    case "active":
+      return "processing";
+    case "waiting":
+    case "delayed":
+    case "prioritized":
     default:
-      return 'queued';
+      return "queued";
   }
 }
 
@@ -417,12 +446,12 @@ async function sendWebhook(
     downloadUrl?: string;
     duration?: number;
     error?: string;
-  }
+  },
 ): Promise<void> {
   const response = await fetch(url, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
     body: JSON.stringify(data),
   });
@@ -431,7 +460,7 @@ async function sendWebhook(
     throw new Error(`Webhook failed with status ${response.status}`);
   }
 
-  logger.info('Webhook delivered', { url, generationId: data.generationId });
+  logger.info("Webhook delivered", { url, generationId: data.generationId });
 }
 
 /**
@@ -455,12 +484,14 @@ export async function getQueueHealth(): Promise<QueueHealth> {
     let redisUptime: number | undefined;
 
     try {
-      pingResult = (await connection.ping()) === 'PONG';
-      const info = await connection.info('server');
+      pingResult = (await connection.ping()) === "PONG";
+      const info = await connection.info("server");
       const versionMatch = info.match(/redis_version:(.+)/);
       const uptimeMatch = info.match(/uptime_in_seconds:(\d+)/);
       redisVersion = versionMatch ? versionMatch[1].trim() : undefined;
-      redisUptime = uptimeMatch ? Number.parseInt(uptimeMatch[1], 10) : undefined;
+      redisUptime = uptimeMatch
+        ? Number.parseInt(uptimeMatch[1], 10)
+        : undefined;
     } catch {
       // Redis not available
     }
@@ -486,7 +517,7 @@ export async function getQueueHealth(): Promise<QueueHealth> {
       },
     };
   } catch (error) {
-    logger.error('Failed to get queue health', {
+    logger.error("Failed to get queue health", {
       error: error instanceof Error ? error.message : String(error),
     });
 
@@ -521,13 +552,13 @@ export async function cleanupOldJobs(retentionMs?: number): Promise<{
   const retention = retentionMs || 3600000; // Default 1 hour
   const grace = retention; // Grace period same as retention
 
-  const cleaned = await queue.clean(grace, 1000, 'completed');
-  const cleanedFailed = await queue.clean(grace, 1000, 'failed');
+  const cleaned = await queue.clean(grace, 1000, "completed");
+  const cleanedFailed = await queue.clean(grace, 1000, "failed");
 
   const totalCleaned = cleaned.length + cleanedFailed.length;
 
   if (totalCleaned > 0) {
-    logger.info('Cleaned up old jobs', {
+    logger.info("Cleaned up old jobs", {
       completed: cleaned.length,
       failed: cleanedFailed.length,
     });
@@ -537,7 +568,7 @@ export async function cleanupOldJobs(retentionMs?: number): Promise<{
   const now = Date.now();
   for (const [id, status] of jobStatusStore.entries()) {
     if (
-      (status.status === 'complete' || status.status === 'error') &&
+      (status.status === "complete" || status.status === "error") &&
       status.completedAt
     ) {
       const completedAt = new Date(status.completedAt).getTime();
@@ -554,7 +585,7 @@ export async function cleanupOldJobs(retentionMs?: number): Promise<{
  * Close all queue connections
  */
 export async function closeQueue(): Promise<void> {
-  logger.info('Closing queue connections');
+  logger.info("Closing queue connections");
 
   await stopSTLWorker();
 
@@ -568,7 +599,7 @@ export async function closeQueue(): Promise<void> {
     stlQueue = null;
   }
 
-  logger.info('Queue connections closed');
+  logger.info("Queue connections closed");
 }
 
 /**
@@ -585,5 +616,5 @@ export function initializeQueue(): void {
   // Initialize queue events
   getQueueEvents();
 
-  logger.info('Queue system initialized');
+  logger.info("Queue system initialized");
 }

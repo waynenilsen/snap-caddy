@@ -1,7 +1,7 @@
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface WizardNavigationProps {
   currentStep: number;
@@ -24,19 +24,19 @@ export function WizardNavigation({
   nextLabel,
   backLabel,
   totalSteps = 6,
-  className
+  className,
 }: WizardNavigationProps) {
   const isFirstStep = currentStep === 1;
   const isLastStep = currentStep === totalSteps;
 
-  const defaultNextLabel = isLastStep ? 'Finish' : 'Next';
-  const defaultBackLabel = 'Back';
+  const defaultNextLabel = isLastStep ? "Finish" : "Next";
+  const defaultBackLabel = "Back";
 
   return (
     <div
       className={cn(
-        'flex items-center justify-between gap-4 border-t bg-background px-4 py-4 md:px-6',
-        className
+        "flex items-center justify-between gap-4 border-t bg-background px-4 py-4 md:px-6",
+        className,
       )}
     >
       {/* Back button */}
@@ -62,13 +62,13 @@ export function WizardNavigation({
       <Button
         onClick={onNext}
         disabled={!canProceed || isLoading}
-        aria-label={isLastStep ? 'Complete wizard' : 'Go to next step'}
+        aria-label={isLastStep ? "Complete wizard" : "Go to next step"}
         className="min-w-[100px]"
       >
         {isLoading ? (
           <>
             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-            {isLastStep ? 'Finishing...' : 'Processing...'}
+            {isLastStep ? "Finishing..." : "Processing..."}
           </>
         ) : (
           <>

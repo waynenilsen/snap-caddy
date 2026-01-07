@@ -1,10 +1,16 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useState, useCallback } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { X } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useRef, useEffect, useState, useCallback } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { X } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export interface SegmentPoint {
   x: number;
@@ -36,7 +42,7 @@ export function ClickToSegment({
   const drawCanvas = useCallback(() => {
     const canvas = canvasRef.current;
     const image = imageRef.current;
-    const ctx = canvas?.getContext('2d');
+    const ctx = canvas?.getContext("2d");
 
     if (!canvas || !image || !ctx || !image.complete) return;
 
@@ -50,18 +56,18 @@ export function ClickToSegment({
       const radius = isHovered ? 10 : 7;
 
       // Point background (green for include, red for exclude)
-      ctx.fillStyle = point.label === 1 ? '#22c55e' : '#ef4444';
+      ctx.fillStyle = point.label === 1 ? "#22c55e" : "#ef4444";
       ctx.beginPath();
       ctx.arc(point.x, point.y, radius, 0, 2 * Math.PI);
       ctx.fill();
 
       // Point border
-      ctx.strokeStyle = '#ffffff';
+      ctx.strokeStyle = "#ffffff";
       ctx.lineWidth = 2.5;
       ctx.stroke();
 
       // Add inner ring for better visibility
-      ctx.strokeStyle = point.label === 1 ? '#16a34a' : '#dc2626';
+      ctx.strokeStyle = point.label === 1 ? "#16a34a" : "#dc2626";
       ctx.lineWidth = 1.5;
       ctx.beginPath();
       ctx.arc(point.x, point.y, radius - 2, 0, 2 * Math.PI);
@@ -69,18 +75,18 @@ export function ClickToSegment({
 
       // Point label on hover
       if (isHovered) {
-        ctx.fillStyle = '#000000';
-        ctx.font = 'bold 13px sans-serif';
-        ctx.textAlign = 'left';
-        const text = point.label === 1 ? 'Include' : 'Exclude';
+        ctx.fillStyle = "#000000";
+        ctx.font = "bold 13px sans-serif";
+        ctx.textAlign = "left";
+        const text = point.label === 1 ? "Include" : "Exclude";
         const textWidth = ctx.measureText(text).width;
 
         // Background for text
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+        ctx.fillStyle = "rgba(255, 255, 255, 0.95)";
         ctx.fillRect(point.x + 14, point.y - 20, textWidth + 10, 24);
 
         // Text
-        ctx.fillStyle = point.label === 1 ? '#16a34a' : '#dc2626';
+        ctx.fillStyle = point.label === 1 ? "#16a34a" : "#dc2626";
         ctx.fillText(text, point.x + 19, point.y - 2);
       }
     });
@@ -108,8 +114,8 @@ export function ClickToSegment({
     if (image.complete) {
       handleLoad();
     } else {
-      image.addEventListener('load', handleLoad);
-      return () => image.removeEventListener('load', handleLoad);
+      image.addEventListener("load", handleLoad);
+      return () => image.removeEventListener("load", handleLoad);
     }
   }, [imageUrl, drawCanvas]);
 
@@ -187,9 +193,10 @@ export function ClickToSegment({
       <CardHeader>
         <CardTitle>Click to Select Object</CardTitle>
         <CardDescription>
-          <span className="font-medium text-green-600">Left-click</span> on the object to include areas.{' '}
-          <span className="font-medium text-red-600">Right-click</span> to exclude areas.
-          Click on a point to remove it.
+          <span className="font-medium text-green-600">Left-click</span> on the
+          object to include areas.{" "}
+          <span className="font-medium text-red-600">Right-click</span> to
+          exclude areas. Click on a point to remove it.
         </CardDescription>
       </CardHeader>
 
@@ -202,18 +209,13 @@ export function ClickToSegment({
             onMouseMove={handleMouseMove}
             onMouseLeave={() => setHoveredPointId(null)}
             className={cn(
-              'w-full h-auto border rounded-lg cursor-crosshair',
-              'hover:border-primary transition-colors'
+              "w-full h-auto border rounded-lg cursor-crosshair",
+              "hover:border-primary transition-colors",
             )}
           />
 
           {/* Hidden image element */}
-          <img
-            ref={imageRef}
-            src={imageUrl}
-            alt="Source"
-            className="hidden"
-          />
+          <img ref={imageRef} src={imageUrl} alt="Source" className="hidden" />
 
           {/* Cursor indicator */}
           {!hoveredPointId && (
@@ -221,9 +223,7 @@ export function ClickToSegment({
               <Badge variant="default" className="bg-green-500 text-white">
                 Left: Include
               </Badge>
-              <Badge variant="destructive">
-                Right: Exclude
-              </Badge>
+              <Badge variant="destructive">Right: Exclude</Badge>
             </div>
           )}
         </div>
@@ -231,21 +231,19 @@ export function ClickToSegment({
         {/* Point list */}
         {points.length > 0 && (
           <div className="space-y-2">
-            <p className="text-sm font-medium">
-              Points ({points.length})
-            </p>
+            <p className="text-sm font-medium">Points ({points.length})</p>
             <div className="flex flex-wrap gap-2">
               {points.map((point, index) => (
                 <Badge
                   key={point.id}
-                  variant={point.label === 1 ? 'default' : 'destructive'}
+                  variant={point.label === 1 ? "default" : "destructive"}
                   className={cn(
-                    'gap-2 cursor-pointer hover:opacity-80 transition-opacity',
-                    point.label === 1 ? 'bg-green-500 hover:bg-green-600' : ''
+                    "gap-2 cursor-pointer hover:opacity-80 transition-opacity",
+                    point.label === 1 ? "bg-green-500 hover:bg-green-600" : "",
                   )}
                   onClick={() => onPointRemove(index)}
                 >
-                  {point.label === 1 ? 'Include' : 'Exclude'} #{index + 1}
+                  {point.label === 1 ? "Include" : "Exclude"} #{index + 1}
                   <X className="w-3 h-3" />
                 </Badge>
               ))}

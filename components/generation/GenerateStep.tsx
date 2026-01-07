@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { GenerateButton } from "./GenerateButton";
 import { ProgressIndicator } from "./ProgressIndicator";
@@ -35,7 +41,8 @@ export function GenerateStep({
 }: GenerateStepProps) {
   const GRID_UNIT_SIZE = 42; // mm per Gridfinity unit
 
-  const canGenerate = generationStatus === "idle" || generationStatus === "error";
+  const canGenerate =
+    generationStatus === "idle" || generationStatus === "error";
   const canDownload = generationStatus === "complete" && !!generationId;
 
   const handleRetry = () => {
@@ -70,7 +77,8 @@ export function GenerateStep({
                     {config.gridUnitsX} × {config.gridUnitsY} units
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {config.gridUnitsX * GRID_UNIT_SIZE} × {config.gridUnitsY * GRID_UNIT_SIZE}mm
+                    {config.gridUnitsX * GRID_UNIT_SIZE} ×{" "}
+                    {config.gridUnitsY * GRID_UNIT_SIZE}mm
                   </p>
                 </div>
 
@@ -81,12 +89,18 @@ export function GenerateStep({
 
                 <div className="p-3 bg-muted rounded-lg">
                   <p className="text-sm text-muted-foreground">Cutout Depth</p>
-                  <p className="text-lg font-semibold">{config.cutoutDepth}mm</p>
+                  <p className="text-lg font-semibold">
+                    {config.cutoutDepth}mm
+                  </p>
                 </div>
 
                 <div className="p-3 bg-muted rounded-lg">
-                  <p className="text-sm text-muted-foreground">Wall Thickness</p>
-                  <p className="text-lg font-semibold">{config.wallThickness}mm</p>
+                  <p className="text-sm text-muted-foreground">
+                    Wall Thickness
+                  </p>
+                  <p className="text-lg font-semibold">
+                    {config.wallThickness}mm
+                  </p>
                 </div>
               </div>
 
@@ -110,9 +124,13 @@ export function GenerateStep({
                       Stacking Lip
                     </div>
                   )}
-                  {!config.magnetHoles && !config.screwHoles && !config.stackingLip && (
-                    <span className="text-sm text-muted-foreground">No additional features</span>
-                  )}
+                  {!config.magnetHoles &&
+                    !config.screwHoles &&
+                    !config.stackingLip && (
+                      <span className="text-sm text-muted-foreground">
+                        No additional features
+                      </span>
+                    )}
                 </div>
               </div>
             </CardContent>

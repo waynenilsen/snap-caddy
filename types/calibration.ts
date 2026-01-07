@@ -2,7 +2,7 @@
  * Calibration and scale types
  */
 
-import type { Point } from './image';
+import type { Point } from "./image";
 
 export interface CalibrationPoints {
   point1: Point;
@@ -30,7 +30,7 @@ export interface CalibrationState {
 export function calculatePixelsPerMm(
   point1: Point,
   point2: Point,
-  knownDistanceMm: number
+  knownDistanceMm: number,
 ): number {
   const dx = point2.x - point1.x;
   const dy = point2.y - point1.y;

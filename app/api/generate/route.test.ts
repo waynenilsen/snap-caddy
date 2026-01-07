@@ -3,36 +3,46 @@
  * Tests POST and GET handlers, validation, and configuration mapping
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from 'bun:test';
-import { NextRequest, NextResponse } from 'next/server';
-import type { GridfinityBinConfig } from '@/types/configuration';
+import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
+import { NextRequest, NextResponse } from "next/server";
+import type { GridfinityBinConfig } from "@/types/configuration";
 
 // Mock dependencies before importing the route
-const mockValidateSVG = mock((svg: string) => ({ valid: true }));
+const mockValidateSVG = mock((svg: string) => ({ valid: true as boolean }));
 const mockValidateBinConfig = mock((config: GridfinityBinConfig) => ({
-  valid: true,
-  errors: [],
-  warnings: [],
+  valid: true as boolean,
+  errors: [] as string[],
+  warnings: [] as string[],
 }));
 
 const mockCreateJobPaths = mock(async () => ({
-  jobId: '550e8400-e29b-41d4-a716-446655440000',
-  svgPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg',
-  scadPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad',
-  stlPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl',
+  jobId: "550e8400-e29b-41d4-a716-446655440000",
+  svgPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg",
+  scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad",
+  stlPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl",
 }));
 
 const mockWriteSVG = mock(async (path: string, content: string) => {});
 
-const mockGenerate = mock(async (svgPath: string, config: GridfinityBinConfig, scadPath: string) => ({
-  success: true,
-  scadPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad',
-}));
+const mockGenerate = mock(
+  async (svgPath: string, config: GridfinityBinConfig, scadPath: string) => ({
+    success: true as boolean,
+    scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad" as
+      | string
+      | undefined,
+    error: undefined as string | undefined,
+  }),
+);
 
 const mockRender = mock(async (scadPath: string, stlPath: string) => ({
-  success: true,
-  outputPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl',
-  duration: 1500,
+  success: true as boolean,
+  outputPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl" as
+    | string
+    | undefined,
+  duration: 1500 as number | undefined,
+  error: undefined as string | undefined,
+  stderr: undefined as string | undefined,
+  stdout: undefined as string | undefined,
 }));
 
 const mockLogger = {
@@ -47,11 +57,11 @@ const mockMetrics = {
 };
 
 // Mock modules
-mock.module('@/lib/validation/svg', () => ({
+mock.module("@/lib/validation/svg", () => ({
   validateSVG: mockValidateSVG,
 }));
 
-mock.module('@/types/configuration', () => ({
+mock.module("@/types/configuration", () => ({
   validateBinConfig: mockValidateBinConfig,
   GRIDFINITY_CONSTRAINTS: {
     GRID_UNIT_SIZE: 42,
@@ -67,31 +77,31 @@ mock.module('@/types/configuration', () => ({
   },
 }));
 
-mock.module('@/lib/openscad/fileManager', () => ({
+mock.module("@/lib/openscad/fileManager", () => ({
   stlFileManager: {
     createJobPaths: mockCreateJobPaths,
     writeSVG: mockWriteSVG,
   },
 }));
 
-mock.module('@/lib/openscad/generator', () => ({
+mock.module("@/lib/openscad/generator", () => ({
   openscadGenerator: {
     generate: mockGenerate,
   },
 }));
 
-mock.module('@/lib/openscad/executor', () => ({
+mock.module("@/lib/openscad/executor", () => ({
   openscadExecutor: {
     render: mockRender,
   },
 }));
 
-mock.module('@/lib/logger', () => ({
+mock.module("@/lib/logger", () => ({
   logger: mockLogger,
   metrics: mockMetrics,
 }));
 
-mock.module('@/lib/api/rateLimit', () => ({
+mock.module("@/lib/api/rateLimit", () => ({
   withRateLimit: (handler: Function) => handler,
 }));
 
@@ -101,14 +111,14 @@ class APIError extends Error {
     message: string,
     public code: string,
     public statusCode: number,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'APIError';
+    this.name = "APIError";
   }
 }
 
-mock.module('@/lib/api/errors', () => ({
+mock.module("@/lib/api/errors", () => ({
   withErrorHandler: (handler: Function) => {
     return async (req: NextRequest) => {
       try {
@@ -121,15 +131,15 @@ mock.module('@/lib/api/errors', () => ({
               code: error.code,
               details: error.details,
             },
-            { status: error.statusCode }
+            { status: error.statusCode },
           );
         }
         return NextResponse.json(
           {
-            message: error instanceof Error ? error.message : 'Unknown error',
-            code: 'SERVER_ERROR',
+            message: error instanceof Error ? error.message : "Unknown error",
+            code: "SERVER_ERROR",
           },
-          { status: 500 }
+          { status: 500 },
         );
       }
     };
@@ -143,11 +153,20 @@ const mockAddSTLJob = mock(async (data: { generationId: string }) => ({
   queuePosition: 1,
 }));
 
-const mockGetJobStatus = mock(async (id: string) => null);
+const mockGetJobStatus = mock(
+  async (
+    id: string,
+  ): Promise<{
+    id: string;
+    status: string;
+    progress: number;
+    createdAt: string;
+  } | null> => null,
+);
 
 const mockInitializeQueue = mock(() => {});
 
-mock.module('@/lib/queue', () => ({
+mock.module("@/lib/queue", () => ({
   addSTLJob: mockAddSTLJob,
   getJobStatus: mockGetJobStatus,
   initializeQueue: mockInitializeQueue,
@@ -156,19 +175,19 @@ mock.module('@/lib/queue', () => ({
 // Import the route handlers after mocking
 // Note: We need to import the internal functions for testing
 // In a real implementation, you might export these or use a different testing approach
-const routeModule = await import('./route');
+const routeModule = await import("./route");
 
 // Helper to create a mock NextRequest
 function createMockRequest(
   method: string,
   body?: unknown,
-  url: string = 'http://localhost:3000/api/generate'
+  url: string = "http://localhost:3000/api/generate",
 ): NextRequest {
   const request = new Request(url, {
     method,
     body: body ? JSON.stringify(body) : undefined,
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
   return request as NextRequest;
@@ -198,12 +217,12 @@ function createValidRequestBody(overrides?: Record<string, unknown>) {
   };
 }
 
-describe('apiConfigToBinConfig', () => {
+describe("apiConfigToBinConfig", () => {
   // We need to test the internal function
   // Since it's not exported, we'll test it indirectly through the POST handler
   // For better testing, the function should be exported
 
-  it('applies default values correctly', async () => {
+  it("applies default values correctly", async () => {
     const requestBody = {
       svg: '<svg><circle cx="50" cy="50" r="40"/></svg>',
       config: {
@@ -215,7 +234,7 @@ describe('apiConfigToBinConfig', () => {
       },
     };
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     const response = await routeModule.POST(request);
     const data = await response.json();
 
@@ -224,7 +243,8 @@ describe('apiConfigToBinConfig', () => {
 
     // Check that the generator was called with default values applied
     expect(mockGenerate).toHaveBeenCalled();
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
 
     expect(config.wallThickness).toBe(1.2);
@@ -232,7 +252,7 @@ describe('apiConfigToBinConfig', () => {
     expect(config.cornerRadius).toBe(0.5);
   });
 
-  it('maps magnetHoles=true, screwHoles=true to baseType=magnet_screw', async () => {
+  it("maps magnetHoles=true, screwHoles=true to baseType=magnet_screw", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -241,15 +261,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.baseType).toBe('magnet_screw');
+    expect(config.baseType).toBe("magnet_screw");
   });
 
-  it('maps magnetHoles=true, screwHoles=false to baseType=magnet', async () => {
+  it("maps magnetHoles=true, screwHoles=false to baseType=magnet", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -258,15 +279,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.baseType).toBe('magnet');
+    expect(config.baseType).toBe("magnet");
   });
 
-  it('maps magnetHoles=false, screwHoles=true to baseType=screw', async () => {
+  it("maps magnetHoles=false, screwHoles=true to baseType=screw", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -275,15 +297,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.baseType).toBe('screw');
+    expect(config.baseType).toBe("screw");
   });
 
-  it('maps magnetHoles=false, screwHoles=false to baseType=solid', async () => {
+  it("maps magnetHoles=false, screwHoles=false to baseType=solid", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -292,15 +315,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.baseType).toBe('solid');
+    expect(config.baseType).toBe("solid");
   });
 
-  it('maps stackingLip=true to lipStyle=normal', async () => {
+  it("maps stackingLip=true to lipStyle=normal", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -308,15 +332,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.lipStyle).toBe('normal');
+    expect(config.lipStyle).toBe("normal");
   });
 
-  it('maps stackingLip=false to lipStyle=none', async () => {
+  it("maps stackingLip=false to lipStyle=none", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -324,15 +349,16 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
-    expect(config.lipStyle).toBe('none');
+    expect(config.lipStyle).toBe("none");
   });
 
-  it('calculates cutoutPadding as average of all padding values', async () => {
+  it("calculates cutoutPadding as average of all padding values", async () => {
     const requestBody = createValidRequestBody({
       config: {
         ...createValidRequestBody().config,
@@ -343,20 +369,22 @@ describe('apiConfigToBinConfig', () => {
       },
     });
 
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
     expect(config.cutoutPadding).toBe(2.5); // (4+3+2+1)/4
   });
 
-  it('sets cutoutOffsetX and cutoutOffsetY to 0', async () => {
+  it("sets cutoutOffsetX and cutoutOffsetY to 0", async () => {
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
     await routeModule.POST(request);
 
-    const generatorCall = mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
+    const generatorCall =
+      mockGenerate.mock.calls[mockGenerate.mock.calls.length - 1];
     const config = generatorCall[1] as GridfinityBinConfig;
     expect(config.cutoutOffsetX).toBe(0);
     expect(config.cutoutOffsetY).toBe(0);
@@ -382,42 +410,58 @@ beforeEach(() => {
   mockInitializeQueue.mockClear();
 
   // Set default mock behaviors
-  mockValidateSVG.mockImplementation(() => ({ valid: true }));
+  mockValidateSVG.mockImplementation(() => ({ valid: true as boolean }));
   mockValidateBinConfig.mockImplementation(() => ({
-    valid: true,
-    errors: [],
-    warnings: [],
+    valid: true as boolean,
+    errors: [] as string[],
+    warnings: [] as string[],
   }));
   mockCreateJobPaths.mockImplementation(async () => ({
-    jobId: '550e8400-e29b-41d4-a716-446655440000',
-    svgPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg',
-    scadPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad',
-    stlPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl',
+    jobId: "550e8400-e29b-41d4-a716-446655440000",
+    svgPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg",
+    scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad",
+    stlPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl",
   }));
   mockWriteSVG.mockImplementation(async (path: string, content: string) => {
     // Default: do nothing, just succeed
   });
   mockGenerate.mockImplementation(async () => ({
-    success: true,
-    scadPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad',
+    success: true as boolean,
+    scadPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad" as
+      | string
+      | undefined,
+    error: undefined as string | undefined,
   }));
   mockRender.mockImplementation(async () => ({
-    success: true,
-    outputPath: '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl',
-    duration: 1500,
+    success: true as boolean,
+    outputPath: "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl" as
+      | string
+      | undefined,
+    duration: 1500 as number | undefined,
+    error: undefined as string | undefined,
+    stderr: undefined as string | undefined,
+    stdout: undefined as string | undefined,
   }));
   mockAddSTLJob.mockImplementation(async (data: { generationId: string }) => ({
     jobId: data.generationId,
     queuePosition: 1,
   }));
-  mockGetJobStatus.mockImplementation(async (id: string) => null);
+  mockGetJobStatus.mockImplementation(
+    async (
+      id: string,
+    ): Promise<{
+      id: string;
+      status: string;
+      progress: number;
+      createdAt: string;
+    } | null> => null,
+  );
 });
 
-describe('POST /api/generate', () => {
-
-  it('returns success with generationId for valid request', async () => {
+describe("POST /api/generate", () => {
+  it("returns success with generationId for valid request", async () => {
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     const data = await response.json();
@@ -425,9 +469,9 @@ describe('POST /api/generate', () => {
     expect(response.status).toBe(200);
     expect(data).toEqual({
       success: true,
-      generationId: '550e8400-e29b-41d4-a716-446655440000',
-      status: 'complete',
-      downloadUrl: '/api/download/550e8400-e29b-41d4-a716-446655440000',
+      generationId: "550e8400-e29b-41d4-a716-446655440000",
+      status: "complete",
+      downloadUrl: "/api/download/550e8400-e29b-41d4-a716-446655440000",
       estimatedTimeMs: expect.any(Number),
     });
 
@@ -441,111 +485,117 @@ describe('POST /api/generate', () => {
     expect(mockMetrics.recordGeneration).toHaveBeenCalled();
   });
 
-  it('returns 400 for invalid schema', async () => {
+  it("returns 400 for invalid schema", async () => {
     const requestBody = {
-      svg: 'short', // Too short (< 10 chars)
+      svg: "short", // Too short (< 10 chars)
       config: createValidRequestBody().config,
     };
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_INPUT');
-    expect(data.message).toContain('Invalid request');
-    expect(data.message).toContain('svg');
+    expect(data.code).toBe("INVALID_INPUT");
+    expect(data.message).toContain("Invalid request");
+    expect(data.message).toContain("svg");
   });
 
-  it('returns 400 for missing required fields', async () => {
+  it("returns 400 for missing required fields", async () => {
     const requestBody = {
       svg: '<svg><circle cx="50" cy="50" r="40"/></svg>',
       // Missing config
     };
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_INPUT');
-    expect(data.message).toContain('Invalid request');
-    expect(data.message).toContain('config');
+    expect(data.code).toBe("INVALID_INPUT");
+    expect(data.message).toContain("Invalid request");
+    expect(data.message).toContain("config");
   });
 
-  it('returns 400 for invalid SVG', async () => {
+  it("returns 400 for invalid SVG", async () => {
     mockValidateSVG.mockImplementation(() => ({
       valid: false,
-      error: 'SVG contains malicious script tag',
+      error: "SVG contains malicious script tag",
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_SVG');
-    expect(data.message).toContain('SVG contains malicious script tag');
-    expect(mockLogger.warn).toHaveBeenCalledWith('SVG validation failed', {
-      error: 'SVG contains malicious script tag',
+    expect(data.code).toBe("INVALID_SVG");
+    expect(data.message).toContain("SVG contains malicious script tag");
+    expect(mockLogger.warn).toHaveBeenCalledWith("SVG validation failed", {
+      error: "SVG contains malicious script tag",
     });
   });
 
-  it('returns 400 for invalid config', async () => {
+  it("returns 400 for invalid config", async () => {
     mockValidateBinConfig.mockImplementation(() => ({
-      valid: false,
-      errors: ['binHeight must be at least 7mm', 'cutoutDepth must be less than binHeight'],
-      warnings: [],
+      valid: false as const,
+      errors: [
+        "binHeight must be at least 7mm",
+        "cutoutDepth must be less than binHeight",
+      ] as const,
+      warnings: [] as const,
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_INPUT');
-    expect(data.message).toContain('Invalid configuration');
-    expect(data.message).toContain('binHeight must be at least 7mm');
-    expect(mockLogger.warn).toHaveBeenCalledWith('Config validation failed', {
-      errors: ['binHeight must be at least 7mm', 'cutoutDepth must be less than binHeight'],
+    expect(data.code).toBe("INVALID_INPUT");
+    expect(data.message).toContain("Invalid configuration");
+    expect(data.message).toContain("binHeight must be at least 7mm");
+    expect(mockLogger.warn).toHaveBeenCalledWith("Config validation failed", {
+      errors: [
+        "binHeight must be at least 7mm",
+        "cutoutDepth must be less than binHeight",
+      ],
     });
   });
 
-  it('logs warnings for valid config with warnings', async () => {
+  it("logs warnings for valid config with warnings", async () => {
     mockValidateBinConfig.mockImplementation(() => ({
-      valid: true,
-      errors: [],
-      warnings: ['wallThickness below 2.0mm may result in weak walls'],
+      valid: true as const,
+      errors: [] as const,
+      warnings: ["wallThickness below 2.0mm may result in weak walls"] as const,
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(200);
 
-    expect(mockLogger.info).toHaveBeenCalledWith('Config validation warnings', {
-      warnings: ['wallThickness below 2.0mm may result in weak walls'],
+    expect(mockLogger.info).toHaveBeenCalledWith("Config validation warnings", {
+      warnings: ["wallThickness below 2.0mm may result in weak walls"],
     });
   });
 
-  it('returns queued status for async request', async () => {
+  it("returns queued status for async request", async () => {
     const requestBody = createValidRequestBody({ async: true });
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     const data = await response.json();
 
     expect(response.status).toBe(200);
     expect(data.success).toBe(true);
-    expect(data.status).toBe('queued');
+    expect(data.status).toBe("queued");
     expect(data.queuePosition).toBe(1);
     expect(data.generationId).toBeDefined();
-    expect(typeof data.generationId).toBe('string');
+    expect(typeof data.generationId).toBe("string");
     expect(data.estimatedTimeMs).toBeGreaterThan(0);
 
     // Should not call render for async requests (goes to queue)
@@ -554,79 +604,84 @@ describe('POST /api/generate', () => {
     expect(mockAddSTLJob).toHaveBeenCalled();
   });
 
-  it('returns 500 when OpenSCAD generation fails', async () => {
+  it("returns 500 when OpenSCAD generation fails", async () => {
     mockGenerate.mockImplementation(async () => ({
-      success: false,
-      error: 'Failed to parse SVG file',
+      success: false as const,
+      scadPath: undefined,
+      error: "Failed to parse SVG file",
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(500);
 
     const data = await response.json();
-    expect(data.code).toBe('OPENSCAD_ERROR');
-    expect(data.message).toContain('Failed to parse SVG file');
+    expect(data.code).toBe("OPENSCAD_ERROR");
+    expect(data.message).toContain("Failed to parse SVG file");
   });
 
-  it('returns 500 when OpenSCAD rendering fails', async () => {
+  it("returns 500 when OpenSCAD rendering fails", async () => {
     mockRender.mockImplementation(async () => ({
-      success: false,
-      error: 'OpenSCAD process crashed',
-      stderr: 'ERROR: Syntax error in generated SCAD file',
+      success: false as const,
+      outputPath: undefined,
+      duration: undefined,
+      error: "OpenSCAD process crashed",
+      stderr: "ERROR: Syntax error in generated SCAD file",
+      stdout: undefined,
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(500);
 
     const data = await response.json();
-    expect(data.code).toBe('OPENSCAD_ERROR');
-    expect(data.message).toContain('OpenSCAD process crashed');
-    expect(mockLogger.error).toHaveBeenCalledWith('OpenSCAD render failed', {
-      error: 'OpenSCAD process crashed',
-      stderr: 'ERROR: Syntax error in generated SCAD file',
+    expect(data.code).toBe("OPENSCAD_ERROR");
+    expect(data.message).toContain("OpenSCAD process crashed");
+    expect(mockLogger.error).toHaveBeenCalledWith("OpenSCAD render failed", {
+      error: "OpenSCAD process crashed",
+      stderr: "ERROR: Syntax error in generated SCAD file",
     });
   });
 
-  it('handles generic errors and returns 500', async () => {
+  it("handles generic errors and returns 500", async () => {
     mockWriteSVG.mockImplementation(async () => {
-      throw new Error('File system error: disk full');
+      throw new Error("File system error: disk full");
     });
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     const response = await routeModule.POST(request);
     expect(response.status).toBe(500);
 
     const data = await response.json();
-    expect(data.code).toBe('SERVER_ERROR');
-    expect(data.message).toContain('Internal server error during generation');
-    expect(mockLogger.error).toHaveBeenCalledWith('Generation error', {
-      error: 'File system error: disk full',
+    expect(data.code).toBe("SERVER_ERROR");
+    expect(data.message).toContain("Internal server error during generation");
+    expect(mockLogger.error).toHaveBeenCalledWith("Generation error", {
+      error: "File system error: disk full",
       duration: expect.any(Number),
     });
   });
 
-  it('writes correct SVG content to file', async () => {
-    const svgContent = '<svg><rect x="10" y="10" width="50" height="50"/></svg>';
+  it("writes correct SVG content to file", async () => {
+    const svgContent =
+      '<svg><rect x="10" y="10" width="50" height="50"/></svg>';
     const requestBody = createValidRequestBody({ svg: svgContent });
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     await routeModule.POST(request);
 
     expect(mockWriteSVG).toHaveBeenCalledWith(
-      '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg',
-      svgContent
+      "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg",
+      svgContent,
     );
   });
 
-  it('passes correct config to OpenSCAD generator', async () => {
+  it("passes correct config to OpenSCAD generator", async () => {
     const requestBody = createValidRequestBody({
       config: {
         gridUnitsX: 3,
@@ -644,12 +699,12 @@ describe('POST /api/generate', () => {
         cornerRadius: 1.0,
       },
     });
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     await routeModule.POST(request);
 
     expect(mockGenerate).toHaveBeenCalledWith(
-      '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg',
+      "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/cutout.svg",
       {
         gridUnitsX: 3,
         gridUnitsY: 2,
@@ -659,43 +714,46 @@ describe('POST /api/generate', () => {
         cutoutOffsetX: 0,
         cutoutOffsetY: 0,
         wallThickness: 2.0,
-        baseType: 'magnet_screw',
-        lipStyle: 'none',
+        baseType: "magnet_screw",
+        lipStyle: "none",
         cornerRadius: 1.0,
       },
-      '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad'
+      "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad",
     );
   });
 
-  it('passes correct paths to OpenSCAD renderer', async () => {
+  it("passes correct paths to OpenSCAD renderer", async () => {
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     await routeModule.POST(request);
 
     expect(mockRender).toHaveBeenCalledWith(
-      '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad',
-      '/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl'
+      "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.scad",
+      "/tmp/jobs/550e8400-e29b-41d4-a716-446655440000/bin.stl",
     );
   });
 
-  it('records generation metrics on success', async () => {
+  it("records generation metrics on success", async () => {
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     await routeModule.POST(request);
 
-    expect(mockMetrics.recordGeneration).toHaveBeenCalledWith(expect.any(Number));
+    expect(mockMetrics.recordGeneration).toHaveBeenCalledWith(
+      expect.any(Number),
+    );
   });
 
-  it('does not record metrics on failure', async () => {
+  it("does not record metrics on failure", async () => {
     mockGenerate.mockImplementation(async () => ({
-      success: false,
-      error: 'Generation failed',
+      success: false as const,
+      scadPath: undefined,
+      error: "Generation failed",
     }));
 
     const requestBody = createValidRequestBody();
-    const request = createMockRequest('POST', requestBody);
+    const request = createMockRequest("POST", requestBody);
 
     await routeModule.POST(request);
 
@@ -703,51 +761,55 @@ describe('POST /api/generate', () => {
   });
 });
 
-describe('GET /api/generate', () => {
-  it('returns 400 when id parameter is missing', async () => {
-    const request = createMockRequest('GET', undefined, 'http://localhost:3000/api/generate');
+describe("GET /api/generate", () => {
+  it("returns 400 when id parameter is missing", async () => {
+    const request = createMockRequest(
+      "GET",
+      undefined,
+      "http://localhost:3000/api/generate",
+    );
 
     const response = await routeModule.GET(request);
     expect(response.status).toBe(400);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_INPUT');
-    expect(data.message).toContain('Missing id query parameter');
+    expect(data.code).toBe("INVALID_INPUT");
+    expect(data.message).toContain("Missing id query parameter");
   });
 
-  it('returns 404 when generation id is not found', async () => {
+  it("returns 404 when generation id is not found", async () => {
     const request = createMockRequest(
-      'GET',
+      "GET",
       undefined,
-      'http://localhost:3000/api/generate?id=nonexistent-id'
+      "http://localhost:3000/api/generate?id=nonexistent-id",
     );
 
     const response = await routeModule.GET(request);
     expect(response.status).toBe(404);
 
     const data = await response.json();
-    expect(data.code).toBe('INVALID_INPUT');
-    expect(data.message).toContain('Generation not found');
+    expect(data.code).toBe("INVALID_INPUT");
+    expect(data.message).toContain("Generation not found");
   });
 
-  it('returns status for valid generation id', async () => {
+  it("returns status for valid generation id", async () => {
     // Use a fresh request to ensure we get a new job ID
     const requestBody = createValidRequestBody();
 
     // First create a job (synchronous)
-    const postRequest = createMockRequest('POST', requestBody);
+    const postRequest = createMockRequest("POST", requestBody);
     const postResponse = await routeModule.POST(postRequest);
     expect(postResponse.status).toBe(200);
 
     const postData = await postResponse.json();
     const generationId = postData.generationId;
-    expect(generationId).toBe('550e8400-e29b-41d4-a716-446655440000');
+    expect(generationId).toBe("550e8400-e29b-41d4-a716-446655440000");
 
     // Then get its status
     const getRequest = createMockRequest(
-      'GET',
+      "GET",
       undefined,
-      `http://localhost:3000/api/generate?id=${generationId}`
+      `http://localhost:3000/api/generate?id=${generationId}`,
     );
     const getResponse = await routeModule.GET(getRequest);
     expect(getResponse.status).toBe(200);
@@ -756,22 +818,28 @@ describe('GET /api/generate', () => {
 
     expect(getData).toMatchObject({
       id: generationId,
-      status: 'complete',
+      status: "complete",
       progress: 100,
       downloadUrl: `/api/download/${generationId}`,
       createdAt: expect.any(String),
       completedAt: expect.any(String),
     });
 
-    expect(mockLogger.debug).toHaveBeenCalledWith('Retrieved generation status', {
-      id: generationId,
-      status: 'complete',
-    });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      "Retrieved generation status",
+      {
+        id: generationId,
+        status: "complete",
+      },
+    );
   });
 
-  it('returns queued status for async job', async () => {
+  it("returns queued status for async job", async () => {
     // Create async job
-    const postRequest = createMockRequest('POST', createValidRequestBody({ async: true }));
+    const postRequest = createMockRequest(
+      "POST",
+      createValidRequestBody({ async: true }),
+    );
     const postResponse = await routeModule.POST(postRequest);
     const postData = await postResponse.json();
     const generationId = postData.generationId;
@@ -781,8 +849,8 @@ describe('GET /api/generate', () => {
       if (id === generationId) {
         return {
           id: generationId,
-          status: 'queued',
-          progress: 0,
+          status: "queued" as const,
+          progress: 0 as const,
           createdAt: new Date().toISOString(),
         };
       }
@@ -791,24 +859,24 @@ describe('GET /api/generate', () => {
 
     // Get status
     const getRequest = createMockRequest(
-      'GET',
+      "GET",
       undefined,
-      `http://localhost:3000/api/generate?id=${generationId}`
+      `http://localhost:3000/api/generate?id=${generationId}`,
     );
     const getResponse = await routeModule.GET(getRequest);
     const getData = await getResponse.json();
 
     expect(getResponse.status).toBe(200);
-    expect(getData.status).toBe('queued');
+    expect(getData.status).toBe("queued");
     expect(getData.progress).toBe(0);
   });
 
-  it('handles generic errors and returns 500', async () => {
+  it("handles generic errors and returns 500", async () => {
     // Create a mock that throws an error
     const getRequest = createMockRequest(
-      'GET',
+      "GET",
       undefined,
-      'http://localhost:3000/api/generate?id=test-id'
+      "http://localhost:3000/api/generate?id=test-id",
     );
 
     // Mock URL constructor to throw
@@ -816,8 +884,8 @@ describe('GET /api/generate', () => {
     global.URL = class extends originalURL {
       constructor(url: string | URL, base?: string | URL) {
         super(url, base);
-        if (url.toString().includes('test-id')) {
-          throw new Error('URL parsing error');
+        if (url.toString().includes("test-id")) {
+          throw new Error("URL parsing error");
         }
       }
     } as typeof URL;
@@ -829,7 +897,7 @@ describe('GET /api/generate', () => {
 
     expect(response.status).toBe(500);
     const data = await response.json();
-    expect(data.code).toBe('SERVER_ERROR');
-    expect(data.message).toContain('Internal server error');
+    expect(data.code).toBe("SERVER_ERROR");
+    expect(data.message).toContain("Internal server error");
   });
 });

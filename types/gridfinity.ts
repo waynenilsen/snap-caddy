@@ -49,7 +49,9 @@ export interface BinDimensions {
 /**
  * Calculate bin dimensions from configuration
  */
-export function calculateBinDimensions(config: GridfinityConfig): BinDimensions {
+export function calculateBinDimensions(
+  config: GridfinityConfig,
+): BinDimensions {
   const outerWidth = config.gridUnitsX * 42;
   const outerDepth = config.gridUnitsY * 42;
   const innerWidth = outerWidth - config.wallThickness * 2;
@@ -69,7 +71,7 @@ export function calculateBinDimensions(config: GridfinityConfig): BinDimensions 
  */
 export function validateBinFit(
   cutoutDimensions: { widthMm: number; heightMm: number },
-  config: GridfinityConfig
+  config: GridfinityConfig,
 ): { fits: boolean; message?: string } {
   const binDims = calculateBinDimensions(config);
 

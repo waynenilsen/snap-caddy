@@ -3,7 +3,7 @@
  * Type definitions for SAM integration using Replicate API
  */
 
-import type { MaskOption } from '@/types/segmentation';
+import type { MaskOption } from "@/types/segmentation";
 
 /**
  * Parameters for SAM segmentation request
@@ -24,7 +24,7 @@ export interface SAMSegmentationParams {
   /** Whether to return multiple mask options (default: false) */
   returnMultiple?: boolean;
   /** Output format for masks (default: 'base64png') */
-  outputFormat?: 'base64png' | 'rle' | 'binary';
+  outputFormat?: "base64png" | "rle" | "binary";
 }
 
 /**
@@ -42,7 +42,7 @@ export interface ReplicatePrediction {
   /** Unique prediction ID */
   id: string;
   /** Current status of the prediction */
-  status: 'starting' | 'processing' | 'succeeded' | 'failed' | 'canceled';
+  status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
   /** Output data (available when succeeded) */
   output?: {
     masks?: string[]; // URLs to mask images

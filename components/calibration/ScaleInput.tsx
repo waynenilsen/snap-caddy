@@ -1,7 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -127,7 +133,8 @@ export function ScaleInput({
             <AlertDescription>
               Calibration: {pixelsPerMm.toFixed(2)} pixels per mm
               <br />
-              {convertedValueInMm.toFixed(1)} mm = {pixelDistance?.toFixed(0)} pixels
+              {convertedValueInMm.toFixed(1)} mm = {pixelDistance?.toFixed(0)}{" "}
+              pixels
             </AlertDescription>
           </Alert>
         )}

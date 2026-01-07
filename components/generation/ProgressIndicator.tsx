@@ -73,7 +73,7 @@ export function ProgressIndicator({
                   "w-5 h-5",
                   config.color,
                   (status === "queued" || status === "processing") &&
-                    "animate-pulse"
+                    "animate-pulse",
                 )}
               />
               <span className="font-medium">{config.label}</span>

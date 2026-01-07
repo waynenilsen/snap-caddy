@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { cn } from '@/lib/utils';
+import { useState, useRef, useEffect } from "react";
+import { ZoomIn, ZoomOut, RotateCcw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { cn } from "@/lib/utils";
 
 interface ImageInfo {
   dimensions: { width: number; height: number };
@@ -25,7 +25,7 @@ interface ImagePreviewProps {
 
 export function ImagePreview({
   src,
-  alt = 'Preview',
+  alt = "Preview",
   onRetake,
   enableZoom = true,
   enablePan = true,
@@ -38,7 +38,9 @@ export function ImagePreview({
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [imageInfo, setImageInfo] = useState<ImageInfo | null>(null);
-  const [initialPinchDistance, setInitialPinchDistance] = useState<number | null>(null);
+  const [initialPinchDistance, setInitialPinchDistance] = useState<
+    number | null
+  >(null);
 
   const imageRef = useRef<HTMLImageElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -107,7 +109,9 @@ export function ImagePreview({
       e.preventDefault();
       const distance = getDistance(e.touches[0], e.touches[1]);
       const scaleFactor = distance / initialPinchDistance;
-      setScale((prev) => Math.min(Math.max(prev * scaleFactor, minZoom), maxZoom));
+      setScale((prev) =>
+        Math.min(Math.max(prev * scaleFactor, minZoom), maxZoom),
+      );
       setInitialPinchDistance(distance);
     }
   };
@@ -129,7 +133,7 @@ export function ImagePreview({
           <div
             ref={containerRef}
             className="relative overflow-hidden bg-muted"
-            style={{ aspectRatio: '4/3' }}
+            style={{ aspectRatio: "4/3" }}
             onWheel={handleWheel}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
@@ -137,9 +141,9 @@ export function ImagePreview({
           >
             <div
               className={cn(
-                'w-full h-full flex items-center justify-center',
-                isDragging && 'cursor-grabbing',
-                enablePan && !isDragging && 'cursor-grab'
+                "w-full h-full flex items-center justify-center",
+                isDragging && "cursor-grabbing",
+                enablePan && !isDragging && "cursor-grab",
               )}
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
@@ -156,7 +160,7 @@ export function ImagePreview({
                   transform: `scale(${scale}) translate(${position.x / scale}px, ${
                     position.y / scale
                   }px)`,
-                  transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                  transition: isDragging ? "none" : "transform 0.1s ease-out",
                 }}
                 draggable={false}
               />
@@ -168,7 +172,9 @@ export function ImagePreview({
                 <Button
                   size="icon"
                   variant="secondary"
-                  onClick={() => setScale((prev) => Math.min(prev + 0.25, maxZoom))}
+                  onClick={() =>
+                    setScale((prev) => Math.min(prev + 0.25, maxZoom))
+                  }
                   disabled={scale >= maxZoom}
                   aria-label="Zoom in"
                 >
@@ -177,7 +183,9 @@ export function ImagePreview({
                 <Button
                   size="icon"
                   variant="secondary"
-                  onClick={() => setScale((prev) => Math.max(prev - 0.25, minZoom))}
+                  onClick={() =>
+                    setScale((prev) => Math.max(prev - 0.25, minZoom))
+                  }
                   disabled={scale <= minZoom}
                   aria-label="Zoom out"
                 >
@@ -200,7 +208,9 @@ export function ImagePreview({
                 <p className="font-medium">
                   {imageInfo.dimensions.width} × {imageInfo.dimensions.height}px
                 </p>
-                <p className="text-muted-foreground">Zoom: {Math.round(scale * 100)}%</p>
+                <p className="text-muted-foreground">
+                  Zoom: {Math.round(scale * 100)}%
+                </p>
               </div>
             )}
           </div>

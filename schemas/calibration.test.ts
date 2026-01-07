@@ -1,13 +1,13 @@
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from "bun:test";
 import {
   CalibrationPointSchema,
   CalibrationSchema,
   ScaleSchema,
   CalibrationRequestSchema,
-} from './calibration';
+} from "./calibration";
 
-describe('CalibrationPointSchema', () => {
-  it('should accept valid point with x and y numbers', () => {
+describe("CalibrationPointSchema", () => {
+  it("should accept valid point with x and y numbers", () => {
     const validPoint = { x: 10, y: 20 };
     const result = CalibrationPointSchema.safeParse(validPoint);
     expect(result.success).toBe(true);
@@ -16,86 +16,86 @@ describe('CalibrationPointSchema', () => {
     }
   });
 
-  it('should accept point with zero values', () => {
+  it("should accept point with zero values", () => {
     const validPoint = { x: 0, y: 0 };
     const result = CalibrationPointSchema.safeParse(validPoint);
     expect(result.success).toBe(true);
   });
 
-  it('should accept point with negative values', () => {
+  it("should accept point with negative values", () => {
     const validPoint = { x: -10, y: -20 };
     const result = CalibrationPointSchema.safeParse(validPoint);
     expect(result.success).toBe(true);
   });
 
-  it('should accept point with decimal values', () => {
+  it("should accept point with decimal values", () => {
     const validPoint = { x: 10.5, y: 20.75 };
     const result = CalibrationPointSchema.safeParse(validPoint);
     expect(result.success).toBe(true);
   });
 
-  it('should reject point with x as Infinity', () => {
+  it("should reject point with x as Infinity", () => {
     const invalidPoint = { x: Infinity, y: 20 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with y as Infinity', () => {
+  it("should reject point with y as Infinity", () => {
     const invalidPoint = { x: 10, y: Infinity };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with x as -Infinity', () => {
+  it("should reject point with x as -Infinity", () => {
     const invalidPoint = { x: -Infinity, y: 20 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with x as NaN', () => {
+  it("should reject point with x as NaN", () => {
     const invalidPoint = { x: NaN, y: 20 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with y as NaN', () => {
+  it("should reject point with y as NaN", () => {
     const invalidPoint = { x: 10, y: NaN };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with missing x', () => {
+  it("should reject point with missing x", () => {
     const invalidPoint = { y: 20 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with missing y', () => {
+  it("should reject point with missing y", () => {
     const invalidPoint = { x: 10 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with non-number x', () => {
-    const invalidPoint = { x: '10', y: 20 };
+  it("should reject point with non-number x", () => {
+    const invalidPoint = { x: "10", y: 20 };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 
-  it('should reject point with non-number y', () => {
-    const invalidPoint = { x: 10, y: '20' };
+  it("should reject point with non-number y", () => {
+    const invalidPoint = { x: 10, y: "20" };
     const result = CalibrationPointSchema.safeParse(invalidPoint);
     expect(result.success).toBe(false);
   });
 });
 
-describe('CalibrationSchema', () => {
-  it('should accept valid calibration object', () => {
+describe("CalibrationSchema", () => {
+  it("should accept valid calibration object", () => {
     const validCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
         { x: 30, y: 40 },
-      ],
+      ] satisfies [{ x: number; y: number }, { x: number; y: number }],
       knownDistanceMm: 100,
       pixelsPerMm: 2.5,
       isValid: true,
@@ -108,19 +108,19 @@ describe('CalibrationSchema', () => {
     }
   });
 
-  it('should accept null rulerPoints', () => {
+  it("should accept null rulerPoints", () => {
     const validCalibration = {
       rulerPoints: null,
       knownDistanceMm: 100,
       pixelsPerMm: null,
       isValid: false,
-      error: 'No ruler points set',
+      error: "No ruler points set",
     };
     const result = CalibrationSchema.safeParse(validCalibration);
     expect(result.success).toBe(true);
   });
 
-  it('should accept null pixelsPerMm', () => {
+  it("should accept null pixelsPerMm", () => {
     const validCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
@@ -129,13 +129,13 @@ describe('CalibrationSchema', () => {
       knownDistanceMm: 100,
       pixelsPerMm: null,
       isValid: false,
-      error: 'Not calculated yet',
+      error: "Not calculated yet",
     };
     const result = CalibrationSchema.safeParse(validCalibration);
     expect(result.success).toBe(true);
   });
 
-  it('should accept null error', () => {
+  it("should accept null error", () => {
     const validCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
@@ -150,7 +150,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept knownDistanceMm at maximum value (1000)', () => {
+  it("should accept knownDistanceMm at maximum value (1000)", () => {
     const validCalibration = {
       rulerPoints: null,
       knownDistanceMm: 1000,
@@ -162,7 +162,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept knownDistanceMm at minimum positive value', () => {
+  it("should accept knownDistanceMm at minimum positive value", () => {
     const validCalibration = {
       rulerPoints: null,
       knownDistanceMm: 0.001,
@@ -174,7 +174,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject negative knownDistanceMm', () => {
+  it("should reject negative knownDistanceMm", () => {
     const invalidCalibration = {
       rulerPoints: null,
       knownDistanceMm: -10,
@@ -186,7 +186,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero knownDistanceMm', () => {
+  it("should reject zero knownDistanceMm", () => {
     const invalidCalibration = {
       rulerPoints: null,
       knownDistanceMm: 0,
@@ -198,7 +198,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject knownDistanceMm over 1000', () => {
+  it("should reject knownDistanceMm over 1000", () => {
     const invalidCalibration = {
       rulerPoints: null,
       knownDistanceMm: 1001,
@@ -210,7 +210,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative pixelsPerMm', () => {
+  it("should reject negative pixelsPerMm", () => {
     const invalidCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
@@ -225,7 +225,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero pixelsPerMm', () => {
+  it("should reject zero pixelsPerMm", () => {
     const invalidCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
@@ -240,7 +240,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject rulerPoints with only one point', () => {
+  it("should reject rulerPoints with only one point", () => {
     const invalidCalibration = {
       rulerPoints: [{ x: 10, y: 20 }],
       knownDistanceMm: 100,
@@ -252,7 +252,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject rulerPoints with three points', () => {
+  it("should reject rulerPoints with three points", () => {
     const invalidCalibration = {
       rulerPoints: [
         { x: 10, y: 20 },
@@ -268,7 +268,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing isValid field', () => {
+  it("should reject missing isValid field", () => {
     const invalidCalibration = {
       rulerPoints: null,
       knownDistanceMm: 100,
@@ -279,7 +279,7 @@ describe('CalibrationSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing error field', () => {
+  it("should reject missing error field", () => {
     const invalidCalibration = {
       rulerPoints: null,
       knownDistanceMm: 100,
@@ -291,8 +291,8 @@ describe('CalibrationSchema', () => {
   });
 });
 
-describe('ScaleSchema', () => {
-  it('should accept valid scale object', () => {
+describe("ScaleSchema", () => {
+  it("should accept valid scale object", () => {
     const validScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: 100,
@@ -306,7 +306,7 @@ describe('ScaleSchema', () => {
     }
   });
 
-  it('should accept scale with decimal values', () => {
+  it("should accept scale with decimal values", () => {
     const validScale = {
       pixelsPerMm: 2.54321,
       knownDistanceMm: 100.5,
@@ -317,7 +317,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept scale with very small positive values', () => {
+  it("should accept scale with very small positive values", () => {
     const validScale = {
       pixelsPerMm: 0.001,
       knownDistanceMm: 0.001,
@@ -328,7 +328,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject negative pixelsPerMm', () => {
+  it("should reject negative pixelsPerMm", () => {
     const invalidScale = {
       pixelsPerMm: -2.5,
       knownDistanceMm: 100,
@@ -339,7 +339,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero pixelsPerMm', () => {
+  it("should reject zero pixelsPerMm", () => {
     const invalidScale = {
       pixelsPerMm: 0,
       knownDistanceMm: 100,
@@ -350,7 +350,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative knownDistanceMm', () => {
+  it("should reject negative knownDistanceMm", () => {
     const invalidScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: -100,
@@ -361,7 +361,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero knownDistanceMm', () => {
+  it("should reject zero knownDistanceMm", () => {
     const invalidScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: 0,
@@ -372,7 +372,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject negative pixelDistance', () => {
+  it("should reject negative pixelDistance", () => {
     const invalidScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: 100,
@@ -383,7 +383,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero pixelDistance', () => {
+  it("should reject zero pixelDistance", () => {
     const invalidScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: 100,
@@ -394,7 +394,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing pixelsPerMm field', () => {
+  it("should reject missing pixelsPerMm field", () => {
     const invalidScale = {
       knownDistanceMm: 100,
       pixelDistance: 250,
@@ -404,7 +404,7 @@ describe('ScaleSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing isValid field', () => {
+  it("should reject missing isValid field", () => {
     const invalidScale = {
       pixelsPerMm: 2.5,
       knownDistanceMm: 100,
@@ -415,8 +415,8 @@ describe('ScaleSchema', () => {
   });
 });
 
-describe('CalibrationRequestSchema', () => {
-  it('should accept valid request with two points and distance', () => {
+describe("CalibrationRequestSchema", () => {
+  it("should accept valid request with two points and distance", () => {
     const validRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -429,7 +429,7 @@ describe('CalibrationRequestSchema', () => {
     }
   });
 
-  it('should accept request with decimal point coordinates', () => {
+  it("should accept request with decimal point coordinates", () => {
     const validRequest = {
       point1: { x: 10.5, y: 20.75 },
       point2: { x: 30.25, y: 40.125 },
@@ -439,7 +439,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept request with negative point coordinates', () => {
+  it("should accept request with negative point coordinates", () => {
     const validRequest = {
       point1: { x: -10, y: -20 },
       point2: { x: 30, y: 40 },
@@ -449,7 +449,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept knownDistanceMm at maximum value (1000)', () => {
+  it("should accept knownDistanceMm at maximum value (1000)", () => {
     const validRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -459,7 +459,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should accept knownDistanceMm at minimum positive value', () => {
+  it("should accept knownDistanceMm at minimum positive value", () => {
     const validRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -469,7 +469,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('should reject negative knownDistanceMm', () => {
+  it("should reject negative knownDistanceMm", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -479,7 +479,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject zero knownDistanceMm', () => {
+  it("should reject zero knownDistanceMm", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -489,7 +489,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject knownDistanceMm over 1000', () => {
+  it("should reject knownDistanceMm over 1000", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },
@@ -499,7 +499,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject point1 with Infinity', () => {
+  it("should reject point1 with Infinity", () => {
     const invalidRequest = {
       point1: { x: Infinity, y: 20 },
       point2: { x: 30, y: 40 },
@@ -509,7 +509,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject point2 with NaN', () => {
+  it("should reject point2 with NaN", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: NaN },
@@ -519,7 +519,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing point1', () => {
+  it("should reject missing point1", () => {
     const invalidRequest = {
       point2: { x: 30, y: 40 },
       knownDistanceMm: 100,
@@ -528,7 +528,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing point2', () => {
+  it("should reject missing point2", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       knownDistanceMm: 100,
@@ -537,7 +537,7 @@ describe('CalibrationRequestSchema', () => {
     expect(result.success).toBe(false);
   });
 
-  it('should reject missing knownDistanceMm', () => {
+  it("should reject missing knownDistanceMm", () => {
     const invalidRequest = {
       point1: { x: 10, y: 20 },
       point2: { x: 30, y: 40 },

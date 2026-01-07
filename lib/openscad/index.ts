@@ -13,7 +13,7 @@ export {
   OpenSCADGenerator,
   openscadGenerator,
   type GenerateResult,
-} from './generator';
+} from "./generator";
 
 // Export executor
 export {
@@ -24,11 +24,11 @@ export {
   type ExecuteOptions,
   type RenderOptions,
   type PreviewOptions,
-} from './executor';
+} from "./executor";
 
 // Export file manager
 export {
   STLFileManager,
   stlFileManager,
   type JobPaths,
-} from './fileManager';
+} from "./fileManager";

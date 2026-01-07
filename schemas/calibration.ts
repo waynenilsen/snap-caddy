@@ -2,7 +2,7 @@
  * Zod schemas for calibration
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Point schema (without label)
@@ -16,7 +16,9 @@ export const CalibrationPointSchema = z.object({
  * Calibration schema
  */
 export const CalibrationSchema = z.object({
-  rulerPoints: z.tuple([CalibrationPointSchema, CalibrationPointSchema]).nullable(),
+  rulerPoints: z
+    .tuple([CalibrationPointSchema, CalibrationPointSchema])
+    .nullable(),
   knownDistanceMm: z.number().positive().max(1000),
   pixelsPerMm: z.number().positive().nullable(),
   isValid: z.boolean(),

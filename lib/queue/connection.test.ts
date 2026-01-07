@@ -6,7 +6,7 @@
  *   ./scripts/start-redis.sh
  */
 
-import { describe, test, expect, afterAll } from 'bun:test';
+import { describe, test, expect, afterAll } from "bun:test";
 import {
   getRedisConnection,
   getSubscriberConnection,
@@ -14,24 +14,24 @@ import {
   getRedisInfo,
   closeRedisConnections,
   getRedisUrl,
-} from './connection';
+} from "./connection";
 
-describe('Redis Connection Integration Tests', () => {
+describe("Redis Connection Integration Tests", () => {
   let redisAvailable = false;
 
   afterAll(async () => {
     await closeRedisConnections();
   });
 
-  describe('Connection URL', () => {
-    test('should return default Redis URL', () => {
+  describe("Connection URL", () => {
+    test("should return default Redis URL", () => {
       // When REDIS_URL is not set, should return default
       const originalUrl = process.env.REDIS_URL;
       delete process.env.REDIS_URL;
 
       // Re-import or call the function
       const url = getRedisUrl();
-      expect(url).toBe('redis://localhost:6397');
+      expect(url).toBe("redis://localhost:6397");
 
       // Restore
       if (originalUrl) {
@@ -39,12 +39,12 @@ describe('Redis Connection Integration Tests', () => {
       }
     });
 
-    test('should return custom Redis URL from env', () => {
+    test("should return custom Redis URL from env", () => {
       const originalUrl = process.env.REDIS_URL;
-      process.env.REDIS_URL = 'redis://custom-host:9999';
+      process.env.REDIS_URL = "redis://custom-host:9999";
 
       const url = getRedisUrl();
-      expect(url).toBe('redis://custom-host:9999');
+      expect(url).toBe("redis://custom-host:9999");
 
       // Restore
       if (originalUrl) {
@@ -55,28 +55,28 @@ describe('Redis Connection Integration Tests', () => {
     });
   });
 
-  describe('Redis Connection', () => {
-    test('should check if Redis is connected', async () => {
+  describe("Redis Connection", () => {
+    test("should check if Redis is connected", async () => {
       const connected = await isRedisConnected();
       redisAvailable = connected;
 
       // Just verify the function runs without error
-      expect(typeof connected).toBe('boolean');
+      expect(typeof connected).toBe("boolean");
     });
 
-    test('should get main Redis connection', async () => {
+    test("should get main Redis connection", async () => {
       const connection = getRedisConnection();
       expect(connection).toBeDefined();
       expect(connection.status).toBeDefined();
     });
 
-    test('should get subscriber connection', async () => {
+    test("should get subscriber connection", async () => {
       const connection = getSubscriberConnection();
       expect(connection).toBeDefined();
       expect(connection.status).toBeDefined();
     });
 
-    test('should reuse existing connections', () => {
+    test("should reuse existing connections", () => {
       const conn1 = getRedisConnection();
       const conn2 = getRedisConnection();
       expect(conn1).toBe(conn2);
@@ -87,43 +87,43 @@ describe('Redis Connection Integration Tests', () => {
     });
   });
 
-  describe('Redis Info', () => {
-    test('should get Redis info when connected', async () => {
+  describe("Redis Info", () => {
+    test("should get Redis info when connected", async () => {
       const connected = await isRedisConnected();
       if (!connected) {
-        console.log('Skipping: Redis not available');
+        console.log("Skipping: Redis not available");
         return;
       }
 
       const info = await getRedisInfo();
       expect(info.version).toBeDefined();
-      expect(typeof info.uptime).toBe('number');
+      expect(typeof info.uptime).toBe("number");
     });
 
-    test('should return empty info when Redis not available', async () => {
+    test("should return empty info when Redis not available", async () => {
       // This test verifies error handling
       const info = await getRedisInfo();
       // Either has data or is empty object
-      expect(typeof info).toBe('object');
+      expect(typeof info).toBe("object");
     });
   });
 
-  describe('Connection Ping', () => {
-    test('should ping Redis successfully when available', async () => {
+  describe("Connection Ping", () => {
+    test("should ping Redis successfully when available", async () => {
       const connected = await isRedisConnected();
       if (!connected) {
-        console.log('Skipping: Redis not available');
+        console.log("Skipping: Redis not available");
         return;
       }
 
       const connection = getRedisConnection();
       const result = await connection.ping();
-      expect(result).toBe('PONG');
+      expect(result).toBe("PONG");
     });
   });
 
-  describe('Connection Close', () => {
-    test('should close connections gracefully', async () => {
+  describe("Connection Close", () => {
+    test("should close connections gracefully", async () => {
       // Get connections first
       getRedisConnection();
       getSubscriberConnection();
@@ -138,40 +138,40 @@ describe('Redis Connection Integration Tests', () => {
   });
 });
 
-describe('URL Parsing', () => {
-  test('should parse simple Redis URL', () => {
-    const url = 'redis://localhost:6397';
+describe("URL Parsing", () => {
+  test("should parse simple Redis URL", () => {
+    const url = "redis://localhost:6397";
     const parsed = new URL(url);
 
-    expect(parsed.hostname).toBe('localhost');
-    expect(parsed.port).toBe('6397');
-    expect(parsed.protocol).toBe('redis:');
+    expect(parsed.hostname).toBe("localhost");
+    expect(parsed.port).toBe("6397");
+    expect(parsed.protocol).toBe("redis:");
   });
 
-  test('should parse Redis URL with authentication', () => {
-    const url = 'redis://user:password@redis.example.com:6380';
+  test("should parse Redis URL with authentication", () => {
+    const url = "redis://user:password@redis.example.com:6380";
     const parsed = new URL(url);
 
-    expect(parsed.hostname).toBe('redis.example.com');
-    expect(parsed.port).toBe('6380');
-    expect(parsed.username).toBe('user');
-    expect(parsed.password).toBe('password');
+    expect(parsed.hostname).toBe("redis.example.com");
+    expect(parsed.port).toBe("6380");
+    expect(parsed.username).toBe("user");
+    expect(parsed.password).toBe("password");
   });
 
-  test('should parse Redis URL without port', () => {
-    const url = 'redis://localhost';
+  test("should parse Redis URL without port", () => {
+    const url = "redis://localhost";
     const parsed = new URL(url);
 
-    expect(parsed.hostname).toBe('localhost');
-    expect(parsed.port).toBe('');
+    expect(parsed.hostname).toBe("localhost");
+    expect(parsed.port).toBe("");
   });
 
-  test('should parse Redis URL with database number', () => {
-    const url = 'redis://localhost:6397/0';
+  test("should parse Redis URL with database number", () => {
+    const url = "redis://localhost:6397/0";
     const parsed = new URL(url);
 
-    expect(parsed.hostname).toBe('localhost');
-    expect(parsed.port).toBe('6397');
-    expect(parsed.pathname).toBe('/0');
+    expect(parsed.hostname).toBe("localhost");
+    expect(parsed.port).toBe("6397");
+    expect(parsed.pathname).toBe("/0");
   });
 });

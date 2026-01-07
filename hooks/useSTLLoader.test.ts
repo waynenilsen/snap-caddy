@@ -91,7 +91,7 @@ describe("useSTLLoader", () => {
       };
 
       global.fetch = mock(() =>
-        Promise.resolve(mockResponse)
+        Promise.resolve(mockResponse),
       ) as unknown as typeof fetch;
 
       const { result } = renderHook(() => useSTLLoader("/test.stl"));
@@ -112,7 +112,7 @@ describe("useSTLLoader", () => {
           ok: false,
           status: 404,
           statusText: "Not Found",
-        })
+        }),
       ) as unknown as typeof fetch;
 
       const { result } = renderHook(() => useSTLLoader("/nonexistent.stl"));
@@ -128,7 +128,7 @@ describe("useSTLLoader", () => {
 
     it("sets error when network request fails", async () => {
       global.fetch = mock(() =>
-        Promise.reject(new Error("Network error"))
+        Promise.reject(new Error("Network error")),
       ) as unknown as typeof fetch;
 
       const { result } = renderHook(() => useSTLLoader("/test.stl"));
@@ -212,11 +212,11 @@ describe("useSTLLoader", () => {
           ok: true,
           headers: { get: () => "84" },
           body: { getReader: () => mockReader },
-        })
+        }),
       ) as unknown as typeof fetch;
 
       const { result } = renderHook(() =>
-        useSTLLoader("/test.stl", { center: true })
+        useSTLLoader("/test.stl", { center: true }),
       );
 
       await waitFor(() => {
@@ -246,16 +246,15 @@ describe("useSTLLoader", () => {
             ok: true,
             headers: { get: () => "84" },
             body: { getReader: () => mockReader },
-          })
+          }),
         ) as unknown as typeof fetch;
       };
 
       global.fetch = createMockFetch();
 
-      const { result, rerender } = renderHook(
-        ({ url }) => useSTLLoader(url),
-        { initialProps: { url: "/first.stl" } }
-      );
+      const { result, rerender } = renderHook(({ url }) => useSTLLoader(url), {
+        initialProps: { url: "/first.stl" },
+      });
 
       await waitFor(() => {
         expect(result.current.geometry).toBeInstanceOf(THREE.BufferGeometry);
@@ -286,13 +285,12 @@ describe("useSTLLoader", () => {
           ok: true,
           headers: { get: () => "84" },
           body: { getReader: () => mockReader },
-        })
+        }),
       ) as unknown as typeof fetch;
 
-      const { result, rerender } = renderHook(
-        ({ url }) => useSTLLoader(url),
-        { initialProps: { url: "/test.stl" as string | null } }
-      );
+      const { result, rerender } = renderHook(({ url }) => useSTLLoader(url), {
+        initialProps: { url: "/test.stl" as string | null },
+      });
 
       await waitFor(() => {
         expect(result.current.geometry).toBeInstanceOf(THREE.BufferGeometry);

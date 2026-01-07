@@ -74,7 +74,10 @@ describe("APIError", () => {
 
 describe("withErrorHandler", () => {
   // Helper to create mock NextRequest
-  const createMockRequest = (url = "http://localhost:3000/api/test", method = "GET") => {
+  const createMockRequest = (
+    url = "http://localhost:3000/api/test",
+    method = "GET",
+  ) => {
     return {
       url,
       method,
@@ -85,10 +88,18 @@ describe("withErrorHandler", () => {
 
   beforeEach(() => {
     // Clear mock call history before each test
-    if (logger.error && typeof logger.error === "function" && "mock" in logger.error) {
+    if (
+      logger.error &&
+      typeof logger.error === "function" &&
+      "mock" in logger.error
+    ) {
       (logger.error as any).mock?.calls?.splice(0);
     }
-    if (metrics.recordError && typeof metrics.recordError === "function" && "mock" in metrics.recordError) {
+    if (
+      metrics.recordError &&
+      typeof metrics.recordError === "function" &&
+      "mock" in metrics.recordError
+    ) {
       (metrics.recordError as any).mock?.calls?.splice(0);
     }
   });
@@ -112,10 +123,12 @@ describe("withErrorHandler", () => {
     const expectedResponse = NextResponse.json({ success: true });
     const extraArgs = { id: "123" };
 
-    const mockHandler = mock(async (req: NextRequest, args: typeof extraArgs) => {
-      expect(args).toBe(extraArgs);
-      return expectedResponse;
-    });
+    const mockHandler = mock(
+      async (req: NextRequest, args: typeof extraArgs) => {
+        expect(args).toBe(extraArgs);
+        return expectedResponse;
+      },
+    );
 
     const wrappedHandler = withErrorHandler(mockHandler);
     const result = await wrappedHandler(mockRequest, extraArgs);
@@ -125,12 +138,15 @@ describe("withErrorHandler", () => {
   });
 
   it("should catch APIError and return proper JSON response with status", async () => {
-    const mockRequest = createMockRequest("http://localhost:3000/api/test", "POST");
+    const mockRequest = createMockRequest(
+      "http://localhost:3000/api/test",
+      "POST",
+    );
     const apiError = new APIError(
       "Validation failed",
       "VALIDATION_ERROR",
       400,
-      { field: "email", message: "Invalid email" }
+      { field: "email", message: "Invalid email" },
     );
 
     const mockHandler = mock(async () => {
@@ -235,7 +251,10 @@ describe("withErrorHandler", () => {
   });
 
   it("should log APIError properly", async () => {
-    const mockRequest = createMockRequest("http://localhost:3000/api/users", "DELETE");
+    const mockRequest = createMockRequest(
+      "http://localhost:3000/api/users",
+      "DELETE",
+    );
     const apiError = new APIError("Unauthorized", "UNAUTHORIZED", 401);
 
     // Spy on logger.error
@@ -257,7 +276,10 @@ describe("withErrorHandler", () => {
   });
 
   it("should log non-APIError properly", async () => {
-    const mockRequest = createMockRequest("http://localhost:3000/api/test", "GET");
+    const mockRequest = createMockRequest(
+      "http://localhost:3000/api/test",
+      "GET",
+    );
     const genericError = new Error("Database connection failed");
 
     const loggerErrorSpy = spyOn(logger, "error");
@@ -298,7 +320,10 @@ describe("withErrorHandler", () => {
   });
 
   it("should record APIError in metrics", async () => {
-    const mockRequest = createMockRequest("http://localhost:3000/api/items", "PUT");
+    const mockRequest = createMockRequest(
+      "http://localhost:3000/api/items",
+      "PUT",
+    );
     const apiError = new APIError("Conflict", "CONFLICT", 409);
 
     const metricsRecordErrorSpy = spyOn(metrics, "recordError");
@@ -358,8 +383,13 @@ describe("withErrorHandler", () => {
   });
 
   it("should handle both logging and metrics recording for APIError", async () => {
-    const mockRequest = createMockRequest("http://localhost:3000/api/data", "PATCH");
-    const apiError = new APIError("Bad request", "BAD_REQUEST", 400, { param: "invalid" });
+    const mockRequest = createMockRequest(
+      "http://localhost:3000/api/data",
+      "PATCH",
+    );
+    const apiError = new APIError("Bad request", "BAD_REQUEST", 400, {
+      param: "invalid",
+    });
 
     const loggerErrorSpy = spyOn(logger, "error");
     const metricsRecordErrorSpy = spyOn(metrics, "recordError");

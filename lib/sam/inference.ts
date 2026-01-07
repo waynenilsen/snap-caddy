@@ -3,36 +3,40 @@
  * Implementation of SAM segmentation using Replicate API
  */
 
-import { env } from '@/lib/env';
-import { logger } from '@/lib/logger';
+import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 import type {
   SAMSegmentationParams,
   SAMResult,
   ReplicatePrediction,
   ReplicateRequest,
   MaskAnalysis,
-} from './types';
-import type { MaskOption } from '@/types/segmentation';
+} from "./types";
+import type { MaskOption } from "@/types/segmentation";
 
-const REPLICATE_API_URL = 'https://api.replicate.com/v1/predictions';
+const REPLICATE_API_URL = "https://api.replicate.com/v1/predictions";
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second
 const MAX_POLL_ATTEMPTS = 60; // Maximum 60 seconds
 
 /**
  * Main function to run SAM segmentation
  */
-export async function runSAMSegmentation(params: SAMSegmentationParams): Promise<SAMResult> {
+export async function runSAMSegmentation(
+  params: SAMSegmentationParams,
+): Promise<SAMResult> {
   const startTime = Date.now();
-  logger.info('Starting SAM segmentation', {
+  logger.info("Starting SAM segmentation", {
     imageWidth: params.imageWidth,
     imageHeight: params.imageHeight,
     pointCount: params.points.length,
-    outputFormat: params.outputFormat || 'base64png',
+    outputFormat: params.outputFormat || "base64png",
   });
 
   // Validate API token
   if (!env.REPLICATE_API_TOKEN) {
-    throw new Error('REPLICATE_API_TOKEN is not configured. Please set it in your environment variables.');
+    throw new Error(
+      "REPLICATE_API_TOKEN is not configured. Please set it in your environment variables.",
+    );
   }
 
   try {
@@ -41,7 +45,7 @@ export async function runSAMSegmentation(params: SAMSegmentationParams): Promise
 
     // Step 2: Create prediction on Replicate
     const prediction = await createPrediction(params, imageDataUri);
-    logger.debug('Prediction created', { predictionId: prediction.id });
+    logger.debug("Prediction created", { predictionId: prediction.id });
 
     // Step 3: Poll for completion
     const completedPrediction = await pollPrediction(prediction.id);
@@ -51,12 +55,12 @@ export async function runSAMSegmentation(params: SAMSegmentationParams): Promise
       completedPrediction,
       params.imageWidth,
       params.imageHeight,
-      params.outputFormat || 'base64png',
-      params.returnMultiple || false
+      params.outputFormat || "base64png",
+      params.returnMultiple || false,
     );
 
     const duration = Date.now() - startTime;
-    logger.info('SAM segmentation completed', {
+    logger.info("SAM segmentation completed", {
       predictionId: prediction.id,
       maskCount: masks.length,
       durationMs: duration,
@@ -65,7 +69,7 @@ export async function runSAMSegmentation(params: SAMSegmentationParams): Promise
     return { masks };
   } catch (error) {
     const duration = Date.now() - startTime;
-    logger.error('SAM segmentation failed', {
+    logger.error("SAM segmentation failed", {
       error: error instanceof Error ? error.message : String(error),
       durationMs: duration,
     });
@@ -77,7 +81,7 @@ export async function runSAMSegmentation(params: SAMSegmentationParams): Promise
  * Convert image buffer to base64 data URI
  */
 function bufferToDataUri(buffer: Buffer): string {
-  const base64 = buffer.toString('base64');
+  const base64 = buffer.toString("base64");
   // Detect image type from buffer header
   const type = detectImageType(buffer);
   return `data:image/${type};base64,${base64}`;
@@ -88,12 +92,17 @@ function bufferToDataUri(buffer: Buffer): string {
  */
 function detectImageType(buffer: Buffer): string {
   // PNG
-  if (buffer[0] === 0x89 && buffer[1] === 0x50 && buffer[2] === 0x4e && buffer[3] === 0x47) {
-    return 'png';
+  if (
+    buffer[0] === 0x89 &&
+    buffer[1] === 0x50 &&
+    buffer[2] === 0x4e &&
+    buffer[3] === 0x47
+  ) {
+    return "png";
   }
   // JPEG
   if (buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) {
-    return 'jpeg';
+    return "jpeg";
   }
   // WebP
   if (
@@ -102,10 +111,10 @@ function detectImageType(buffer: Buffer): string {
     buffer[10] === 0x42 &&
     buffer[11] === 0x50
   ) {
-    return 'webp';
+    return "webp";
   }
   // Default to PNG
-  return 'png';
+  return "png";
 }
 
 /**
@@ -113,7 +122,7 @@ function detectImageType(buffer: Buffer): string {
  */
 async function createPrediction(
   params: SAMSegmentationParams,
-  imageDataUri: string
+  imageDataUri: string,
 ): Promise<ReplicatePrediction> {
   const requestBody: ReplicateRequest = {
     version: env.SAM_MODEL_VERSION,
@@ -126,9 +135,9 @@ async function createPrediction(
   };
 
   const response = await fetch(REPLICATE_API_URL, {
-    method: 'POST',
+    method: "POST",
     headers: {
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
       Authorization: `Token ${env.REPLICATE_API_TOKEN}`,
     },
     body: JSON.stringify(requestBody),
@@ -146,22 +155,26 @@ async function createPrediction(
 /**
  * Poll prediction until it completes
  */
-async function pollPrediction(predictionId: string): Promise<ReplicatePrediction> {
+async function pollPrediction(
+  predictionId: string,
+): Promise<ReplicatePrediction> {
   let attempts = 0;
 
   while (attempts < MAX_POLL_ATTEMPTS) {
     const prediction = await getPrediction(predictionId);
 
-    if (prediction.status === 'succeeded') {
+    if (prediction.status === "succeeded") {
       return prediction;
     }
 
-    if (prediction.status === 'failed') {
-      throw new Error(`Prediction failed: ${prediction.error || 'Unknown error'}`);
+    if (prediction.status === "failed") {
+      throw new Error(
+        `Prediction failed: ${prediction.error || "Unknown error"}`,
+      );
     }
 
-    if (prediction.status === 'canceled') {
-      throw new Error('Prediction was canceled');
+    if (prediction.status === "canceled") {
+      throw new Error("Prediction was canceled");
     }
 
     // Still processing, wait and try again
@@ -169,7 +182,7 @@ async function pollPrediction(predictionId: string): Promise<ReplicatePrediction
     attempts++;
 
     if (attempts % 5 === 0) {
-      logger.debug('Still waiting for prediction', {
+      logger.debug("Still waiting for prediction", {
         predictionId,
         status: prediction.status,
         attempts,
@@ -183,7 +196,9 @@ async function pollPrediction(predictionId: string): Promise<ReplicatePrediction
 /**
  * Get prediction status from Replicate API
  */
-async function getPrediction(predictionId: string): Promise<ReplicatePrediction> {
+async function getPrediction(
+  predictionId: string,
+): Promise<ReplicatePrediction> {
   const response = await fetch(`${REPLICATE_API_URL}/${predictionId}`, {
     headers: {
       Authorization: `Token ${env.REPLICATE_API_TOKEN}`,
@@ -192,7 +207,9 @@ async function getPrediction(predictionId: string): Promise<ReplicatePrediction>
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`Failed to get prediction (${response.status}): ${errorText}`);
+    throw new Error(
+      `Failed to get prediction (${response.status}): ${errorText}`,
+    );
   }
 
   return (await response.json()) as ReplicatePrediction;
@@ -205,11 +222,15 @@ async function processPredictionOutput(
   prediction: ReplicatePrediction,
   imageWidth: number,
   imageHeight: number,
-  outputFormat: 'base64png' | 'rle' | 'binary',
-  returnMultiple: boolean
+  outputFormat: "base64png" | "rle" | "binary",
+  returnMultiple: boolean,
 ): Promise<MaskOption[]> {
-  if (!prediction.output || !prediction.output.masks || prediction.output.masks.length === 0) {
-    throw new Error('No masks returned from prediction');
+  if (
+    !prediction.output ||
+    !prediction.output.masks ||
+    prediction.output.masks.length === 0
+  ) {
+    throw new Error("No masks returned from prediction");
   }
 
   const maskUrls = prediction.output.masks;
@@ -223,17 +244,17 @@ async function processPredictionOutput(
     // Convert to requested format
     let maskData: string;
     switch (outputFormat) {
-      case 'base64png':
-        maskData = maskBuffer.toString('base64');
+      case "base64png":
+        maskData = maskBuffer.toString("base64");
         break;
-      case 'rle':
+      case "rle":
         maskData = encodeRLE(maskBuffer, imageWidth, imageHeight);
         break;
-      case 'binary':
-        maskData = maskBuffer.toString('base64'); // Still base64 encode for transport
+      case "binary":
+        maskData = maskBuffer.toString("base64"); // Still base64 encode for transport
         break;
       default:
-        maskData = maskBuffer.toString('base64');
+        maskData = maskBuffer.toString("base64");
     }
 
     const maskOption: MaskOption = {
@@ -251,7 +272,7 @@ async function processPredictionOutput(
   // Return only the best mask if returnMultiple is false
   if (!returnMultiple && allMasks.length > 0) {
     const bestMask = allMasks.reduce((best, current) =>
-      current.confidence > best.confidence ? current : best
+      current.confidence > best.confidence ? current : best,
     );
     return [bestMask];
   }
@@ -263,7 +284,7 @@ async function processPredictionOutput(
  * Download mask image from URL
  */
 async function downloadMask(url: string): Promise<Buffer> {
-  logger.debug('Downloading mask', { url });
+  logger.debug("Downloading mask", { url });
 
   const response = await fetch(url);
 
@@ -281,7 +302,7 @@ async function downloadMask(url: string): Promise<Buffer> {
 export function analyzeMask(
   maskBuffer: Buffer,
   width: number,
-  height: number
+  height: number,
 ): MaskAnalysis {
   // For PNG images, we need to decode them first
   // This is a simplified implementation that assumes the mask is a grayscale PNG
@@ -355,14 +376,14 @@ export function analyzeMask(
 export function encodeRLE(
   maskBuffer: Buffer,
   width: number,
-  height: number
+  height: number,
 ): string {
   const isPNG = maskBuffer[0] === 0x89 && maskBuffer[1] === 0x50;
 
   if (isPNG) {
     // For PNG files, return a placeholder RLE
     // In production, decode the PNG first
-    return 'RLE_ENCODED_MASK_DATA';
+    return "RLE_ENCODED_MASK_DATA";
   }
 
   const runs: number[] = [];
@@ -390,7 +411,7 @@ export function encodeRLE(
   }
 
   // Encode as string: "width,height:run1,run2,run3,..."
-  return `${width},${height}:${runs.join(',')}`;
+  return `${width},${height}:${runs.join(",")}`;
 }
 
 /**
