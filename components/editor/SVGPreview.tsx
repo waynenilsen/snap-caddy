@@ -1,19 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { useState, useRef, useCallback, useEffect } from "react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Label } from "@/components/ui/label"
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { useState, useRef, useCallback, useEffect } from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 interface SVGPreviewProps {
-  svgContent: string
-  pixelsPerMm: number
-  zoom?: number
-  onZoomChange?: (zoom: number) => void
-  showGrid?: boolean
-  gridSize?: number // mm
+  svgContent: string;
+  pixelsPerMm: number;
+  zoom?: number;
+  onZoomChange?: (zoom: number) => void;
+  showGrid?: boolean;
+  gridSize?: number; // mm
 }
 
 export function SVGPreview({
@@ -24,76 +30,85 @@ export function SVGPreview({
   showGrid = true,
   gridSize = 10, // mm
 }: SVGPreviewProps) {
-  const [internalZoom, setInternalZoom] = useState(1)
-  const [isPanning, setIsPanning] = useState(false)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 })
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 })
-  const containerRef = useRef<HTMLDivElement>(null)
-  const svgRef = useRef<HTMLDivElement>(null)
+  const [internalZoom, setInternalZoom] = useState(1);
+  const [isPanning, setIsPanning] = useState(false);
+  const [pan, setPan] = useState({ x: 0, y: 0 });
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  const containerRef = useRef<HTMLDivElement>(null);
+  const svgRef = useRef<HTMLDivElement>(null);
 
   // Use controlled zoom if provided, otherwise use internal state
-  const zoom = controlledZoom ?? internalZoom
+  const zoom = controlledZoom ?? internalZoom;
   const setZoom = (value: number) => {
     if (onZoomChange) {
-      onZoomChange(value)
+      onZoomChange(value);
     } else {
-      setInternalZoom(value)
+      setInternalZoom(value);
     }
-  }
+  };
 
   // Parse SVG to get dimensions
   useEffect(() => {
-    const parser = new DOMParser()
-    const doc = parser.parseFromString(svgContent, "image/svg+xml")
-    const svgEl = doc.querySelector("svg")
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(svgContent, "image/svg+xml");
+    const svgEl = doc.querySelector("svg");
 
     if (svgEl) {
-      const viewBox = svgEl.getAttribute("viewBox")
+      const viewBox = svgEl.getAttribute("viewBox");
       if (viewBox) {
-        const [, , width, height] = viewBox.split(" ").map(Number)
+        const [, , width, height] = viewBox.split(" ").map(Number);
         // Convert pixels to mm
         setDimensions({
           width: width / pixelsPerMm,
           height: height / pixelsPerMm,
-        })
+        });
       } else {
-        const width = parseFloat(svgEl.getAttribute("width") || "0")
-        const height = parseFloat(svgEl.getAttribute("height") || "0")
+        const width = parseFloat(svgEl.getAttribute("width") || "0");
+        const height = parseFloat(svgEl.getAttribute("height") || "0");
         setDimensions({
           width: width / pixelsPerMm,
           height: height / pixelsPerMm,
-        })
+        });
       }
     }
-  }, [svgContent, pixelsPerMm])
+  }, [svgContent, pixelsPerMm]);
 
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return // Only left click
-    setIsPanning(true)
-    setDragStart({
-      x: e.clientX - pan.x,
-      y: e.clientY - pan.y,
-    })
-  }, [pan])
+  const handleMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      if (e.button !== 0) return; // Only left click
+      setIsPanning(true);
+      setDragStart({
+        x: e.clientX - pan.x,
+        y: e.clientY - pan.y,
+      });
+    },
+    [pan],
+  );
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isPanning) return
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    })
-  }, [isPanning, dragStart])
+  const handleMouseMove = useCallback(
+    (e: React.MouseEvent) => {
+      if (!isPanning) return;
+      setPan({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
+      });
+    },
+    [isPanning, dragStart],
+  );
 
   const handleMouseUp = useCallback(() => {
-    setIsPanning(false)
-  }, [])
+    setIsPanning(false);
+  }, []);
 
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? -0.1 : 0.1
-    setZoom(Math.min(Math.max(zoom + delta, 0.5), 3))
-  }, [zoom, setZoom])
+  const handleWheel = useCallback(
+    (e: React.WheelEvent) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? -0.1 : 0.1;
+      setZoom(Math.min(Math.max(zoom + delta, 0.5), 3));
+    },
+    [zoom, setZoom],
+  );
 
   return (
     <Card>
@@ -104,7 +119,8 @@ export function SVGPreview({
             <CardDescription>
               {dimensions.width > 0 && dimensions.height > 0 ? (
                 <>
-                  {dimensions.width.toFixed(1)}mm × {dimensions.height.toFixed(1)}mm
+                  {dimensions.width.toFixed(1)}mm ×{" "}
+                  {dimensions.height.toFixed(1)}mm
                 </>
               ) : (
                 "Loading dimensions..."
@@ -138,7 +154,7 @@ export function SVGPreview({
           className={cn(
             "relative border rounded-lg overflow-hidden",
             "bg-muted/30",
-            isPanning ? "cursor-grabbing" : "cursor-grab"
+            isPanning ? "cursor-grabbing" : "cursor-grab",
           )}
           style={{ minHeight: "400px" }}
           onMouseDown={handleMouseDown}
@@ -188,5 +204,5 @@ export function SVGPreview({
         </div>
       </CardContent>
     </Card>
-  )
+  );
 }

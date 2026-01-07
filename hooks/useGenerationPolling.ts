@@ -3,9 +3,9 @@
  * Automatically polls the status endpoint and cleans up on unmount
  */
 
-import { useEffect, useRef, useState } from 'react';
-import { api } from '@/lib/api/client';
-import type { GenerationStatusResponse, GenerationStatus } from '@/types/api';
+import { useEffect, useRef, useState } from "react";
+import { api } from "@/lib/api/client";
+import type { GenerationStatusResponse, GenerationStatus } from "@/types/api";
 
 export interface UseGenerationPollingResult {
   status: GenerationStatus | null;
@@ -31,7 +31,7 @@ export interface UseGenerationPollingOptions {
  */
 export function useGenerationPolling(
   generationId: string | null | undefined,
-  options: UseGenerationPollingOptions = {}
+  options: UseGenerationPollingOptions = {},
 ): UseGenerationPollingResult {
   const {
     enabled = true,
@@ -73,7 +73,7 @@ export function useGenerationPolling(
     }
 
     // Don't poll if status is already complete or error
-    if (status === 'complete' || status === 'error') {
+    if (status === "complete" || status === "error") {
       return;
     }
 
@@ -88,7 +88,7 @@ export function useGenerationPolling(
         setPreviewUrl(response.previewUrl);
 
         // Handle completion
-        if (response.status === 'complete') {
+        if (response.status === "complete") {
           setIsPolling(false);
           if (intervalRef.current) {
             clearInterval(intervalRef.current);
@@ -103,9 +103,9 @@ export function useGenerationPolling(
         }
 
         // Handle error
-        if (response.status === 'error') {
+        if (response.status === "error") {
           setIsPolling(false);
-          const errorMsg = response.error || 'Generation failed';
+          const errorMsg = response.error || "Generation failed";
           setError(errorMsg);
 
           if (intervalRef.current) {
@@ -120,18 +120,18 @@ export function useGenerationPolling(
           }
         }
       } catch (err) {
-        console.error('Failed to poll generation status:', err);
+        console.error("Failed to poll generation status:", err);
 
         // Handle network errors gracefully - don't stop polling immediately
         // Just log the error and try again on next interval
         // This makes the polling more resilient to temporary network issues
 
         // Only stop polling and set error state if it's a persistent error (404)
-        if (err instanceof Error && err.message.includes('404')) {
+        if (err instanceof Error && err.message.includes("404")) {
           setIsPolling(false);
-          const errorMsg = 'Generation not found';
+          const errorMsg = "Generation not found";
           setError(errorMsg);
-          setStatus('error');
+          setStatus("error");
 
           if (intervalRef.current) {
             clearInterval(intervalRef.current);

@@ -1,19 +1,25 @@
-"use client"
+"use client";
 
-import * as React from "react"
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card"
-import { Slider } from "@/components/ui/slider"
-import { Input } from "@/components/ui/input"
-import { Button } from "@/components/ui/button"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Info } from "lucide-react"
+import * as React from "react";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Info } from "lucide-react";
 
 interface PaddingControlsProps {
-  padding: number // mm
-  onPaddingChange: (padding: number) => void
-  min?: number
-  max?: number
-  step?: number
+  padding: number; // mm
+  onPaddingChange: (padding: number) => void;
+  min?: number;
+  max?: number;
+  step?: number;
 }
 
 export function PaddingControls({
@@ -24,13 +30,13 @@ export function PaddingControls({
   step = 0.5,
 }: PaddingControlsProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = parseFloat(e.target.value)
+    const value = parseFloat(e.target.value);
     if (!isNaN(value) && value >= min && value <= max) {
-      onPaddingChange(value)
+      onPaddingChange(value);
     }
-  }
+  };
 
-  const presets = [0, 1, 2, 5]
+  const presets = [0, 1, 2, 5];
 
   return (
     <Card>
@@ -86,5 +92,5 @@ export function PaddingControls({
         </Alert>
       </CardContent>
     </Card>
-  )
+  );
 }

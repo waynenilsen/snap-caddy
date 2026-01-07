@@ -3,17 +3,17 @@
  * POST /api/preview - Generate quick preview of STL design
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
-import { z } from 'zod';
-import { promises as fs } from 'fs';
-import { stlFileManager, openscadExecutor } from '@/lib/openscad';
-import { withRateLimit } from '@/lib/api/rateLimit';
-import { withErrorHandler } from '@/lib/api/errors';
-import { logger } from '@/lib/logger';
+import { type NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { promises as fs } from "fs";
+import { stlFileManager, openscadExecutor } from "@/lib/openscad";
+import { withRateLimit } from "@/lib/api/rateLimit";
+import { withErrorHandler } from "@/lib/api/errors";
+import { logger } from "@/lib/logger";
 
 // Request validation schema (similar to generate route but for preview)
 const PreviewRequestSchema = z.object({
-  svg: z.string().min(1, 'SVG content is required'),
+  svg: z.string().min(1, "SVG content is required"),
   config: z.object({
     gridUnitsX: z.number().int().min(1).max(10),
     gridUnitsY: z.number().int().min(1).max(10),
@@ -23,8 +23,10 @@ const PreviewRequestSchema = z.object({
     cutoutOffsetX: z.number().default(0),
     cutoutOffsetY: z.number().default(0),
     wallThickness: z.number().min(1).default(2),
-    baseType: z.enum(['solid', 'magnet', 'screw', 'magnet_screw']).default('magnet'),
-    lipStyle: z.enum(['normal', 'reduced', 'none']).default('normal'),
+    baseType: z
+      .enum(["solid", "magnet", "screw", "magnet_screw"])
+      .default("magnet"),
+    lipStyle: z.enum(["normal", "reduced", "none"]).default("normal"),
     cornerRadius: z.number().optional().default(0),
     taperAngle: z.number().optional().default(0),
   }),
@@ -43,10 +45,10 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
 
     if (!validation.success) {
       const issues = validation.error.issues;
-      logger.warn('Invalid preview request', { errors: issues });
+      logger.warn("Invalid preview request", { errors: issues });
       return NextResponse.json(
-        { error: 'Invalid request', details: issues },
-        { status: 400 }
+        { error: "Invalid request", details: issues },
+        { status: 400 },
       );
     }
 
@@ -57,28 +59,28 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
 
     try {
       // Write SVG file
-      await fs.writeFile(paths.svgPath, svg, 'utf-8');
+      await fs.writeFile(paths.svgPath, svg, "utf-8");
 
       // Generate simplified OpenSCAD script for preview
       const scadContent = generatePreviewScript(paths.svgPath, config);
-      await fs.writeFile(paths.scadPath, scadContent, 'utf-8');
+      await fs.writeFile(paths.scadPath, scadContent, "utf-8");
 
       // Generate preview with lower quality settings for speed
       const previewResult = await openscadExecutor.preview(
         paths.scadPath,
         paths.previewPath,
         {
-          imgsize: '600,450',
+          imgsize: "600,450",
           timeout: 15000, // 15 second timeout
-        }
+        },
       );
 
       if (!previewResult.success || !previewResult.previewPath) {
-        logger.error('Preview generation failed', {
+        logger.error("Preview generation failed", {
           error: previewResult.error,
           stderr: previewResult.stderr,
         });
-        throw new Error(previewResult.error || 'Preview generation failed');
+        throw new Error(previewResult.error || "Preview generation failed");
       }
 
       // Read the generated preview image
@@ -86,7 +88,7 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
 
       const renderTime = Date.now() - startTime;
 
-      logger.info('Preview generated', {
+      logger.info("Preview generated", {
         jobId: paths.jobId,
         renderTime,
         size: previewBuffer.length,
@@ -95,7 +97,10 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
       // Clean up temporary files after a short delay
       setTimeout(() => {
         stlFileManager.cleanupJob(paths.jobId).catch((err) => {
-          logger.error('Failed to cleanup preview job', { jobId: paths.jobId, error: err });
+          logger.error("Failed to cleanup preview job", {
+            jobId: paths.jobId,
+            error: err,
+          });
         });
       }, 5000);
 
@@ -103,9 +108,9 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
       return new NextResponse(previewBuffer, {
         status: 200,
         headers: {
-          'Content-Type': 'image/png',
-          'Cache-Control': 'private, max-age=300', // Cache for 5 minutes
-          'X-Render-Time': renderTime.toString(),
+          "Content-Type": "image/png",
+          "Cache-Control": "private, max-age=300", // Cache for 5 minutes
+          "X-Render-Time": renderTime.toString(),
         },
       });
     } catch (error) {
@@ -114,17 +119,17 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
       throw error;
     }
   } catch (error) {
-    logger.error('Preview generation error', {
-      error: error instanceof Error ? error.message : 'Unknown error',
+    logger.error("Preview generation error", {
+      error: error instanceof Error ? error.message : "Unknown error",
       duration: Date.now() - startTime,
     });
 
     return NextResponse.json(
       {
-        error: 'Preview generation failed',
-        message: error instanceof Error ? error.message : 'Unknown error',
+        error: "Preview generation failed",
+        message: error instanceof Error ? error.message : "Unknown error",
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -133,7 +138,10 @@ async function previewHandler(request: NextRequest): Promise<NextResponse> {
  * Generate simplified OpenSCAD script for preview
  * (lower quality settings for faster rendering)
  */
-function generatePreviewScript(svgPath: string, config: z.infer<typeof PreviewRequestSchema>['config']): string {
+function generatePreviewScript(
+  svgPath: string,
+  config: z.infer<typeof PreviewRequestSchema>["config"],
+): string {
   return `
 // Gridfinity Preview - Generated by Snap Caddy
 // Simplified for faster rendering
@@ -180,14 +188,11 @@ difference() {
 }
 
 // Apply middleware: rate limiting -> error handling
-export const POST = withRateLimit(
-  withErrorHandler(previewHandler),
-  {
-    maxRequests: 20, // More generous for previews
-    windowMs: 60000, // 1 minute
-  }
-);
+export const POST = withRateLimit(withErrorHandler(previewHandler), {
+  maxRequests: 20, // More generous for previews
+  windowMs: 60000, // 1 minute
+});
 
 // Export runtime configuration
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 export const maxDuration = 15; // 15 seconds max for preview

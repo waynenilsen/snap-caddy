@@ -1,18 +1,18 @@
 "use client";
 
-import { useState, useRef, useEffect } from 'react';
-import { Camera, X, Zap } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useState, useRef, useEffect } from "react";
+import { Camera, X, Zap } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select';
-import { AlertCircle } from 'lucide-react';
+} from "@/components/ui/select";
+import { AlertCircle } from "lucide-react";
 
 interface CameraMetadata {
   timestamp: number;
@@ -39,7 +39,7 @@ export function CameraCapture({
   const [isStreaming, setIsStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
-  const [selectedDeviceId, setSelectedDeviceId] = useState<string>('');
+  const [selectedDeviceId, setSelectedDeviceId] = useState<string>("");
   const [flashEnabled, setFlashEnabled] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -50,14 +50,14 @@ export function CameraCapture({
     navigator.mediaDevices
       .enumerateDevices()
       .then((deviceList) => {
-        const cameras = deviceList.filter((d) => d.kind === 'videoinput');
+        const cameras = deviceList.filter((d) => d.kind === "videoinput");
         setDevices(cameras);
         if (cameras.length > 0) {
           setSelectedDeviceId(cameras[0].deviceId);
         }
       })
       .catch((err) => {
-        console.error('Error enumerating devices:', err);
+        console.error("Error enumerating devices:", err);
       });
   }, []);
 
@@ -75,12 +75,13 @@ export function CameraCapture({
           deviceId: selectedDeviceId ? { exact: selectedDeviceId } : undefined,
           width: { ideal: maxResolution?.width || 1920 },
           height: { ideal: maxResolution?.height || 1080 },
-          facingMode: 'environment', // Prefer rear camera on mobile
+          facingMode: "environment", // Prefer rear camera on mobile
         },
         audio: false,
       };
 
-      const mediaStream = await navigator.mediaDevices.getUserMedia(constraints);
+      const mediaStream =
+        await navigator.mediaDevices.getUserMedia(constraints);
       setStream(mediaStream);
 
       if (videoRef.current) {
@@ -90,7 +91,8 @@ export function CameraCapture({
         setError(null);
       }
     } catch (err) {
-      const errorMessage = 'Camera access denied or not available. Please ensure you have granted camera permissions.';
+      const errorMessage =
+        "Camera access denied or not available. Please ensure you have granted camera permissions.";
       setError(errorMessage);
       onError?.(err as Error);
     }
@@ -105,9 +107,10 @@ export function CameraCapture({
   };
 
   const applyFlashEffect = () => {
-    const flashOverlay = document.createElement('div');
-    flashOverlay.className = 'fixed inset-0 bg-white pointer-events-none z-50 animate-flash';
-    flashOverlay.style.animation = 'flash 200ms ease-out';
+    const flashOverlay = document.createElement("div");
+    flashOverlay.className =
+      "fixed inset-0 bg-white pointer-events-none z-50 animate-flash";
+    flashOverlay.style.animation = "flash 200ms ease-out";
     document.body.appendChild(flashOverlay);
 
     setTimeout(() => flashOverlay.remove(), 200);
@@ -118,7 +121,7 @@ export function CameraCapture({
 
     const video = videoRef.current;
     const canvas = canvasRef.current;
-    const context = canvas.getContext('2d');
+    const context = canvas.getContext("2d");
 
     if (!context) return;
 
@@ -135,7 +138,7 @@ export function CameraCapture({
     }
 
     // Convert to base64
-    const imageData = canvas.toDataURL('image/jpeg', 0.95);
+    const imageData = canvas.toDataURL("image/jpeg", 0.95);
 
     const metadata: CameraMetadata = {
       timestamp: Date.now(),
@@ -189,7 +192,7 @@ export function CameraCapture({
                   >
                     <Zap
                       className="w-5 h-5"
-                      fill={flashEnabled ? 'currentColor' : 'none'}
+                      fill={flashEnabled ? "currentColor" : "none"}
                     />
                   </Button>
                 )}
@@ -233,7 +236,10 @@ export function CameraCapture({
                     </SelectTrigger>
                     <SelectContent>
                       {devices.map((device, index) => (
-                        <SelectItem key={device.deviceId} value={device.deviceId}>
+                        <SelectItem
+                          key={device.deviceId}
+                          value={device.deviceId}
+                        >
                           {device.label || `Camera ${index + 1}`}
                         </SelectItem>
                       ))}

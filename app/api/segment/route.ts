@@ -3,17 +3,17 @@
  * Handles SAM (Segment Anything Model) segmentation requests
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
-import { SegmentRequestSchema } from '@/schemas/segment';
-import { validateBase64Image, decodeBase64Image } from '@/lib/validation/image';
-import { runSAMSegmentation } from '@/lib/sam/inference';
-import { withRateLimit } from '@/lib/api/rateLimit';
-import { withErrorHandler, APIError } from '@/lib/api/errors';
-import { logger, metrics } from '@/lib/logger';
-import type { SegmentResponse } from '@/types/api';
+import { type NextRequest, NextResponse } from "next/server";
+import { SegmentRequestSchema } from "@/schemas/segment";
+import { validateBase64Image, decodeBase64Image } from "@/lib/validation/image";
+import { runSAMSegmentation } from "@/lib/sam/inference";
+import { withRateLimit } from "@/lib/api/rateLimit";
+import { withErrorHandler, APIError } from "@/lib/api/errors";
+import { logger, metrics } from "@/lib/logger";
+import type { SegmentResponse } from "@/types/api";
 
 // Runtime configuration
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 export const maxDuration = 30;
 
 /**
@@ -31,15 +31,15 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
     const parseResult = SegmentRequestSchema.safeParse(body);
     if (!parseResult.success) {
       const issues = parseResult.error.issues;
-      logger.warn('Invalid segment request', {
+      logger.warn("Invalid segment request", {
         errors: issues,
       });
 
       throw new APIError(
-        `Invalid request: ${issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
-        'INVALID_INPUT',
+        `Invalid request: ${issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+        "INVALID_INPUT",
         400,
-        issues
+        issues,
       );
     }
 
@@ -50,32 +50,32 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
       maxSize: 10 * 1024 * 1024, // 10MB
       maxWidth: 4096,
       maxHeight: 4096,
-      allowedFormats: ['png', 'jpg', 'jpeg', 'webp'],
+      allowedFormats: ["png", "jpg", "jpeg", "webp"],
     });
 
     if (!imageValidation.valid) {
-      logger.warn('Image validation failed', {
+      logger.warn("Image validation failed", {
         error: imageValidation.error,
         size: imageValidation.size,
       });
 
       throw new APIError(
-        imageValidation.error || 'Image validation failed',
-        'INVALID_INPUT',
-        400
+        imageValidation.error || "Image validation failed",
+        "INVALID_INPUT",
+        400,
       );
     }
 
     // Validate dimensions
     if (request.imageWidth > 4096 || request.imageHeight > 4096) {
       throw new APIError(
-        'Image dimensions exceed maximum allowed size (4096x4096)',
-        'IMAGE_TOO_LARGE',
-        400
+        "Image dimensions exceed maximum allowed size (4096x4096)",
+        "IMAGE_TOO_LARGE",
+        400,
       );
     }
 
-    logger.info('Processing segmentation request', {
+    logger.info("Processing segmentation request", {
       imageWidth: request.imageWidth,
       imageHeight: request.imageHeight,
       pointCount: request.points.length,
@@ -109,7 +109,7 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
       processingTimeMs,
     };
 
-    logger.info('Segmentation completed successfully', {
+    logger.info("Segmentation completed successfully", {
       maskCount: samResult.masks.length,
       processingTimeMs,
     });
@@ -122,29 +122,30 @@ async function segmentHandler(req: NextRequest): Promise<NextResponse> {
     }
 
     // Handle SAM-specific errors
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
 
-    logger.error('Segmentation error', {
+    logger.error("Segmentation error", {
       error: errorMessage,
       duration: Date.now() - startTime,
     });
 
     // Check if it's a SAM/Replicate error
-    if (errorMessage.includes('Replicate') || errorMessage.includes('prediction')) {
-      throw new APIError(
-        'SAM segmentation service error',
-        'SAM_ERROR',
-        503,
-        { originalError: errorMessage }
-      );
+    if (
+      errorMessage.includes("Replicate") ||
+      errorMessage.includes("prediction")
+    ) {
+      throw new APIError("SAM segmentation service error", "SAM_ERROR", 503, {
+        originalError: errorMessage,
+      });
     }
 
     // Generic server error
     throw new APIError(
-      'Internal server error during segmentation',
-      'SERVER_ERROR',
+      "Internal server error during segmentation",
+      "SERVER_ERROR",
       500,
-      { originalError: errorMessage }
+      { originalError: errorMessage },
     );
   }
 }
@@ -154,5 +155,5 @@ export const POST = withErrorHandler(
   withRateLimit(segmentHandler, {
     maxRequests: 10,
     windowMs: 60000, // 10 requests per minute
-  })
+  }),
 );

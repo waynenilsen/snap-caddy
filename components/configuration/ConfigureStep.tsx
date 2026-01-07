@@ -18,7 +18,7 @@ export function ConfigureStep({
   svgDimensions,
   svgOutline,
   onConfigComplete,
-  initialConfig
+  initialConfig,
 }: ConfigureStepProps) {
   const GRID_UNIT_SIZE = 42; // mm per Gridfinity unit
 
@@ -39,8 +39,8 @@ export function ConfigureStep({
       wallThickness: 1.2,
       magnetHoles: true,
       screwHoles: false,
-      stackingLip: true
-    }
+      stackingLip: true,
+    },
   );
 
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
@@ -56,13 +56,13 @@ export function ConfigureStep({
 
       if (config.gridUnitsX < requiredX) {
         errors.push(
-          `Grid width too small: need at least ${requiredX} units for ${svgDimensions.width.toFixed(0)}mm object`
+          `Grid width too small: need at least ${requiredX} units for ${svgDimensions.width.toFixed(0)}mm object`,
         );
       }
 
       if (config.gridUnitsY < requiredY) {
         errors.push(
-          `Grid depth too small: need at least ${requiredY} units for ${svgDimensions.height.toFixed(0)}mm object`
+          `Grid depth too small: need at least ${requiredY} units for ${svgDimensions.height.toFixed(0)}mm object`,
         );
       }
     }
@@ -100,7 +100,9 @@ export function ConfigureStep({
   return (
     <div className="container max-w-7xl mx-auto p-6">
       <div className="mb-6">
-        <h2 className="text-3xl font-bold tracking-tight">Configure Gridfinity Bin</h2>
+        <h2 className="text-3xl font-bold tracking-tight">
+          Configure Gridfinity Bin
+        </h2>
         <p className="text-muted-foreground mt-2">
           Set the dimensions and features for your custom bin
         </p>
@@ -110,8 +112,10 @@ export function ConfigureStep({
         <Alert className="mb-6">
           <Info className="h-4 w-4" />
           <AlertDescription>
-            Your object measures {svgDimensions.width.toFixed(1)}mm × {svgDimensions.height.toFixed(1)}mm.
-            We suggest a {suggestedUnitsX}×{suggestedUnitsY} grid ({suggestedUnitsX * GRID_UNIT_SIZE}mm × {suggestedUnitsY * GRID_UNIT_SIZE}mm).
+            Your object measures {svgDimensions.width.toFixed(1)}mm ×{" "}
+            {svgDimensions.height.toFixed(1)}mm. We suggest a {suggestedUnitsX}×
+            {suggestedUnitsY} grid ({suggestedUnitsX * GRID_UNIT_SIZE}mm ×{" "}
+            {suggestedUnitsY * GRID_UNIT_SIZE}mm).
           </AlertDescription>
         </Alert>
       )}
@@ -126,10 +130,7 @@ export function ConfigureStep({
         </div>
 
         <div>
-          <GridfinityPreview
-            config={config}
-            svgOutline={svgOutline}
-          />
+          <GridfinityPreview config={config} svgOutline={svgOutline} />
         </div>
       </div>
 
@@ -139,7 +140,9 @@ export function ConfigureStep({
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Configuration Errors</AlertTitle>
             <AlertDescription>
-              <p className="mb-2">Please fix the following issues before proceeding:</p>
+              <p className="mb-2">
+                Please fix the following issues before proceeding:
+              </p>
               <ul className="list-disc list-inside space-y-1">
                 {validationErrors.map((error, idx) => (
                   <li key={idx}>{error}</li>
@@ -159,11 +162,7 @@ export function ConfigureStep({
         )}
 
         <div className="flex justify-end gap-4">
-          <Button
-            onClick={handleComplete}
-            disabled={!isValid}
-            size="lg"
-          >
+          <Button onClick={handleComplete} disabled={!isValid} size="lg">
             Continue to Generation
           </Button>
         </div>

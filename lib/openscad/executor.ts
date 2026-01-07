@@ -3,9 +3,9 @@
  * Handles execution of OpenSCAD commands for rendering STL files and previews
  */
 
-import { spawn } from 'child_process';
-import { env } from '@/lib/env';
-import { logger } from '@/lib/logger';
+import { spawn } from "child_process";
+import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 /**
  * Result of rendering operation
@@ -81,27 +81,22 @@ export class OpenSCADExecutor {
   async render(
     scadPath: string,
     outputPath: string,
-    options?: RenderOptions
+    options?: RenderOptions,
   ): Promise<RenderResult> {
     const startTime = Date.now();
 
     try {
-      logger.info('Starting OpenSCAD render', { scadPath, outputPath });
+      logger.info("Starting OpenSCAD render", { scadPath, outputPath });
 
-      const args: string[] = [
-        '-o',
-        outputPath,
-        '--export-format',
-        'binstl',
-      ];
+      const args: string[] = ["-o", outputPath, "--export-format", "binstl"];
 
       // Add optional parameters
       if (options?.colorscheme) {
-        args.push('--colorscheme', options.colorscheme);
+        args.push("--colorscheme", options.colorscheme);
       }
 
       if (options?.viewall) {
-        args.push('--viewall');
+        args.push("--viewall");
       }
 
       // Add input file
@@ -111,7 +106,7 @@ export class OpenSCADExecutor {
       const duration = Date.now() - startTime;
 
       if (result.success) {
-        logger.info('OpenSCAD render completed', { outputPath, duration });
+        logger.info("OpenSCAD render completed", { outputPath, duration });
         return {
           success: true,
           outputPath,
@@ -121,7 +116,7 @@ export class OpenSCADExecutor {
         };
       }
 
-      logger.error('OpenSCAD render failed', {
+      logger.error("OpenSCAD render failed", {
         scadPath,
         error: result.error,
         stderr: result.stderr,
@@ -136,8 +131,12 @@ export class OpenSCADExecutor {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('OpenSCAD render exception', { error: errorMessage, scadPath });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("OpenSCAD render exception", {
+        error: errorMessage,
+        scadPath,
+      });
 
       return {
         success: false,
@@ -153,34 +152,30 @@ export class OpenSCADExecutor {
   async preview(
     scadPath: string,
     outputPath: string,
-    options?: PreviewOptions
+    options?: PreviewOptions,
   ): Promise<PreviewResult> {
     const startTime = Date.now();
 
     try {
-      logger.info('Starting OpenSCAD preview', { scadPath, outputPath });
+      logger.info("Starting OpenSCAD preview", { scadPath, outputPath });
 
-      const args: string[] = [
-        '-o',
-        outputPath,
-        '--render',
-      ];
+      const args: string[] = ["-o", outputPath, "--render"];
 
       // Add optional parameters
       if (options?.colorscheme) {
-        args.push('--colorscheme', options.colorscheme);
+        args.push("--colorscheme", options.colorscheme);
       }
 
       if (options?.viewall) {
-        args.push('--viewall');
+        args.push("--viewall");
       }
 
       if (options?.camera) {
-        args.push('--camera', options.camera);
+        args.push("--camera", options.camera);
       }
 
       if (options?.imgsize) {
-        args.push('--imgsize', options.imgsize);
+        args.push("--imgsize", options.imgsize);
       }
 
       // Add input file
@@ -190,7 +185,7 @@ export class OpenSCADExecutor {
       const duration = Date.now() - startTime;
 
       if (result.success) {
-        logger.info('OpenSCAD preview completed', { outputPath, duration });
+        logger.info("OpenSCAD preview completed", { outputPath, duration });
         return {
           success: true,
           previewPath: outputPath,
@@ -200,7 +195,7 @@ export class OpenSCADExecutor {
         };
       }
 
-      logger.error('OpenSCAD preview failed', {
+      logger.error("OpenSCAD preview failed", {
         scadPath,
         error: result.error,
         stderr: result.stderr,
@@ -215,8 +210,12 @@ export class OpenSCADExecutor {
       };
     } catch (error) {
       const duration = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('OpenSCAD preview exception', { error: errorMessage, scadPath });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("OpenSCAD preview exception", {
+        error: errorMessage,
+        scadPath,
+      });
 
       return {
         success: false,
@@ -231,7 +230,7 @@ export class OpenSCADExecutor {
    */
   private async execute(
     args: string[],
-    options?: ExecuteOptions
+    options?: ExecuteOptions,
   ): Promise<{
     success: boolean;
     stdout: string;
@@ -251,49 +250,55 @@ export class OpenSCADExecutor {
 
       if (this.useXvfb) {
         // Use xvfb-run for headless rendering
-        command = 'xvfb-run';
-        commandArgs = ['-a', '-s', '-screen 0 1024x768x24', this.openscadBinary, ...args];
+        command = "xvfb-run";
+        commandArgs = [
+          "-a",
+          "-s",
+          "-screen 0 1024x768x24",
+          this.openscadBinary,
+          ...args,
+        ];
       } else {
         command = this.openscadBinary;
         commandArgs = args;
       }
 
-      logger.debug('Executing OpenSCAD', { command, args: commandArgs });
+      logger.debug("Executing OpenSCAD", { command, args: commandArgs });
 
       const child = spawn(command, commandArgs, {
         env: processEnv,
-        stdio: ['ignore', 'pipe', 'pipe'],
+        stdio: ["ignore", "pipe", "pipe"],
       });
 
-      let stdout = '';
-      let stderr = '';
+      let stdout = "";
+      let stderr = "";
       let killed = false;
 
       // Set timeout
       const timer = setTimeout(() => {
         killed = true;
-        child.kill('SIGTERM');
+        child.kill("SIGTERM");
 
         // Force kill after 5 seconds
         setTimeout(() => {
           if (!child.killed) {
-            child.kill('SIGKILL');
+            child.kill("SIGKILL");
           }
         }, 5000);
       }, timeout);
 
       // Collect stdout
-      child.stdout?.on('data', (data) => {
+      child.stdout?.on("data", (data) => {
         stdout += data.toString();
       });
 
       // Collect stderr
-      child.stderr?.on('data', (data) => {
+      child.stderr?.on("data", (data) => {
         stderr += data.toString();
       });
 
       // Handle completion
-      child.on('close', (code) => {
+      child.on("close", (code) => {
         clearTimeout(timer);
 
         if (killed) {
@@ -323,7 +328,7 @@ export class OpenSCADExecutor {
       });
 
       // Handle errors
-      child.on('error', (error) => {
+      child.on("error", (error) => {
         clearTimeout(timer);
         resolve({
           success: false,

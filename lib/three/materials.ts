@@ -8,7 +8,9 @@ import * as THREE from "three";
 /**
  * Default material for Gridfinity bins - semi-matte plastic finish
  */
-export function createBinMaterial(color: string = "#e0e0e0"): THREE.MeshStandardMaterial {
+export function createBinMaterial(
+  color: string = "#e0e0e0",
+): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(color),
     roughness: 0.35,
@@ -21,7 +23,9 @@ export function createBinMaterial(color: string = "#e0e0e0"): THREE.MeshStandard
 /**
  * Material for transparent/ghost preview
  */
-export function createGhostMaterial(color: string = "#4a9eff"): THREE.MeshStandardMaterial {
+export function createGhostMaterial(
+  color: string = "#4a9eff",
+): THREE.MeshStandardMaterial {
   return new THREE.MeshStandardMaterial({
     color: new THREE.Color(color),
     roughness: 0.5,
@@ -35,7 +39,9 @@ export function createGhostMaterial(color: string = "#4a9eff"): THREE.MeshStanda
 /**
  * Material for wireframe view
  */
-export function createWireframeMaterial(color: string = "#333333"): THREE.MeshBasicMaterial {
+export function createWireframeMaterial(
+  color: string = "#333333",
+): THREE.MeshBasicMaterial {
   return new THREE.MeshBasicMaterial({
     color: new THREE.Color(color),
     wireframe: true,
@@ -66,6 +72,8 @@ export type FilamentColor = keyof typeof FILAMENT_COLORS;
 /**
  * Get a material with a specific filament color
  */
-export function createColoredMaterial(colorName: FilamentColor): THREE.MeshStandardMaterial {
+export function createColoredMaterial(
+  colorName: FilamentColor,
+): THREE.MeshStandardMaterial {
   return createBinMaterial(FILAMENT_COLORS[colorName]);
 }

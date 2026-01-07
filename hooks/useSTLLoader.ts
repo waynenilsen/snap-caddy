@@ -23,7 +23,7 @@ interface UseSTLLoaderResult {
  */
 export function useSTLLoader(
   url: string | null,
-  options: UseSTLLoaderOptions = {}
+  options: UseSTLLoaderOptions = {},
 ): UseSTLLoaderResult {
   const { center = true, computeNormals = true } = options;
 
@@ -62,7 +62,9 @@ export function useSTLLoader(
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch STL: ${response.status} ${response.statusText}`);
+        throw new Error(
+          `Failed to fetch STL: ${response.status} ${response.statusText}`,
+        );
       }
 
       const contentLength = response.headers.get("content-length");

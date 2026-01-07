@@ -6,12 +6,12 @@
  * Available wizard steps
  */
 export type Step =
-  | 'capture' // Image capture (camera/upload)
-  | 'segment' // Object selection (SAM segmentation)
-  | 'calibrate' // Scale calibration (ruler measurement)
-  | 'review' // Outline review (SVG preview)
-  | 'configure' // Bin configuration (Gridfinity params)
-  | 'generate'; // Generate & download (STL creation)
+  | "capture" // Image capture (camera/upload)
+  | "segment" // Object selection (SAM segmentation)
+  | "calibrate" // Scale calibration (ruler measurement)
+  | "review" // Outline review (SVG preview)
+  | "configure" // Bin configuration (Gridfinity params)
+  | "generate"; // Generate & download (STL creation)
 
 /**
  * Step metadata for UI display
@@ -49,12 +49,12 @@ export interface WizardState {
  * Step order for validation
  */
 export const STEP_ORDER: Step[] = [
-  'capture',
-  'segment',
-  'calibrate',
-  'review',
-  'configure',
-  'generate',
+  "capture",
+  "segment",
+  "calibrate",
+  "review",
+  "configure",
+  "generate",
 ];
 
 /**
@@ -62,46 +62,52 @@ export const STEP_ORDER: Step[] = [
  */
 export const STEP_METADATA: Record<Step, StepMetadata> = {
   capture: {
-    id: 'capture',
-    title: 'Capture Image',
-    description: 'Take a photo or upload an image',
-    icon: 'camera',
+    id: "capture",
+    title: "Capture Image",
+    description: "Take a photo or upload an image",
+    icon: "camera",
     requiresCompletion: [],
   },
   segment: {
-    id: 'segment',
-    title: 'Select Object',
-    description: 'Click on the object to segment',
-    icon: 'mouse-pointer',
-    requiresCompletion: ['capture'],
+    id: "segment",
+    title: "Select Object",
+    description: "Click on the object to segment",
+    icon: "mouse-pointer",
+    requiresCompletion: ["capture"],
   },
   calibrate: {
-    id: 'calibrate',
-    title: 'Set Scale',
-    description: 'Calibrate using a ruler',
-    icon: 'ruler',
-    requiresCompletion: ['capture', 'segment'],
+    id: "calibrate",
+    title: "Set Scale",
+    description: "Calibrate using a ruler",
+    icon: "ruler",
+    requiresCompletion: ["capture", "segment"],
   },
   review: {
-    id: 'review',
-    title: 'Review Outline',
-    description: 'Preview and adjust the SVG',
-    icon: 'eye',
-    requiresCompletion: ['capture', 'segment', 'calibrate'],
+    id: "review",
+    title: "Review Outline",
+    description: "Preview and adjust the SVG",
+    icon: "eye",
+    requiresCompletion: ["capture", "segment", "calibrate"],
   },
   configure: {
-    id: 'configure',
-    title: 'Configure Bin',
-    description: 'Set Gridfinity parameters',
-    icon: 'settings',
-    requiresCompletion: ['capture', 'segment', 'calibrate', 'review'],
+    id: "configure",
+    title: "Configure Bin",
+    description: "Set Gridfinity parameters",
+    icon: "settings",
+    requiresCompletion: ["capture", "segment", "calibrate", "review"],
   },
   generate: {
-    id: 'generate',
-    title: 'Generate STL',
-    description: 'Create and download 3D model',
-    icon: 'download',
-    requiresCompletion: ['capture', 'segment', 'calibrate', 'review', 'configure'],
+    id: "generate",
+    title: "Generate STL",
+    description: "Create and download 3D model",
+    icon: "download",
+    requiresCompletion: [
+      "capture",
+      "segment",
+      "calibrate",
+      "review",
+      "configure",
+    ],
   },
 };
 

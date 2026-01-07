@@ -210,10 +210,10 @@ describe("Three.js utilities", () => {
 
     it("shadow map sizes increase with quality", () => {
       expect(QUALITY_PRESETS.low.shadowMapSize).toBeLessThanOrEqual(
-        QUALITY_PRESETS.medium.shadowMapSize
+        QUALITY_PRESETS.medium.shadowMapSize,
       );
       expect(QUALITY_PRESETS.medium.shadowMapSize).toBeLessThanOrEqual(
-        QUALITY_PRESETS.high.shadowMapSize
+        QUALITY_PRESETS.high.shadowMapSize,
       );
     });
   });

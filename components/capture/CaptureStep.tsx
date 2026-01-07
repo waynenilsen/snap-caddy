@@ -1,14 +1,20 @@
 "use client";
 
-import { useState } from 'react';
-import { Camera, Upload, AlertCircle, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Button } from '@/components/ui/button';
-import { CameraCapture } from './CameraCapture';
-import { ImageUpload } from './ImageUpload';
-import { ImagePreview } from './ImagePreview';
+import { useState } from "react";
+import { Camera, Upload, AlertCircle, X } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { CameraCapture } from "./CameraCapture";
+import { ImageUpload } from "./ImageUpload";
+import { ImagePreview } from "./ImagePreview";
 
 interface CaptureStepProps {
   onImageCaptured: (imageDataUrl: string) => void;
@@ -16,7 +22,7 @@ interface CaptureStepProps {
 
 export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
-  const [activeTab, setActiveTab] = useState<'camera' | 'upload'>('camera');
+  const [activeTab, setActiveTab] = useState<"camera" | "upload">("camera");
   const [error, setError] = useState<string | null>(null);
 
   const handleCapture = (imageDataUrl: string) => {
@@ -37,21 +43,38 @@ export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
   };
 
   const handleError = (error: Error) => {
-    console.error('Capture error:', error);
+    console.error("Capture error:", error);
 
     // Transform technical errors into user-friendly messages
     let errorMessage = "Unable to capture image. Please try again.";
 
-    if (error.message.includes("permission") || error.message.includes("denied")) {
-      errorMessage = "Camera permission denied. Please allow camera access in your browser settings and try again.";
-    } else if (error.message.includes("not found") || error.message.includes("no device")) {
-      errorMessage = "No camera found. Please connect a camera or try uploading an image instead.";
-    } else if (error.message.includes("size") || error.message.includes("large")) {
-      errorMessage = "Image file is too large. Please choose a smaller image (maximum 10MB).";
-    } else if (error.message.includes("format") || error.message.includes("type")) {
-      errorMessage = "Unsupported file format. Please upload a JPG, PNG, or WebP image.";
+    if (
+      error.message.includes("permission") ||
+      error.message.includes("denied")
+    ) {
+      errorMessage =
+        "Camera permission denied. Please allow camera access in your browser settings and try again.";
+    } else if (
+      error.message.includes("not found") ||
+      error.message.includes("no device")
+    ) {
+      errorMessage =
+        "No camera found. Please connect a camera or try uploading an image instead.";
+    } else if (
+      error.message.includes("size") ||
+      error.message.includes("large")
+    ) {
+      errorMessage =
+        "Image file is too large. Please choose a smaller image (maximum 10MB).";
+    } else if (
+      error.message.includes("format") ||
+      error.message.includes("type")
+    ) {
+      errorMessage =
+        "Unsupported file format. Please upload a JPG, PNG, or WebP image.";
     } else if (error.message.includes("network")) {
-      errorMessage = "Network error. Please check your connection and try again.";
+      errorMessage =
+        "Network error. Please check your connection and try again.";
     }
 
     setError(errorMessage);
@@ -68,7 +91,8 @@ export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
           <CardHeader>
             <CardTitle>Image Preview</CardTitle>
             <CardDescription>
-              Review your captured image. You can zoom and pan to inspect details.
+              Review your captured image. You can zoom and pan to inspect
+              details.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -92,8 +116,8 @@ export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
         <CardHeader>
           <CardTitle>Capture Image</CardTitle>
           <CardDescription>
-            Take a photo of your object or upload an existing image. Make sure the object is
-            clearly visible and well-lit.
+            Take a photo of your object or upload an existing image. Make sure
+            the object is clearly visible and well-lit.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -117,7 +141,9 @@ export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
 
           <Tabs
             value={activeTab}
-            onValueChange={(value) => setActiveTab(value as 'camera' | 'upload')}
+            onValueChange={(value) =>
+              setActiveTab(value as "camera" | "upload")
+            }
             className="w-full"
           >
             <TabsList className="grid w-full max-w-md mx-auto grid-cols-2 mb-6">
@@ -156,7 +182,9 @@ export function CaptureStep({ onImageCaptured }: CaptureStepProps) {
               <li>Place the object on a contrasting background</li>
               <li>Ensure good, even lighting without harsh shadows</li>
               <li>Include a ruler or known-size object for scale reference</li>
-              <li>Take the photo from directly above for accurate measurements</li>
+              <li>
+                Take the photo from directly above for accurate measurements
+              </li>
               <li>Avoid blurry images - keep the camera steady</li>
             </ul>
           </div>

@@ -2,7 +2,7 @@
  * Unit tests for segment schemas
  */
 
-import { describe, it, expect } from 'bun:test';
+import { describe, it, expect } from "bun:test";
 import {
   PointSchema,
   SegmentRequestSchema,
@@ -10,33 +10,33 @@ import {
   MaskOptionSchema,
   SegmentResponseSchema,
   SegmentErrorResponseSchema,
-} from './segment';
+} from "./segment";
 
-describe('PointSchema', () => {
-  describe('valid cases', () => {
-    it('should accept valid point with label 0 (background)', () => {
+describe("PointSchema", () => {
+  describe("valid cases", () => {
+    it("should accept valid point with label 0 (background)", () => {
       const validPoint = {
         x: 100,
         y: 200,
-        label: 0,
+        label: 0 as const,
       };
       expect(() => PointSchema.parse(validPoint)).not.toThrow();
       const result = PointSchema.parse(validPoint);
       expect(result).toEqual(validPoint);
     });
 
-    it('should accept valid point with label 1 (foreground)', () => {
+    it("should accept valid point with label 1 (foreground)", () => {
       const validPoint = {
         x: 50,
         y: 75,
-        label: 1,
+        label: 1 as const,
       };
       expect(() => PointSchema.parse(validPoint)).not.toThrow();
       const result = PointSchema.parse(validPoint);
       expect(result).toEqual(validPoint);
     });
 
-    it('should accept point with x and y as 0', () => {
+    it("should accept point with x and y as 0", () => {
       const validPoint = {
         x: 0,
         y: 0,
@@ -45,7 +45,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(validPoint)).not.toThrow();
     });
 
-    it('should accept point with floating point coordinates', () => {
+    it("should accept point with floating point coordinates", () => {
       const validPoint = {
         x: 123.456,
         y: 789.012,
@@ -55,8 +55,8 @@ describe('PointSchema', () => {
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject negative x coordinate', () => {
+  describe("invalid cases", () => {
+    it("should reject negative x coordinate", () => {
       const invalidPoint = {
         x: -1,
         y: 100,
@@ -65,7 +65,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject negative y coordinate', () => {
+    it("should reject negative y coordinate", () => {
       const invalidPoint = {
         x: 100,
         y: -1,
@@ -74,7 +74,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject label value 2', () => {
+    it("should reject label value 2", () => {
       const invalidPoint = {
         x: 100,
         y: 100,
@@ -83,7 +83,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject negative label', () => {
+    it("should reject negative label", () => {
       const invalidPoint = {
         x: 100,
         y: 100,
@@ -92,7 +92,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject missing x coordinate', () => {
+    it("should reject missing x coordinate", () => {
       const invalidPoint = {
         y: 100,
         label: 1,
@@ -100,7 +100,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject missing y coordinate', () => {
+    it("should reject missing y coordinate", () => {
       const invalidPoint = {
         x: 100,
         label: 1,
@@ -108,7 +108,7 @@ describe('PointSchema', () => {
       expect(() => PointSchema.parse(invalidPoint)).toThrow();
     });
 
-    it('should reject missing label', () => {
+    it("should reject missing label", () => {
       const invalidPoint = {
         x: 100,
         y: 100,
@@ -118,19 +118,19 @@ describe('PointSchema', () => {
   });
 });
 
-describe('SegmentRequestSchema', () => {
+describe("SegmentRequestSchema", () => {
   const validRequest = {
-    image: 'data:image/png;base64,iVBORw0KGgoAAAANS...',
+    image: "data:image/png;base64,iVBORw0KGgoAAAANS...",
     points: [
-      { x: 100, y: 200, label: 1 },
-      { x: 150, y: 250, label: 0 },
+      { x: 100, y: 200, label: 1 as const },
+      { x: 150, y: 250, label: 0 as const },
     ],
     imageWidth: 1920,
     imageHeight: 1080,
   };
 
-  describe('valid cases', () => {
-    it('should accept valid request with all required fields', () => {
+  describe("valid cases", () => {
+    it("should accept valid request with all required fields", () => {
       expect(() => SegmentRequestSchema.parse(validRequest)).not.toThrow();
       const result = SegmentRequestSchema.parse(validRequest);
       expect(result.image).toBe(validRequest.image);
@@ -139,17 +139,17 @@ describe('SegmentRequestSchema', () => {
       expect(result.imageHeight).toBe(validRequest.imageHeight);
     });
 
-    it('should apply default value for returnMultipleMasks (false)', () => {
+    it("should apply default value for returnMultipleMasks (false)", () => {
       const result = SegmentRequestSchema.parse(validRequest);
       expect(result.returnMultipleMasks).toBe(false);
     });
 
-    it('should apply default value for maskFormat (base64png)', () => {
+    it("should apply default value for maskFormat (base64png)", () => {
       const result = SegmentRequestSchema.parse(validRequest);
-      expect(result.maskFormat).toBe('base64png');
+      expect(result.maskFormat).toBe("base64png");
     });
 
-    it('should accept explicit returnMultipleMasks true', () => {
+    it("should accept explicit returnMultipleMasks true", () => {
       const requestWithOption = {
         ...validRequest,
         returnMultipleMasks: true,
@@ -158,25 +158,25 @@ describe('SegmentRequestSchema', () => {
       expect(result.returnMultipleMasks).toBe(true);
     });
 
-    it('should accept maskFormat rle', () => {
+    it("should accept maskFormat rle", () => {
       const requestWithOption = {
         ...validRequest,
-        maskFormat: 'rle' as const,
+        maskFormat: "rle" as const,
       };
       const result = SegmentRequestSchema.parse(requestWithOption);
-      expect(result.maskFormat).toBe('rle');
+      expect(result.maskFormat).toBe("rle");
     });
 
-    it('should accept maskFormat binary', () => {
+    it("should accept maskFormat binary", () => {
       const requestWithOption = {
         ...validRequest,
-        maskFormat: 'binary' as const,
+        maskFormat: "binary" as const,
       };
       const result = SegmentRequestSchema.parse(requestWithOption);
-      expect(result.maskFormat).toBe('binary');
+      expect(result.maskFormat).toBe("binary");
     });
 
-    it('should accept request with 1 point (minimum)', () => {
+    it("should accept request with 1 point (minimum)", () => {
       const minRequest = {
         ...validRequest,
         points: [{ x: 100, y: 100, label: 1 }],
@@ -184,7 +184,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(minRequest)).not.toThrow();
     });
 
-    it('should accept request with 20 points (maximum)', () => {
+    it("should accept request with 20 points (maximum)", () => {
       const maxRequest = {
         ...validRequest,
         points: Array.from({ length: 20 }, (_, i) => ({
@@ -196,7 +196,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(maxRequest)).not.toThrow();
     });
 
-    it('should accept imageWidth of 1 (minimum)', () => {
+    it("should accept imageWidth of 1 (minimum)", () => {
       const minWidthRequest = {
         ...validRequest,
         imageWidth: 1,
@@ -204,7 +204,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(minWidthRequest)).not.toThrow();
     });
 
-    it('should accept imageWidth of 8192 (maximum)', () => {
+    it("should accept imageWidth of 8192 (maximum)", () => {
       const maxWidthRequest = {
         ...validRequest,
         imageWidth: 8192,
@@ -212,7 +212,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(maxWidthRequest)).not.toThrow();
     });
 
-    it('should accept imageHeight of 1 (minimum)', () => {
+    it("should accept imageHeight of 1 (minimum)", () => {
       const minHeightRequest = {
         ...validRequest,
         imageHeight: 1,
@@ -220,7 +220,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(minHeightRequest)).not.toThrow();
     });
 
-    it('should accept imageHeight of 8192 (maximum)', () => {
+    it("should accept imageHeight of 8192 (maximum)", () => {
       const maxHeightRequest = {
         ...validRequest,
         imageHeight: 8192,
@@ -229,16 +229,16 @@ describe('SegmentRequestSchema', () => {
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject empty image string', () => {
+  describe("invalid cases", () => {
+    it("should reject empty image string", () => {
       const invalidRequest = {
         ...validRequest,
-        image: '',
+        image: "",
       };
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject empty points array', () => {
+    it("should reject empty points array", () => {
       const invalidRequest = {
         ...validRequest,
         points: [],
@@ -246,7 +246,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject points array with 21 points', () => {
+    it("should reject points array with 21 points", () => {
       const invalidRequest = {
         ...validRequest,
         points: Array.from({ length: 21 }, (_, i) => ({
@@ -258,7 +258,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject imageWidth of 0', () => {
+    it("should reject imageWidth of 0", () => {
       const invalidRequest = {
         ...validRequest,
         imageWidth: 0,
@@ -266,7 +266,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject imageWidth greater than 8192', () => {
+    it("should reject imageWidth greater than 8192", () => {
       const invalidRequest = {
         ...validRequest,
         imageWidth: 8193,
@@ -274,7 +274,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject negative imageWidth', () => {
+    it("should reject negative imageWidth", () => {
       const invalidRequest = {
         ...validRequest,
         imageWidth: -100,
@@ -282,7 +282,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject imageHeight of 0', () => {
+    it("should reject imageHeight of 0", () => {
       const invalidRequest = {
         ...validRequest,
         imageHeight: 0,
@@ -290,7 +290,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject imageHeight greater than 8192', () => {
+    it("should reject imageHeight greater than 8192", () => {
       const invalidRequest = {
         ...validRequest,
         imageHeight: 8193,
@@ -298,7 +298,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject negative imageHeight', () => {
+    it("should reject negative imageHeight", () => {
       const invalidRequest = {
         ...validRequest,
         imageHeight: -100,
@@ -306,7 +306,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject floating point imageWidth', () => {
+    it("should reject floating point imageWidth", () => {
       const invalidRequest = {
         ...validRequest,
         imageWidth: 1920.5,
@@ -314,7 +314,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject floating point imageHeight', () => {
+    it("should reject floating point imageHeight", () => {
       const invalidRequest = {
         ...validRequest,
         imageHeight: 1080.5,
@@ -322,15 +322,15 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject invalid maskFormat', () => {
+    it("should reject invalid maskFormat", () => {
       const invalidRequest = {
         ...validRequest,
-        maskFormat: 'jpeg',
+        maskFormat: "jpeg",
       };
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject missing image field', () => {
+    it("should reject missing image field", () => {
       const invalidRequest = {
         points: validRequest.points,
         imageWidth: validRequest.imageWidth,
@@ -339,7 +339,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject missing points field', () => {
+    it("should reject missing points field", () => {
       const invalidRequest = {
         image: validRequest.image,
         imageWidth: validRequest.imageWidth,
@@ -348,7 +348,7 @@ describe('SegmentRequestSchema', () => {
       expect(() => SegmentRequestSchema.parse(invalidRequest)).toThrow();
     });
 
-    it('should reject invalid point in points array', () => {
+    it("should reject invalid point in points array", () => {
       const invalidRequest = {
         ...validRequest,
         points: [
@@ -361,9 +361,9 @@ describe('SegmentRequestSchema', () => {
   });
 });
 
-describe('BoundingBoxSchema', () => {
-  describe('valid cases', () => {
-    it('should accept valid bounding box', () => {
+describe("BoundingBoxSchema", () => {
+  describe("valid cases", () => {
+    it("should accept valid bounding box", () => {
       const validBox = {
         x: 100,
         y: 200,
@@ -375,7 +375,7 @@ describe('BoundingBoxSchema', () => {
       expect(result).toEqual(validBox);
     });
 
-    it('should accept negative x coordinate', () => {
+    it("should accept negative x coordinate", () => {
       const validBox = {
         x: -50,
         y: 100,
@@ -385,7 +385,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(validBox)).not.toThrow();
     });
 
-    it('should accept negative y coordinate', () => {
+    it("should accept negative y coordinate", () => {
       const validBox = {
         x: 100,
         y: -50,
@@ -395,7 +395,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(validBox)).not.toThrow();
     });
 
-    it('should accept floating point dimensions', () => {
+    it("should accept floating point dimensions", () => {
       const validBox = {
         x: 100.5,
         y: 200.5,
@@ -405,7 +405,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(validBox)).not.toThrow();
     });
 
-    it('should accept very small positive dimensions', () => {
+    it("should accept very small positive dimensions", () => {
       const validBox = {
         x: 0,
         y: 0,
@@ -416,8 +416,8 @@ describe('BoundingBoxSchema', () => {
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject width of 0', () => {
+  describe("invalid cases", () => {
+    it("should reject width of 0", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -427,7 +427,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject negative width', () => {
+    it("should reject negative width", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -437,7 +437,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject height of 0', () => {
+    it("should reject height of 0", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -447,7 +447,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject negative height', () => {
+    it("should reject negative height", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -457,7 +457,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject missing x field', () => {
+    it("should reject missing x field", () => {
       const invalidBox = {
         y: 200,
         width: 300,
@@ -466,7 +466,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject missing y field', () => {
+    it("should reject missing y field", () => {
       const invalidBox = {
         x: 100,
         width: 300,
@@ -475,7 +475,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject missing width field', () => {
+    it("should reject missing width field", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -484,7 +484,7 @@ describe('BoundingBoxSchema', () => {
       expect(() => BoundingBoxSchema.parse(invalidBox)).toThrow();
     });
 
-    it('should reject missing height field', () => {
+    it("should reject missing height field", () => {
       const invalidBox = {
         x: 100,
         y: 200,
@@ -495,7 +495,7 @@ describe('BoundingBoxSchema', () => {
   });
 });
 
-describe('MaskOptionSchema', () => {
+describe("MaskOptionSchema", () => {
   const validBoundingBox = {
     x: 100,
     y: 200,
@@ -503,10 +503,10 @@ describe('MaskOptionSchema', () => {
     height: 400,
   };
 
-  describe('valid cases', () => {
-    it('should accept valid mask option', () => {
+  describe("valid cases", () => {
+    it("should accept valid mask option", () => {
       const validMask = {
-        mask: 'data:image/png;base64,iVBORw0KGgo...',
+        mask: "data:image/png;base64,iVBORw0KGgo...",
         confidence: 0.95,
         boundingBox: validBoundingBox,
         area: 120000,
@@ -516,9 +516,9 @@ describe('MaskOptionSchema', () => {
       expect(result).toEqual(validMask);
     });
 
-    it('should accept confidence of 0', () => {
+    it("should accept confidence of 0", () => {
       const validMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0,
         boundingBox: validBoundingBox,
         area: 1000,
@@ -526,9 +526,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(validMask)).not.toThrow();
     });
 
-    it('should accept confidence of 1', () => {
+    it("should accept confidence of 1", () => {
       const validMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 1,
         boundingBox: validBoundingBox,
         area: 1000,
@@ -536,9 +536,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(validMask)).not.toThrow();
     });
 
-    it('should accept confidence between 0 and 1', () => {
+    it("should accept confidence between 0 and 1", () => {
       const validMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.5,
         boundingBox: validBoundingBox,
         area: 1000,
@@ -546,9 +546,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(validMask)).not.toThrow();
     });
 
-    it('should accept area of 1 (minimum positive)', () => {
+    it("should accept area of 1 (minimum positive)", () => {
       const validMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
         area: 1,
@@ -556,9 +556,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(validMask)).not.toThrow();
     });
 
-    it('should accept large area value', () => {
+    it("should accept large area value", () => {
       const validMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
         area: 8192 * 8192, // Maximum possible area
@@ -567,10 +567,10 @@ describe('MaskOptionSchema', () => {
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject confidence less than 0', () => {
+  describe("invalid cases", () => {
+    it("should reject confidence less than 0", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: -0.1,
         boundingBox: validBoundingBox,
         area: 1000,
@@ -578,9 +578,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject confidence greater than 1', () => {
+    it("should reject confidence greater than 1", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 1.1,
         boundingBox: validBoundingBox,
         area: 1000,
@@ -588,9 +588,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject area of 0', () => {
+    it("should reject area of 0", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
         area: 0,
@@ -598,9 +598,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject negative area', () => {
+    it("should reject negative area", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
         area: -100,
@@ -608,9 +608,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject floating point area', () => {
+    it("should reject floating point area", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
         area: 1000.5,
@@ -618,9 +618,9 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject invalid bounding box', () => {
+    it("should reject invalid bounding box", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: {
           x: 100,
@@ -633,7 +633,7 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject missing mask field', () => {
+    it("should reject missing mask field", () => {
       const invalidMask = {
         confidence: 0.8,
         boundingBox: validBoundingBox,
@@ -642,27 +642,27 @@ describe('MaskOptionSchema', () => {
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject missing confidence field', () => {
+    it("should reject missing confidence field", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         boundingBox: validBoundingBox,
         area: 1000,
       };
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject missing boundingBox field', () => {
+    it("should reject missing boundingBox field", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         area: 1000,
       };
       expect(() => MaskOptionSchema.parse(invalidMask)).toThrow();
     });
 
-    it('should reject missing area field', () => {
+    it("should reject missing area field", () => {
       const invalidMask = {
-        mask: 'base64data',
+        mask: "base64data",
         confidence: 0.8,
         boundingBox: validBoundingBox,
       };
@@ -671,9 +671,9 @@ describe('MaskOptionSchema', () => {
   });
 });
 
-describe('SegmentResponseSchema', () => {
+describe("SegmentResponseSchema", () => {
   const validMask = {
-    mask: 'data:image/png;base64,iVBORw0KGgo...',
+    mask: "data:image/png;base64,iVBORw0KGgo...",
     confidence: 0.95,
     boundingBox: {
       x: 100,
@@ -684,10 +684,10 @@ describe('SegmentResponseSchema', () => {
     area: 120000,
   };
 
-  describe('valid cases', () => {
-    it('should accept valid success response', () => {
+  describe("valid cases", () => {
+    it("should accept valid success response", () => {
       const validResponse = {
-        success: true,
+        success: true as const,
         masks: [validMask],
         imageWidth: 1920,
         imageHeight: 1080,
@@ -698,7 +698,7 @@ describe('SegmentResponseSchema', () => {
       expect(result).toEqual(validResponse);
     });
 
-    it('should accept response with multiple masks', () => {
+    it("should accept response with multiple masks", () => {
       const validResponse = {
         success: true,
         masks: [
@@ -713,7 +713,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(validResponse)).not.toThrow();
     });
 
-    it('should accept processingTimeMs of 0', () => {
+    it("should accept processingTimeMs of 0", () => {
       const validResponse = {
         success: true,
         masks: [validMask],
@@ -724,7 +724,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(validResponse)).not.toThrow();
     });
 
-    it('should accept imageWidth of 1 (minimum positive)', () => {
+    it("should accept imageWidth of 1 (minimum positive)", () => {
       const validResponse = {
         success: true,
         masks: [validMask],
@@ -735,7 +735,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(validResponse)).not.toThrow();
     });
 
-    it('should accept imageHeight of 1 (minimum positive)', () => {
+    it("should accept imageHeight of 1 (minimum positive)", () => {
       const validResponse = {
         success: true,
         masks: [validMask],
@@ -747,8 +747,8 @@ describe('SegmentResponseSchema', () => {
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject success field with false value', () => {
+  describe("invalid cases", () => {
+    it("should reject success field with false value", () => {
       const invalidResponse = {
         success: false,
         masks: [validMask],
@@ -759,7 +759,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject empty masks array', () => {
+    it("should reject empty masks array", () => {
       const invalidResponse = {
         success: true,
         masks: [],
@@ -770,7 +770,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject imageWidth of 0', () => {
+    it("should reject imageWidth of 0", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -781,7 +781,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject negative imageWidth', () => {
+    it("should reject negative imageWidth", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -792,7 +792,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject imageHeight of 0', () => {
+    it("should reject imageHeight of 0", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -803,7 +803,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject negative imageHeight', () => {
+    it("should reject negative imageHeight", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -814,7 +814,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject floating point imageWidth', () => {
+    it("should reject floating point imageWidth", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -825,7 +825,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject floating point imageHeight', () => {
+    it("should reject floating point imageHeight", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -836,7 +836,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject negative processingTimeMs', () => {
+    it("should reject negative processingTimeMs", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -847,7 +847,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject invalid mask in masks array', () => {
+    it("should reject invalid mask in masks array", () => {
       const invalidResponse = {
         success: true,
         masks: [
@@ -863,7 +863,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject missing masks field', () => {
+    it("should reject missing masks field", () => {
       const invalidResponse = {
         success: true,
         imageWidth: 1920,
@@ -873,7 +873,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject missing imageWidth field', () => {
+    it("should reject missing imageWidth field", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -883,7 +883,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject missing imageHeight field', () => {
+    it("should reject missing imageHeight field", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -893,7 +893,7 @@ describe('SegmentResponseSchema', () => {
       expect(() => SegmentResponseSchema.parse(invalidResponse)).toThrow();
     });
 
-    it('should reject missing processingTimeMs field', () => {
+    it("should reject missing processingTimeMs field", () => {
       const invalidResponse = {
         success: true,
         masks: [validMask],
@@ -905,150 +905,152 @@ describe('SegmentResponseSchema', () => {
   });
 });
 
-describe('SegmentErrorResponseSchema', () => {
-  describe('valid cases', () => {
-    it('should accept valid error response with INVALID_INPUT code', () => {
+describe("SegmentErrorResponseSchema", () => {
+  describe("valid cases", () => {
+    it("should accept valid error response with INVALID_INPUT code", () => {
       const validError = {
-        success: false,
-        error: 'Invalid input parameters',
-        code: 'INVALID_INPUT' as const,
+        success: false as const,
+        error: "Invalid input parameters",
+        code: "INVALID_INPUT" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
       const result = SegmentErrorResponseSchema.parse(validError);
       expect(result).toEqual(validError);
     });
 
-    it('should accept error response with IMAGE_TOO_LARGE code', () => {
+    it("should accept error response with IMAGE_TOO_LARGE code", () => {
       const validError = {
         success: false,
-        error: 'Image exceeds maximum size',
-        code: 'IMAGE_TOO_LARGE' as const,
+        error: "Image exceeds maximum size",
+        code: "IMAGE_TOO_LARGE" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with SAM_ERROR code', () => {
+    it("should accept error response with SAM_ERROR code", () => {
       const validError = {
         success: false,
-        error: 'SAM model error',
-        code: 'SAM_ERROR' as const,
+        error: "SAM model error",
+        code: "SAM_ERROR" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with RATE_LIMIT code', () => {
+    it("should accept error response with RATE_LIMIT code", () => {
       const validError = {
         success: false,
-        error: 'Rate limit exceeded',
-        code: 'RATE_LIMIT' as const,
+        error: "Rate limit exceeded",
+        code: "RATE_LIMIT" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with SERVER_ERROR code', () => {
+    it("should accept error response with SERVER_ERROR code", () => {
       const validError = {
         success: false,
-        error: 'Internal server error',
-        code: 'SERVER_ERROR' as const,
+        error: "Internal server error",
+        code: "SERVER_ERROR" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with optional details as object', () => {
+    it("should accept error response with optional details as object", () => {
       const validError = {
         success: false,
-        error: 'Invalid input',
-        code: 'INVALID_INPUT' as const,
+        error: "Invalid input",
+        code: "INVALID_INPUT" as const,
         details: {
-          field: 'imageWidth',
-          message: 'Width exceeds maximum',
+          field: "imageWidth",
+          message: "Width exceeds maximum",
         },
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with optional details as string', () => {
+    it("should accept error response with optional details as string", () => {
       const validError = {
         success: false,
-        error: 'Invalid input',
-        code: 'INVALID_INPUT' as const,
-        details: 'Additional error information',
+        error: "Invalid input",
+        code: "INVALID_INPUT" as const,
+        details: "Additional error information",
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response with optional details as array', () => {
+    it("should accept error response with optional details as array", () => {
       const validError = {
         success: false,
-        error: 'Multiple validation errors',
-        code: 'INVALID_INPUT' as const,
-        details: ['Error 1', 'Error 2', 'Error 3'],
+        error: "Multiple validation errors",
+        code: "INVALID_INPUT" as const,
+        details: ["Error 1", "Error 2", "Error 3"],
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
 
-    it('should accept error response without details field', () => {
+    it("should accept error response without details field", () => {
       const validError = {
         success: false,
-        error: 'Generic error',
-        code: 'SERVER_ERROR' as const,
+        error: "Generic error",
+        code: "SERVER_ERROR" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(validError)).not.toThrow();
     });
   });
 
-  describe('invalid cases', () => {
-    it('should reject success field with true value', () => {
+  describe("invalid cases", () => {
+    it("should reject success field with true value", () => {
       const invalidError = {
         success: true,
-        error: 'Invalid input',
-        code: 'INVALID_INPUT' as const,
+        error: "Invalid input",
+        code: "INVALID_INPUT" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(invalidError)).toThrow();
     });
 
-    it('should reject invalid error code', () => {
+    it("should reject invalid error code", () => {
       const invalidError = {
         success: false,
-        error: 'Some error',
-        code: 'UNKNOWN_ERROR',
+        error: "Some error",
+        code: "UNKNOWN_ERROR",
       };
       expect(() => SegmentErrorResponseSchema.parse(invalidError)).toThrow();
     });
 
-    it('should reject missing error field', () => {
+    it("should reject missing error field", () => {
       const invalidError = {
         success: false,
-        code: 'SERVER_ERROR' as const,
+        code: "SERVER_ERROR" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(invalidError)).toThrow();
     });
 
-    it('should reject missing code field', () => {
+    it("should reject missing code field", () => {
       const invalidError = {
         success: false,
-        error: 'Some error',
+        error: "Some error",
       };
       expect(() => SegmentErrorResponseSchema.parse(invalidError)).toThrow();
     });
 
-    it('should reject empty error string', () => {
+    it("should reject empty error string", () => {
       const invalidError = {
         success: false,
-        error: '',
-        code: 'SERVER_ERROR' as const,
+        error: "",
+        code: "SERVER_ERROR" as const,
       };
       // Zod allows empty strings unless explicitly forbidden
       // This test documents current behavior - if you want to reject empty strings,
       // add .min(1) to the error field in the schema
-      expect(() => SegmentErrorResponseSchema.parse(invalidError)).not.toThrow();
+      expect(() =>
+        SegmentErrorResponseSchema.parse(invalidError),
+      ).not.toThrow();
     });
 
-    it('should reject numeric error value', () => {
+    it("should reject numeric error value", () => {
       const invalidError = {
         success: false,
         error: 123,
-        code: 'SERVER_ERROR' as const,
+        code: "SERVER_ERROR" as const,
       };
       expect(() => SegmentErrorResponseSchema.parse(invalidError)).toThrow();
     });

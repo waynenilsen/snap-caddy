@@ -1,12 +1,12 @@
 "use client";
 
-import { useState, useRef } from 'react';
-import { Upload, Loader2, Image as ImageIcon } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { AlertCircle } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { useState, useRef } from "react";
+import { Upload, Loader2, Image as ImageIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface ImageUploadProps {
   onUpload: (imageData: string, file: File) => void;
@@ -19,7 +19,7 @@ interface ImageUploadProps {
 export function ImageUpload({
   onUpload,
   onError,
-  accept = 'image/jpeg,image/png,image/webp',
+  accept = "image/jpeg,image/png,image/webp",
   maxSizeBytes = 10 * 1024 * 1024, // 10MB
   multiple = false,
 }: ImageUploadProps) {
@@ -30,11 +30,11 @@ export function ImageUpload({
 
   const validateFile = (file: File): { valid: boolean; error?: string } => {
     // Check file type
-    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    const validTypes = ["image/jpeg", "image/png", "image/webp"];
     if (!validTypes.includes(file.type)) {
       return {
         valid: false,
-        error: 'Please upload a JPEG, PNG, or WebP image',
+        error: "Please upload a JPEG, PNG, or WebP image",
       };
     }
 
@@ -56,7 +56,7 @@ export function ImageUpload({
     const validation = validateFile(file);
 
     if (!validation.valid) {
-      setError(validation.error || 'Invalid file');
+      setError(validation.error || "Invalid file");
       onError?.(new Error(validation.error));
       return;
     }
@@ -71,7 +71,7 @@ export function ImageUpload({
       setIsProcessing(false);
     };
     reader.onerror = () => {
-      const errorMessage = 'Failed to read file';
+      const errorMessage = "Failed to read file";
       setError(errorMessage);
       onError?.(new Error(errorMessage));
       setIsProcessing(false);
@@ -109,9 +109,9 @@ export function ImageUpload({
         <CardContent className="p-8">
           <div
             className={cn(
-              'border-2 border-dashed rounded-lg p-12 transition-colors',
-              isDragging ? 'border-primary bg-primary/5' : 'border-muted',
-              isProcessing && 'opacity-50 pointer-events-none'
+              "border-2 border-dashed rounded-lg p-12 transition-colors",
+              isDragging ? "border-primary bg-primary/5" : "border-muted",
+              isProcessing && "opacity-50 pointer-events-none",
             )}
             onDragEnter={handleDragEnter}
             onDragOver={handleDragOver}
@@ -122,7 +122,9 @@ export function ImageUpload({
               {isProcessing ? (
                 <>
                   <Loader2 className="w-12 h-12 animate-spin text-muted-foreground" />
-                  <p className="text-sm text-muted-foreground">Processing image...</p>
+                  <p className="text-sm text-muted-foreground">
+                    Processing image...
+                  </p>
                 </>
               ) : (
                 <>
@@ -143,7 +145,8 @@ export function ImageUpload({
                     Choose File
                   </Button>
                   <p className="text-xs text-muted-foreground">
-                    JPEG, PNG, or WebP • Max {Math.round(maxSizeBytes / 1024 / 1024)}MB
+                    JPEG, PNG, or WebP • Max{" "}
+                    {Math.round(maxSizeBytes / 1024 / 1024)}MB
                   </p>
                 </>
               )}

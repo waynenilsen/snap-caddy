@@ -3,11 +3,11 @@
  * Handles Redis connection for BullMQ queue system
  */
 
-import Redis from 'ioredis';
-import { logger } from '@/lib/logger';
+import Redis, { type RedisOptions } from "ioredis";
+import { logger } from "@/lib/logger";
 
 // Default Redis URL using non-standard port to avoid collisions
-const DEFAULT_REDIS_URL = 'redis://localhost:6397';
+const DEFAULT_REDIS_URL = "redis://localhost:6397";
 
 let redisConnection: Redis | null = null;
 let subscriberConnection: Redis | null = null;
@@ -21,18 +21,19 @@ export function getRedisUrl(): string {
 
 /**
  * Create Redis connection options from URL
+ * Exported so BullMQ can create its own connections
  */
-function createConnectionOptions(url: string): Redis.RedisOptions {
+export function createConnectionOptions(url: string): RedisOptions {
   const parsed = new URL(url);
 
-  const options: Redis.RedisOptions = {
-    host: parsed.hostname || 'localhost',
+  const options: RedisOptions = {
+    host: parsed.hostname || "localhost",
     port: Number.parseInt(parsed.port, 10) || 6397,
     maxRetriesPerRequest: null, // Required for BullMQ
     enableReadyCheck: false,
     retryStrategy: (times: number) => {
       if (times > 10) {
-        logger.error('Redis connection failed after 10 retries');
+        logger.error("Redis connection failed after 10 retries");
         return null;
       }
       const delay = Math.min(times * 200, 2000);
@@ -59,21 +60,23 @@ function createConnectionOptions(url: string): Redis.RedisOptions {
 export function getRedisConnection(): Redis {
   if (!redisConnection) {
     const url = getRedisUrl();
-    logger.info('Creating Redis connection', { url: url.replace(/\/\/.*@/, '//***@') });
+    logger.info("Creating Redis connection", {
+      url: url.replace(/\/\/.*@/, "//***@"),
+    });
 
     const options = createConnectionOptions(url);
     redisConnection = new Redis(options);
 
-    redisConnection.on('connect', () => {
-      logger.info('Redis connected');
+    redisConnection.on("connect", () => {
+      logger.info("Redis connected");
     });
 
-    redisConnection.on('error', (error) => {
-      logger.error('Redis connection error', { error: error.message });
+    redisConnection.on("error", (error) => {
+      logger.error("Redis connection error", { error: error.message });
     });
 
-    redisConnection.on('close', () => {
-      logger.warn('Redis connection closed');
+    redisConnection.on("close", () => {
+      logger.warn("Redis connection closed");
     });
   }
 
@@ -87,13 +90,13 @@ export function getRedisConnection(): Redis {
 export function getSubscriberConnection(): Redis {
   if (!subscriberConnection) {
     const url = getRedisUrl();
-    logger.debug('Creating Redis subscriber connection');
+    logger.debug("Creating Redis subscriber connection");
 
     const options = createConnectionOptions(url);
     subscriberConnection = new Redis(options);
 
-    subscriberConnection.on('error', (error) => {
-      logger.error('Redis subscriber error', { error: error.message });
+    subscriberConnection.on("error", (error) => {
+      logger.error("Redis subscriber error", { error: error.message });
     });
   }
 
@@ -107,7 +110,7 @@ export async function isRedisConnected(): Promise<boolean> {
   try {
     const conn = getRedisConnection();
     const result = await conn.ping();
-    return result === 'PONG';
+    return result === "PONG";
   } catch {
     return false;
   }
@@ -124,9 +127,9 @@ export async function getRedisInfo(): Promise<{
 }> {
   try {
     const conn = getRedisConnection();
-    const info = await conn.info('server');
-    const memory = await conn.info('memory');
-    const clients = await conn.info('clients');
+    const info = await conn.info("server");
+    const memory = await conn.info("memory");
+    const clients = await conn.info("clients");
 
     const parseInfo = (text: string, key: string): string | undefined => {
       const match = text.match(new RegExp(`${key}:(.+)`));
@@ -134,13 +137,16 @@ export async function getRedisInfo(): Promise<{
     };
 
     return {
-      version: parseInfo(info, 'redis_version'),
-      uptime: Number.parseInt(parseInfo(info, 'uptime_in_seconds') || '0', 10),
-      connectedClients: Number.parseInt(parseInfo(clients, 'connected_clients') || '0', 10),
-      usedMemory: Number.parseInt(parseInfo(memory, 'used_memory') || '0', 10),
+      version: parseInfo(info, "redis_version"),
+      uptime: Number.parseInt(parseInfo(info, "uptime_in_seconds") || "0", 10),
+      connectedClients: Number.parseInt(
+        parseInfo(clients, "connected_clients") || "0",
+        10,
+      ),
+      usedMemory: Number.parseInt(parseInfo(memory, "used_memory") || "0", 10),
     };
   } catch (error) {
-    logger.error('Failed to get Redis info', {
+    logger.error("Failed to get Redis info", {
       error: error instanceof Error ? error.message : String(error),
     });
     return {};
@@ -151,7 +157,7 @@ export async function getRedisInfo(): Promise<{
  * Close all Redis connections
  */
 export async function closeRedisConnections(): Promise<void> {
-  logger.info('Closing Redis connections');
+  logger.info("Closing Redis connections");
 
   const closePromises: Promise<void>[] = [];
 
@@ -159,7 +165,7 @@ export async function closeRedisConnections(): Promise<void> {
     closePromises.push(
       redisConnection.quit().then(() => {
         redisConnection = null;
-      })
+      }),
     );
   }
 
@@ -167,20 +173,18 @@ export async function closeRedisConnections(): Promise<void> {
     closePromises.push(
       subscriberConnection.quit().then(() => {
         subscriberConnection = null;
-      })
+      }),
     );
   }
 
   await Promise.all(closePromises);
-  logger.info('Redis connections closed');
+  logger.info("Redis connections closed");
 }
 
 /**
- * Export connection for BullMQ
- * BullMQ expects a connection object with specific shape
+ * Get connection options for BullMQ
+ * Returns raw options so BullMQ creates connections with its bundled ioredis
  */
-export function getBullMQConnection() {
-  return {
-    connection: getRedisConnection(),
-  };
+export function getBullMQConnectionOptions(): RedisOptions {
+  return createConnectionOptions(getRedisUrl());
 }

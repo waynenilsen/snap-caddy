@@ -3,10 +3,14 @@
  * Populates OpenSCAD templates with configuration parameters
  */
 
-import { readFile, writeFile } from 'fs/promises';
-import { join } from 'path';
-import type { GridfinityBinConfig, BaseType, LipStyle } from '@/types/configuration';
-import { logger } from '@/lib/logger';
+import { readFile, writeFile } from "fs/promises";
+import { join } from "path";
+import type {
+  GridfinityBinConfig,
+  BaseType,
+  LipStyle,
+} from "@/types/configuration";
+import { logger } from "@/lib/logger";
 
 /**
  * Result of template generation
@@ -46,7 +50,7 @@ export class OpenSCADGenerator {
 
   constructor(templatePath?: string) {
     this.templatePath =
-      templatePath || join(__dirname, 'templates', 'custom-cutout.scad');
+      templatePath || join(__dirname, "templates", "custom-cutout.scad");
   }
 
   /**
@@ -55,33 +59,34 @@ export class OpenSCADGenerator {
   async generate(
     svgPath: string,
     config: GridfinityBinConfig,
-    outputPath: string
+    outputPath: string,
   ): Promise<GenerateResult> {
     try {
-      logger.debug('Generating OpenSCAD file', {
+      logger.debug("Generating OpenSCAD file", {
         svgPath,
         outputPath,
         config,
       });
 
       // Read template
-      const template = await readFile(this.templatePath, 'utf-8');
+      const template = await readFile(this.templatePath, "utf-8");
 
       // Populate template with configuration
       const populated = this.populateTemplate(template, svgPath, config);
 
       // Write output file
-      await writeFile(outputPath, populated, 'utf-8');
+      await writeFile(outputPath, populated, "utf-8");
 
-      logger.info('OpenSCAD file generated successfully', { outputPath });
+      logger.info("OpenSCAD file generated successfully", { outputPath });
 
       return {
         success: true,
         scadPath: outputPath,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Failed to generate OpenSCAD file', {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to generate OpenSCAD file", {
         error: errorMessage,
         svgPath,
         outputPath,
@@ -100,7 +105,7 @@ export class OpenSCADGenerator {
   populateTemplate(
     template: string,
     svgPath: string,
-    config: GridfinityBinConfig
+    config: GridfinityBinConfig,
   ): string {
     // Calculate padding from single cutoutPadding value
     const paddingTop = config.cutoutPadding;
@@ -170,7 +175,7 @@ export class OpenSCADGenerator {
    * Handles backslashes and quotes
    */
   private escapeScadString(str: string): string {
-    return str.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+    return str.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   }
 }
 

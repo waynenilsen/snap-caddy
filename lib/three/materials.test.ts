@@ -24,24 +24,32 @@ describe("materials", () => {
       material = createBinMaterial();
 
       expect(material).toBeInstanceOf(THREE.MeshStandardMaterial);
-      expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe("e0e0e0");
+      expect(
+        (material as THREE.MeshStandardMaterial).color.getHexString(),
+      ).toBe("e0e0e0");
     });
 
     it("creates a MeshStandardMaterial with custom color", () => {
       material = createBinMaterial("#ff0000");
 
       expect(material).toBeInstanceOf(THREE.MeshStandardMaterial);
-      expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe("ff0000");
+      expect(
+        (material as THREE.MeshStandardMaterial).color.getHexString(),
+      ).toBe("ff0000");
     });
 
     it("has semi-matte plastic finish properties", () => {
-      material = createBinMaterial() as THREE.MeshStandardMaterial;
+      material = createBinMaterial();
+      const standardMaterial: THREE.MeshStandardMaterial =
+        material instanceof THREE.MeshStandardMaterial
+          ? material
+          : new THREE.MeshStandardMaterial();
 
-      expect(material.roughness).toBeGreaterThan(0.2);
-      expect(material.roughness).toBeLessThan(0.5);
-      expect(material.metalness).toBeLessThan(0.2);
-      expect(material.flatShading).toBe(false);
-      expect(material.side).toBe(THREE.DoubleSide);
+      expect(standardMaterial.roughness).toBeGreaterThan(0.2);
+      expect(standardMaterial.roughness).toBeLessThan(0.5);
+      expect(standardMaterial.metalness).toBeLessThan(0.2);
+      expect(standardMaterial.flatShading).toBe(false);
+      expect(standardMaterial.side).toBe(THREE.DoubleSide);
     });
   });
 
@@ -57,7 +65,9 @@ describe("materials", () => {
     it("creates material with custom color", () => {
       material = createGhostMaterial("#00ff00");
 
-      expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe("00ff00");
+      expect(
+        (material as THREE.MeshStandardMaterial).color.getHexString(),
+      ).toBe("00ff00");
     });
 
     it("has appropriate transparency level", () => {
@@ -79,7 +89,9 @@ describe("materials", () => {
     it("creates material with custom color", () => {
       material = createWireframeMaterial("#0000ff");
 
-      expect((material as THREE.MeshBasicMaterial).color.getHexString()).toBe("0000ff");
+      expect((material as THREE.MeshBasicMaterial).color.getHexString()).toBe(
+        "0000ff",
+      );
     });
 
     it("has DoubleSide rendering", () => {
@@ -112,13 +124,15 @@ describe("materials", () => {
       material = createColoredMaterial("red");
 
       expect(material).toBeInstanceOf(THREE.MeshStandardMaterial);
-      expect((material as THREE.MeshStandardMaterial).color.getHexString()).toBe(
-        FILAMENT_COLORS.red.replace("#", "")
-      );
+      expect(
+        (material as THREE.MeshStandardMaterial).color.getHexString(),
+      ).toBe(FILAMENT_COLORS.red.replace("#", ""));
     });
 
     it("works with all filament colors", () => {
-      const colorNames = Object.keys(FILAMENT_COLORS) as Array<keyof typeof FILAMENT_COLORS>;
+      const colorNames = Object.keys(FILAMENT_COLORS) as Array<
+        keyof typeof FILAMENT_COLORS
+      >;
 
       for (const colorName of colorNames) {
         const mat = createColoredMaterial(colorName);

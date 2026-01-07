@@ -8,7 +8,7 @@
  * Conversion happens in app/api/generate/route.ts via apiConfigToBinConfig()
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Gridfinity configuration schema - API request format
@@ -62,7 +62,12 @@ export const GenerateRequestSchema = z.object({
 /**
  * Generation status enum
  */
-export const GenerationStatusSchema = z.enum(['queued', 'processing', 'complete', 'error']);
+export const GenerationStatusSchema = z.enum([
+  "queued",
+  "processing",
+  "complete",
+  "error",
+]);
 
 /**
  * Generate response schema
@@ -83,7 +88,13 @@ export const GenerateResponseSchema = z.object({
 export const GenerateErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.string(),
-  code: z.enum(['INVALID_INPUT', 'INVALID_SVG', 'OPENSCAD_ERROR', 'RATE_LIMIT', 'SERVER_ERROR']),
+  code: z.enum([
+    "INVALID_INPUT",
+    "INVALID_SVG",
+    "OPENSCAD_ERROR",
+    "RATE_LIMIT",
+    "SERVER_ERROR",
+  ]),
   details: z.unknown().optional(),
 });
 
@@ -107,4 +118,6 @@ export type GenerateRequest = z.infer<typeof GenerateRequestSchema>;
 export type GenerateResponse = z.infer<typeof GenerateResponseSchema>;
 export type GenerateErrorResponse = z.infer<typeof GenerateErrorResponseSchema>;
 export type GenerationStatus = z.infer<typeof GenerationStatusSchema>;
-export type GenerationStatusResponse = z.infer<typeof GenerationStatusResponseSchema>;
+export type GenerationStatusResponse = z.infer<
+  typeof GenerationStatusResponseSchema
+>;

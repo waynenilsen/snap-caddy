@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Info } from "lucide-react";
@@ -10,7 +16,10 @@ interface CalibrationPreviewProps {
   unit: "mm" | "cm" | "in";
 }
 
-export function CalibrationPreview({ pixelsPerMm, unit }: CalibrationPreviewProps) {
+export function CalibrationPreview({
+  pixelsPerMm,
+  unit,
+}: CalibrationPreviewProps) {
   // Calculate what 1mm equals in pixels
   const mmToPixels = pixelsPerMm;
 
@@ -23,18 +32,22 @@ export function CalibrationPreview({ pixelsPerMm, unit }: CalibrationPreviewProp
 
   // Calculate accuracy indicator
   // Generally, good calibration has 10-50 pixels per mm
-  const getAccuracyLevel = (pxPerMm: number): { level: string; color: string; message: string } => {
+  const getAccuracyLevel = (
+    pxPerMm: number,
+  ): { level: string; color: string; message: string } => {
     if (pxPerMm < 5) {
       return {
         level: "Low Resolution",
         color: "destructive",
-        message: "Image resolution is quite low. Consider using a higher quality image for better accuracy.",
+        message:
+          "Image resolution is quite low. Consider using a higher quality image for better accuracy.",
       };
     } else if (pxPerMm < 10) {
       return {
         level: "Acceptable",
         color: "secondary",
-        message: "Calibration is acceptable. Results should be reasonably accurate.",
+        message:
+          "Calibration is acceptable. Results should be reasonably accurate.",
       };
     } else if (pxPerMm < 50) {
       return {
@@ -46,7 +59,8 @@ export function CalibrationPreview({ pixelsPerMm, unit }: CalibrationPreviewProp
       return {
         level: "Excellent",
         color: "default",
-        message: "Calibration quality is excellent. Results should be very accurate.",
+        message:
+          "Calibration quality is excellent. Results should be very accurate.",
       };
     }
   };
@@ -83,7 +97,9 @@ export function CalibrationPreview({ pixelsPerMm, unit }: CalibrationPreviewProp
         <div className="grid grid-cols-2 gap-3 text-sm">
           <div className="p-3 border rounded-lg">
             <p className="text-muted-foreground">10mm equals</p>
-            <p className="font-semibold">{(pixelsPerMm * 10).toFixed(0)} pixels</p>
+            <p className="font-semibold">
+              {(pixelsPerMm * 10).toFixed(0)} pixels
+            </p>
           </div>
           <div className="p-3 border rounded-lg">
             <p className="text-muted-foreground">100 pixels equals</p>

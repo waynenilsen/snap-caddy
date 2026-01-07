@@ -1,5 +1,5 @@
 // Test setup file to provide DOM environment for Bun tests using happy-dom
-import { GlobalWindow } from 'happy-dom';
+import { GlobalWindow } from "happy-dom";
 
 const globalWindow = new GlobalWindow();
 const window = globalWindow.window;

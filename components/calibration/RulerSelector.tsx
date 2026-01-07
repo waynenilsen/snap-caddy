@@ -1,7 +1,13 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Ruler } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -17,8 +23,14 @@ interface RulerSelectorProps {
   onLineChange: (point1: Point, point2: Point) => void;
 }
 
-export function RulerSelector({ imageUrl, line, onLineChange }: RulerSelectorProps) {
-  const [points, setPoints] = useState<[Point?, Point?]>(line || [undefined, undefined]);
+export function RulerSelector({
+  imageUrl,
+  line,
+  onLineChange,
+}: RulerSelectorProps) {
+  const [points, setPoints] = useState<[Point?, Point?]>(
+    line || [undefined, undefined],
+  );
   const [isDragging, setIsDragging] = useState<0 | 1 | null>(null);
   const [hoveredEndpoint, setHoveredEndpoint] = useState<0 | 1 | null>(null);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
@@ -68,7 +80,7 @@ export function RulerSelector({ imageUrl, line, onLineChange }: RulerSelectorPro
         midX - metrics.width / 2 - padding,
         midY - 20,
         metrics.width + padding * 2,
-        20
+        20,
       );
 
       // Text
@@ -119,7 +131,9 @@ export function RulerSelector({ imageUrl, line, onLineChange }: RulerSelectorPro
     setIsImageLoaded(true);
   };
 
-  const getCanvasCoordinates = (e: React.MouseEvent<HTMLCanvasElement>): Point => {
+  const getCanvasCoordinates = (
+    e: React.MouseEvent<HTMLCanvasElement>,
+  ): Point => {
     const canvas = canvasRef.current;
     if (!canvas) return { x: 0, y: 0 };
 
@@ -198,7 +212,8 @@ export function RulerSelector({ imageUrl, line, onLineChange }: RulerSelectorPro
     setIsDragging(null);
   };
 
-  const pixelDistance = points[0] && points[1] ? distance(points[0], points[1]) : null;
+  const pixelDistance =
+    points[0] && points[1] ? distance(points[0], points[1]) : null;
 
   return (
     <Card>
@@ -219,7 +234,7 @@ export function RulerSelector({ imageUrl, line, onLineChange }: RulerSelectorPro
             onMouseLeave={handleMouseUp}
             className={cn(
               "w-full h-auto border rounded-lg",
-              isDragging !== null ? "cursor-grabbing" : "cursor-crosshair"
+              isDragging !== null ? "cursor-grabbing" : "cursor-crosshair",
             )}
           />
 

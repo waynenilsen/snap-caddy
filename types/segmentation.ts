@@ -4,7 +4,11 @@
  * and re-exported here for consistency with the validated API contract
  */
 
-import type { Point as SchemaPoint, MaskOption as SchemaMaskOption } from '@/schemas/segment';
+import type {
+  Point as SchemaPoint,
+  MaskOption as SchemaMaskOption,
+  BoundingBox,
+} from "@/schemas/segment";
 
 /**
  * ClickPoint - represents a user click for segmentation
@@ -27,6 +31,8 @@ export interface SegmentationResult {
   imageHeight: number;
   processingTimeMs: number;
 }
+
+export type { BoundingBox };
 
 export interface SegmentationState {
   clickPoints: ClickPoint[];

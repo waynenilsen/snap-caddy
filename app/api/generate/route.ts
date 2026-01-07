@@ -3,23 +3,23 @@
  * Handles STL file generation from SVG cutouts
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
-import { GenerateRequestSchema } from '@/schemas/generate';
-import { validateSVG } from '@/lib/validation/svg';
-import { validateBinConfig } from '@/types/configuration';
-import { stlFileManager } from '@/lib/openscad/fileManager';
-import { openscadGenerator } from '@/lib/openscad/generator';
-import { openscadExecutor } from '@/lib/openscad/executor';
-import { withRateLimit } from '@/lib/api/rateLimit';
-import { withErrorHandler, APIError } from '@/lib/api/errors';
-import { logger, metrics } from '@/lib/logger';
-import { addSTLJob, getJobStatus, initializeQueue } from '@/lib/queue';
-import type { GenerateResponse, GenerationStatusResponse } from '@/types/api';
-import type { GridfinityBinConfig } from '@/types/configuration';
-import type { STLJobData } from '@/lib/queue/types';
+import { type NextRequest, NextResponse } from "next/server";
+import { GenerateRequestSchema } from "@/schemas/generate";
+import { validateSVG } from "@/lib/validation/svg";
+import { validateBinConfig } from "@/types/configuration";
+import { stlFileManager } from "@/lib/openscad/fileManager";
+import { openscadGenerator } from "@/lib/openscad/generator";
+import { openscadExecutor } from "@/lib/openscad/executor";
+import { withRateLimit } from "@/lib/api/rateLimit";
+import { withErrorHandler, APIError } from "@/lib/api/errors";
+import { logger, metrics } from "@/lib/logger";
+import { addSTLJob, getJobStatus, initializeQueue } from "@/lib/queue";
+import type { GenerateResponse, GenerationStatusResponse } from "@/types/api";
+import type { GridfinityBinConfig } from "@/types/configuration";
+import type { STLJobData } from "@/lib/queue/types";
 
 // Runtime configuration
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // Initialize queue on module load (for async processing)
@@ -30,7 +30,7 @@ function ensureQueueInitialized() {
       initializeQueue();
       queueInitialized = true;
     } catch (error) {
-      logger.error('Failed to initialize queue', {
+      logger.error("Failed to initialize queue", {
         error: error instanceof Error ? error.message : String(error),
       });
     }
@@ -85,18 +85,20 @@ function apiConfigToBinConfig(config: {
     gridUnitsY: config.gridUnitsY,
     binHeight: config.binHeight,
     cutoutDepth: config.cutoutDepth,
-    cutoutPadding: (paddingTop + paddingBottom + paddingLeft + paddingRight) / 4,
+    cutoutPadding:
+      (paddingTop + paddingBottom + paddingLeft + paddingRight) / 4,
     cutoutOffsetX: 0,
     cutoutOffsetY: 0,
     wallThickness,
-    baseType: magnetHoles && screwHoles
-      ? 'magnet_screw'
-      : magnetHoles
-        ? 'magnet'
-        : screwHoles
-          ? 'screw'
-          : 'solid',
-    lipStyle: stackingLip ? 'normal' : 'none',
+    baseType:
+      magnetHoles && screwHoles
+        ? "magnet_screw"
+        : magnetHoles
+          ? "magnet"
+          : screwHoles
+            ? "screw"
+            : "solid",
+    lipStyle: stackingLip ? "normal" : "none",
     cornerRadius,
   };
 }
@@ -116,15 +118,15 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     const parseResult = GenerateRequestSchema.safeParse(body);
     if (!parseResult.success) {
       const issues = parseResult.error.issues;
-      logger.warn('Invalid generate request', {
+      logger.warn("Invalid generate request", {
         errors: issues,
       });
 
       throw new APIError(
-        `Invalid request: ${issues.map((e) => `${e.path.join('.')}: ${e.message}`).join(', ')}`,
-        'INVALID_INPUT',
+        `Invalid request: ${issues.map((e) => `${e.path.join(".")}: ${e.message}`).join(", ")}`,
+        "INVALID_INPUT",
         400,
-        issues
+        issues,
       );
     }
 
@@ -133,14 +135,14 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     // Validate SVG
     const svgValidation = validateSVG(request.svg);
     if (!svgValidation.valid) {
-      logger.warn('SVG validation failed', {
+      logger.warn("SVG validation failed", {
         error: svgValidation.error,
       });
 
       throw new APIError(
-        svgValidation.error || 'SVG validation failed',
-        'INVALID_SVG',
-        400
+        svgValidation.error || "SVG validation failed",
+        "INVALID_SVG",
+        400,
       );
     }
 
@@ -149,26 +151,29 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     const configValidation = validateBinConfig(binConfig);
 
     if (!configValidation.valid) {
-      logger.warn('Config validation failed', {
+      logger.warn("Config validation failed", {
         errors: configValidation.errors,
       });
 
       throw new APIError(
-        `Invalid configuration: ${configValidation.errors.join(', ')}`,
-        'INVALID_INPUT',
+        `Invalid configuration: ${configValidation.errors.join(", ")}`,
+        "INVALID_INPUT",
         400,
-        { errors: configValidation.errors, warnings: configValidation.warnings }
+        {
+          errors: configValidation.errors,
+          warnings: configValidation.warnings,
+        },
       );
     }
 
     // Log warnings if any
     if (configValidation.warnings.length > 0) {
-      logger.info('Config validation warnings', {
+      logger.info("Config validation warnings", {
         warnings: configValidation.warnings,
       });
     }
 
-    logger.info('Processing generation request', {
+    logger.info("Processing generation request", {
       async: request.async,
       config: binConfig,
     });
@@ -195,27 +200,30 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
         // Add job to queue
         const { queuePosition } = await addSTLJob(jobData);
 
-        logger.info('Queued async generation', { generationId, queuePosition });
+        logger.info("Queued async generation", { generationId, queuePosition });
 
         const response: GenerateResponse = {
           success: true,
           generationId,
-          status: 'queued',
+          status: "queued",
           queuePosition,
           estimatedTimeMs: 30000 + (queuePosition - 1) * 15000, // Estimate based on queue position
         };
 
         return NextResponse.json(response);
       } catch (error) {
-        logger.error('Failed to queue job', {
+        logger.error("Failed to queue job", {
           error: error instanceof Error ? error.message : String(error),
         });
 
         throw new APIError(
-          'Failed to queue generation job',
-          'SERVER_ERROR',
+          "Failed to queue generation job",
+          "SERVER_ERROR",
           500,
-          { originalError: error instanceof Error ? error.message : String(error) }
+          {
+            originalError:
+              error instanceof Error ? error.message : String(error),
+          },
         );
       }
     }
@@ -227,7 +235,7 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     // Initialize job status for sync jobs
     const jobStatus: GenerationStatusResponse = {
       id: generationId,
-      status: 'processing',
+      status: "processing",
       progress: 0,
       createdAt: new Date().toISOString(),
     };
@@ -236,12 +244,12 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     // Synchronous processing
     try {
       // Update status
-      jobStatus.status = 'processing';
+      jobStatus.status = "processing";
       jobStatus.progress = 10;
 
       // Write SVG file
       await stlFileManager.writeSVG(jobPaths.svgPath, request.svg);
-      logger.debug('SVG file written', { path: jobPaths.svgPath });
+      logger.debug("SVG file written", { path: jobPaths.svgPath });
 
       jobStatus.progress = 20;
 
@@ -249,47 +257,47 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
       const scadResult = await openscadGenerator.generate(
         jobPaths.svgPath,
         binConfig,
-        jobPaths.scadPath
+        jobPaths.scadPath,
       );
 
       if (!scadResult.success || !scadResult.scadPath) {
         throw new APIError(
-          scadResult.error || 'Failed to generate OpenSCAD file',
-          'OPENSCAD_ERROR',
-          500
+          scadResult.error || "Failed to generate OpenSCAD file",
+          "OPENSCAD_ERROR",
+          500,
         );
       }
 
-      logger.debug('OpenSCAD file generated', { path: scadResult.scadPath });
+      logger.debug("OpenSCAD file generated", { path: scadResult.scadPath });
       jobStatus.progress = 40;
 
       // Render STL file
       const renderResult = await openscadExecutor.render(
         scadResult.scadPath,
-        jobPaths.stlPath
+        jobPaths.stlPath,
       );
 
       if (!renderResult.success || !renderResult.outputPath) {
-        logger.error('OpenSCAD render failed', {
+        logger.error("OpenSCAD render failed", {
           error: renderResult.error,
           stderr: renderResult.stderr,
         });
 
         throw new APIError(
-          renderResult.error || 'Failed to render STL file',
-          'OPENSCAD_ERROR',
+          renderResult.error || "Failed to render STL file",
+          "OPENSCAD_ERROR",
           500,
-          { stderr: renderResult.stderr }
+          { stderr: renderResult.stderr },
         );
       }
 
-      logger.info('STL file rendered successfully', {
+      logger.info("STL file rendered successfully", {
         path: renderResult.outputPath,
         duration: renderResult.duration,
       });
 
       jobStatus.progress = 100;
-      jobStatus.status = 'complete';
+      jobStatus.status = "complete";
       jobStatus.completedAt = new Date().toISOString();
       jobStatus.downloadUrl = `/api/download/${generationId}`;
 
@@ -302,12 +310,12 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
       const response: GenerateResponse = {
         success: true,
         generationId,
-        status: 'complete',
+        status: "complete",
         downloadUrl: `/api/download/${generationId}`,
         estimatedTimeMs: processingTimeMs,
       };
 
-      logger.info('Generation completed successfully', {
+      logger.info("Generation completed successfully", {
         generationId,
         processingTimeMs,
       });
@@ -315,8 +323,9 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
       return NextResponse.json(response);
     } catch (error) {
       // Update job status to error
-      jobStatus.status = 'error';
-      jobStatus.error = error instanceof Error ? error.message : 'Unknown error';
+      jobStatus.status = "error";
+      jobStatus.error =
+        error instanceof Error ? error.message : "Unknown error";
       jobStatus.completedAt = new Date().toISOString();
 
       throw error;
@@ -328,18 +337,19 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
     }
 
     // Generic server error
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
 
-    logger.error('Generation error', {
+    logger.error("Generation error", {
       error: errorMessage,
       duration: Date.now() - startTime,
     });
 
     throw new APIError(
-      'Internal server error during generation',
-      'SERVER_ERROR',
+      "Internal server error during generation",
+      "SERVER_ERROR",
       500,
-      { originalError: errorMessage }
+      { originalError: errorMessage },
     );
   }
 }
@@ -352,34 +362,30 @@ async function getStatusHandler(req: NextRequest): Promise<NextResponse> {
   try {
     // Get id from query params
     const { searchParams } = new URL(req.url);
-    const id = searchParams.get('id');
+    const id = searchParams.get("id");
 
     if (!id) {
-      throw new APIError(
-        'Missing id query parameter',
-        'INVALID_INPUT',
-        400
-      );
+      throw new APIError("Missing id query parameter", "INVALID_INPUT", 400);
     }
 
     // First check sync job status store
-    let jobStatus = syncJobStatusStore.get(id);
+    let jobStatus: GenerationStatusResponse | undefined =
+      syncJobStatusStore.get(id);
 
     // If not in sync store, check async queue
     if (!jobStatus) {
       ensureQueueInitialized();
-      jobStatus = await getJobStatus(id);
+      jobStatus = (await getJobStatus(id)) ?? undefined;
     }
 
     if (!jobStatus) {
-      throw new APIError(
-        'Generation not found',
-        'INVALID_INPUT',
-        404
-      );
+      throw new APIError("Generation not found", "INVALID_INPUT", 404);
     }
 
-    logger.debug('Retrieved generation status', { id, status: jobStatus.status });
+    logger.debug("Retrieved generation status", {
+      id,
+      status: jobStatus.status,
+    });
 
     return NextResponse.json(jobStatus);
   } catch (error) {
@@ -389,18 +395,16 @@ async function getStatusHandler(req: NextRequest): Promise<NextResponse> {
     }
 
     // Generic server error
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
 
-    logger.error('Get status error', {
+    logger.error("Get status error", {
       error: errorMessage,
     });
 
-    throw new APIError(
-      'Internal server error',
-      'SERVER_ERROR',
-      500,
-      { originalError: errorMessage }
-    );
+    throw new APIError("Internal server error", "SERVER_ERROR", 500, {
+      originalError: errorMessage,
+    });
   }
 }
 
@@ -409,7 +413,7 @@ export const POST = withErrorHandler(
   withRateLimit(generateHandler, {
     maxRequests: 5,
     windowMs: 60000, // 5 requests per minute
-  })
+  }),
 );
 
 export const GET = withErrorHandler(getStatusHandler);

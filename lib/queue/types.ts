@@ -3,7 +3,7 @@
  * Type definitions for the async job queue system
  */
 
-import type { GridfinityBinConfig } from '@/types/configuration';
+import type { GridfinityBinConfig } from "@/types/configuration";
 
 /**
  * Data passed to STL generation jobs
@@ -29,13 +29,18 @@ export interface STLJobResult {
 /**
  * Job status for tracking progress
  */
-export type JobStatus = 'queued' | 'processing' | 'complete' | 'error';
+export type JobStatus = "queued" | "processing" | "complete" | "error";
 
 /**
  * Progress update from job
  */
 export interface JobProgress {
-  stage: 'queued' | 'writing_svg' | 'generating_scad' | 'rendering_stl' | 'complete';
+  stage:
+    | "queued"
+    | "writing_svg"
+    | "generating_scad"
+    | "rendering_stl"
+    | "complete";
   percent: number;
   message?: string;
 }

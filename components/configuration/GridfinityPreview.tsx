@@ -1,6 +1,12 @@
 "use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { BinConfig } from "./BinConfigurator";
 
 interface GridfinityPreviewProps {
@@ -10,7 +16,7 @@ interface GridfinityPreviewProps {
 
 export function GridfinityPreview({
   config,
-  svgOutline
+  svgOutline,
 }: GridfinityPreviewProps) {
   const GRID_SIZE = 42;
   const viewWidth = config.gridUnitsX * GRID_SIZE;
@@ -21,7 +27,8 @@ export function GridfinityPreview({
       <CardHeader>
         <CardTitle>Bin Preview</CardTitle>
         <CardDescription>
-          {config.gridUnitsX} × {config.gridUnitsY} units, {config.binHeight}mm tall
+          {config.gridUnitsX} × {config.gridUnitsY} units, {config.binHeight}mm
+          tall
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -50,11 +57,7 @@ export function GridfinityPreview({
             </defs>
 
             {/* Base grid */}
-            <rect
-              width={viewWidth}
-              height={viewHeight}
-              fill="url(#grid)"
-            />
+            <rect width={viewWidth} height={viewHeight} fill="url(#grid)" />
 
             {/* Bin outline */}
             <rect
@@ -84,19 +87,61 @@ export function GridfinityPreview({
             {config.magnetHoles && (
               <>
                 <circle cx={8} cy={8} r={3} fill="currentColor" opacity="0.3" />
-                <circle cx={viewWidth - 8} cy={8} r={3} fill="currentColor" opacity="0.3" />
-                <circle cx={8} cy={viewHeight - 8} r={3} fill="currentColor" opacity="0.3" />
-                <circle cx={viewWidth - 8} cy={viewHeight - 8} r={3} fill="currentColor" opacity="0.3" />
+                <circle
+                  cx={viewWidth - 8}
+                  cy={8}
+                  r={3}
+                  fill="currentColor"
+                  opacity="0.3"
+                />
+                <circle
+                  cx={8}
+                  cy={viewHeight - 8}
+                  r={3}
+                  fill="currentColor"
+                  opacity="0.3"
+                />
+                <circle
+                  cx={viewWidth - 8}
+                  cy={viewHeight - 8}
+                  r={3}
+                  fill="currentColor"
+                  opacity="0.3"
+                />
               </>
             )}
 
             {/* Screw holes */}
             {config.screwHoles && (
               <>
-                <circle cx={GRID_SIZE / 2} cy={GRID_SIZE / 2} r={1.5} fill="currentColor" opacity="0.4" />
-                <circle cx={viewWidth - GRID_SIZE / 2} cy={GRID_SIZE / 2} r={1.5} fill="currentColor" opacity="0.4" />
-                <circle cx={GRID_SIZE / 2} cy={viewHeight - GRID_SIZE / 2} r={1.5} fill="currentColor" opacity="0.4" />
-                <circle cx={viewWidth - GRID_SIZE / 2} cy={viewHeight - GRID_SIZE / 2} r={1.5} fill="currentColor" opacity="0.4" />
+                <circle
+                  cx={GRID_SIZE / 2}
+                  cy={GRID_SIZE / 2}
+                  r={1.5}
+                  fill="currentColor"
+                  opacity="0.4"
+                />
+                <circle
+                  cx={viewWidth - GRID_SIZE / 2}
+                  cy={GRID_SIZE / 2}
+                  r={1.5}
+                  fill="currentColor"
+                  opacity="0.4"
+                />
+                <circle
+                  cx={GRID_SIZE / 2}
+                  cy={viewHeight - GRID_SIZE / 2}
+                  r={1.5}
+                  fill="currentColor"
+                  opacity="0.4"
+                />
+                <circle
+                  cx={viewWidth - GRID_SIZE / 2}
+                  cy={viewHeight - GRID_SIZE / 2}
+                  r={1.5}
+                  fill="currentColor"
+                  opacity="0.4"
+                />
               </>
             )}
 
@@ -144,19 +189,20 @@ export function GridfinityPreview({
           <div className="flex justify-between p-2 bg-muted rounded">
             <span className="text-muted-foreground">Volume:</span>
             <span className="font-medium">
-              {((viewWidth * viewHeight * config.binHeight) / 1000).toFixed(1)}cm³
+              {((viewWidth * viewHeight * config.binHeight) / 1000).toFixed(1)}
+              cm³
             </span>
           </div>
           <div className="flex justify-between p-2 bg-muted rounded">
             <span className="text-muted-foreground">Features:</span>
             <span className="font-medium">
               {[
-                config.magnetHoles && 'Magnets',
-                config.screwHoles && 'Screws',
-                config.stackingLip && 'Label'
+                config.magnetHoles && "Magnets",
+                config.screwHoles && "Screws",
+                config.stackingLip && "Label",
               ]
                 .filter(Boolean)
-                .join(', ') || 'None'}
+                .join(", ") || "None"}
             </span>
           </div>
         </div>

@@ -3,11 +3,11 @@
  * Returns health status of the job queue system
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
-import { getQueueHealth, initializeQueue } from '@/lib/queue';
-import { logger } from '@/lib/logger';
+import { type NextRequest, NextResponse } from "next/server";
+import { getQueueHealth, initializeQueue } from "@/lib/queue";
+import { logger } from "@/lib/logger";
 
-export const runtime = 'nodejs';
+export const runtime = "nodejs";
 
 // Initialize queue on first request
 let initialized = false;
@@ -24,7 +24,7 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
         initializeQueue();
         initialized = true;
       } catch (error) {
-        logger.warn('Queue not initialized', {
+        logger.warn("Queue not initialized", {
           error: error instanceof Error ? error.message : String(error),
         });
       }
@@ -34,9 +34,9 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
 
     // Determine overall health status
     const isHealthy = health.connected && health.redis.ping;
-    const status = isHealthy ? 'healthy' : 'unhealthy';
+    const status = isHealthy ? "healthy" : "unhealthy";
 
-    logger.debug('Queue health check', { status, ...health });
+    logger.debug("Queue health check", { status, ...health });
 
     return NextResponse.json(
       {
@@ -47,21 +47,21 @@ export async function GET(_req: NextRequest): Promise<NextResponse> {
       {
         status: isHealthy ? 200 : 503,
         headers: {
-          'Cache-Control': 'no-store, max-age=0',
+          "Cache-Control": "no-store, max-age=0",
         },
-      }
+      },
     );
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logger.error('Queue health check failed', { error: errorMessage });
+    logger.error("Queue health check failed", { error: errorMessage });
 
     return NextResponse.json(
       {
-        status: 'error',
+        status: "error",
         error: errorMessage,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

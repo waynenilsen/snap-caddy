@@ -3,7 +3,11 @@
 import { useCallback, useState } from "react";
 import { useWizard } from "@/hooks/useWizard";
 import { useGenerationPolling } from "@/hooks/useGenerationPolling";
-import { WizardLayout, StepIndicator, WizardNavigation } from "@/components/wizard";
+import {
+  WizardLayout,
+  StepIndicator,
+  WizardNavigation,
+} from "@/components/wizard";
 import { CaptureStep } from "@/components/capture";
 import { SelectStep } from "@/components/segmentation";
 import { CalibrateStep } from "@/components/calibration";
@@ -18,12 +22,23 @@ import { findContours, generateSVG } from "@/lib/canvas";
 
 export default function Home() {
   const wizard = useWizard();
-  const { state, setImageData, setCalibration, setSvgOutline, setGridfinityConfig, setGenerationStatus, setGenerationId } = wizard;
+  const {
+    state,
+    setImageData,
+    setCalibration,
+    setSvgOutline,
+    setGridfinityConfig,
+    setGenerationStatus,
+    setGenerationId,
+  } = wizard;
   const [isLoading, setIsLoading] = useState(false);
 
   // Use polling hook to track generation status
   const polling = useGenerationPolling(state.generationId, {
-    enabled: !!state.generationId && (state.generationStatus === "queued" || state.generationStatus === "processing"),
+    enabled:
+      !!state.generationId &&
+      (state.generationStatus === "queued" ||
+        state.generationStatus === "processing"),
     pollingInterval: 2500, // Poll every 2.5 seconds
     onComplete: (data) => {
       console.log("Generation complete:", data);
@@ -40,112 +55,136 @@ export default function Home() {
   const generationStatus = polling.status || state.generationStatus;
 
   // Step handlers
-  const handleImageCaptured = useCallback((imageDataUrl: string) => {
-    setImageData(imageDataUrl);
-  }, [setImageData]);
+  const handleImageCaptured = useCallback(
+    (imageDataUrl: string) => {
+      setImageData(imageDataUrl);
+    },
+    [setImageData],
+  );
 
-  const handleMaskGenerated = useCallback((maskDataUrl: string) => {
-    // Load the mask image from data URL and convert to ImageData
-    const img = new Image();
-    img.onload = () => {
-      // Create canvas to extract ImageData from the mask
-      const canvas = document.createElement("canvas");
-      canvas.width = img.width;
-      canvas.height = img.height;
-      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  const handleMaskGenerated = useCallback(
+    (maskDataUrl: string) => {
+      // Load the mask image from data URL and convert to ImageData
+      const img = new Image();
+      img.onload = () => {
+        // Create canvas to extract ImageData from the mask
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext("2d", { willReadFrequently: true });
 
-      if (!ctx) {
-        console.error("Failed to get canvas context for mask processing");
-        return;
-      }
-
-      // Draw mask image to canvas
-      ctx.drawImage(img, 0, 0);
-
-      // Get ImageData from the mask
-      const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      // Store the mask in wizard state
-      wizard.setSegmentationMask(maskImageData);
-
-      try {
-        // Detect contours from the binary mask
-        const contourResult = findContours(maskImageData, {
-          minArea: 200,           // Ignore small noise
-          simplifyTolerance: 1.5, // Reduce points while preserving shape
-          smoothingIterations: 2, // Smooth edges
-          findHoles: true,        // Detect inner holes
-        });
-
-        // Check if we found a valid contour
-        if (contourResult.outerContour.points.length === 0) {
-          console.warn("No contour detected in mask");
-          // Use a fallback simple SVG if no contour detected
-          setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
+        if (!ctx) {
+          console.error("Failed to get canvas context for mask processing");
           return;
         }
 
-        // Use calibration data if available, otherwise use a sensible default
-        // Default: 10 pixels per mm (typical for a phone camera at ~30cm distance)
-        const pixelsPerMm = state.calibration.pixelsPerMm || 10;
+        // Draw mask image to canvas
+        ctx.drawImage(img, 0, 0);
 
-        // Generate SVG from contours
-        const svgDoc = generateSVG(
-          contourResult.outerContour,
-          contourResult.holes,
-          {
-            pixelsPerMm,
-            padding: 3,           // 3mm padding
-            useBezier: true,      // Smooth curves for organic shapes
-            bezierTension: 0.4,   // Moderate smoothing
-            decimals: 2,          // 0.01mm precision
-            flipY: true,          // SVG Y-axis convention
-          }
+        // Get ImageData from the mask
+        const maskImageData = ctx.getImageData(
+          0,
+          0,
+          canvas.width,
+          canvas.height,
         );
 
-        // Store the generated SVG
-        setSvgOutline(svgDoc.fullSvg);
+        // Store the mask in wizard state
+        wizard.setSegmentationMask(maskImageData);
 
-        console.log(`SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`);
-      } catch (error) {
-        console.error("Error generating SVG from mask:", error);
-        // Use fallback on error
-        setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
-      }
-    };
+        try {
+          // Detect contours from the binary mask
+          const contourResult = findContours(maskImageData, {
+            minArea: 200, // Ignore small noise
+            simplifyTolerance: 1.5, // Reduce points while preserving shape
+            smoothingIterations: 2, // Smooth edges
+            findHoles: true, // Detect inner holes
+          });
 
-    img.onerror = () => {
-      console.error("Failed to load mask image");
-    };
+          // Check if we found a valid contour
+          if (contourResult.outerContour.points.length === 0) {
+            console.warn("No contour detected in mask");
+            // Use a fallback simple SVG if no contour detected
+            setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
+            return;
+          }
 
-    img.src = maskDataUrl;
-  }, [wizard, setSvgOutline, state.calibration.pixelsPerMm]);
+          // Use calibration data if available, otherwise use a sensible default
+          // Default: 10 pixels per mm (typical for a phone camera at ~30cm distance)
+          const pixelsPerMm = state.calibration.pixelsPerMm || 10;
 
-  const handleCalibrationComplete = useCallback((pixelsPerMm: number, unit: "mm" | "cm" | "in") => {
-    setCalibration({ pixelsPerMm, unit });
-  }, [setCalibration]);
+          // Generate SVG from contours
+          const svgDoc = generateSVG(
+            contourResult.outerContour,
+            contourResult.holes,
+            {
+              pixelsPerMm,
+              padding: 3, // 3mm padding
+              useBezier: true, // Smooth curves for organic shapes
+              bezierTension: 0.4, // Moderate smoothing
+              decimals: 2, // 0.01mm precision
+              flipY: true, // SVG Y-axis convention
+            },
+          );
 
-  const handleReviewConfirm = useCallback((paddedSvg: string, padding: number) => {
-    setSvgOutline(paddedSvg);
-  }, [setSvgOutline]);
+          // Store the generated SVG
+          setSvgOutline(svgDoc.fullSvg);
 
-  const handleConfigComplete = useCallback((config: {
-    gridUnitsX: number;
-    gridUnitsY: number;
-    binHeight: number;
-    cutoutDepth: number;
-    wallThickness: number;
-    magnetHoles: boolean;
-    screwHoles: boolean;
-    stackingLip: boolean;
-  }) => {
-    setGridfinityConfig(config);
-  }, [setGridfinityConfig]);
+          console.log(
+            `SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`,
+          );
+        } catch (error) {
+          console.error("Error generating SVG from mask:", error);
+          // Use fallback on error
+          setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
+        }
+      };
+
+      img.onerror = () => {
+        console.error("Failed to load mask image");
+      };
+
+      img.src = maskDataUrl;
+    },
+    [wizard, setSvgOutline, state.calibration.pixelsPerMm],
+  );
+
+  const handleCalibrationComplete = useCallback(
+    (pixelsPerMm: number, unit: "mm" | "cm" | "in") => {
+      setCalibration({ pixelsPerMm, unit });
+    },
+    [setCalibration],
+  );
+
+  const handleReviewConfirm = useCallback(
+    (paddedSvg: string, padding: number) => {
+      setSvgOutline(paddedSvg);
+    },
+    [setSvgOutline],
+  );
+
+  const handleConfigComplete = useCallback(
+    (config: {
+      gridUnitsX: number;
+      gridUnitsY: number;
+      binHeight: number;
+      cutoutDepth: number;
+      wallThickness: number;
+      magnetHoles: boolean;
+      screwHoles: boolean;
+      stackingLip: boolean;
+    }) => {
+      setGridfinityConfig(config);
+    },
+    [setGridfinityConfig],
+  );
 
   const handleGenerate = useCallback(async () => {
     // Validate required data
     if (!state.svgOutline) {
-      wizard.setError("SVG outline is missing. Please complete the previous steps.");
+      wizard.setError(
+        "SVG outline is missing. Please complete the previous steps.",
+      );
       return;
     }
 
@@ -180,9 +219,9 @@ export default function Home() {
       // Set the generation ID to start polling
       setGenerationId(response.generationId);
       // Update status from response - polling hook will monitor progress and update to "complete"
-      if (response.status === 'queued' || response.status === 'processing') {
+      if (response.status === "queued" || response.status === "processing") {
         setGenerationStatus(response.status);
-      } else if (response.status === 'complete') {
+      } else if (response.status === "complete") {
         setGenerationStatus("complete");
       }
     } catch (error) {
@@ -195,19 +234,23 @@ export default function Home() {
       if (error instanceof APIClientError) {
         // Handle specific API errors
         switch (error.code) {
-          case 'INVALID_INPUT':
-            errorMessage = "Invalid configuration. Please check your settings and try again.";
+          case "INVALID_INPUT":
+            errorMessage =
+              "Invalid configuration. Please check your settings and try again.";
             break;
-          case 'INVALID_SVG':
-            errorMessage = "Invalid SVG outline. Please go back and review your outline.";
+          case "INVALID_SVG":
+            errorMessage =
+              "Invalid SVG outline. Please go back and review your outline.";
             break;
-          case 'OPENSCAD_ERROR':
-            errorMessage = "Error generating the 3D model. Please try different configuration settings.";
+          case "OPENSCAD_ERROR":
+            errorMessage =
+              "Error generating the 3D model. Please try different configuration settings.";
             break;
-          case 'RATE_LIMIT':
-            errorMessage = "Too many requests. Please wait a moment before trying again.";
+          case "RATE_LIMIT":
+            errorMessage =
+              "Too many requests. Please wait a moment before trying again.";
             break;
-          case 'SERVER_ERROR':
+          case "SERVER_ERROR":
             errorMessage = "Server error. Please try again later.";
             break;
           default:
@@ -215,8 +258,12 @@ export default function Home() {
         }
       } else if (error instanceof Error) {
         // Check for specific error types
-        if (error.message.includes("network") || error.message.includes("fetch")) {
-          errorMessage = "Network error. Please check your connection and try again.";
+        if (
+          error.message.includes("network") ||
+          error.message.includes("fetch")
+        ) {
+          errorMessage =
+            "Network error. Please check your connection and try again.";
         } else if (error.message.includes("timeout")) {
           errorMessage = "The request took too long. Please try again.";
         }
@@ -226,11 +273,20 @@ export default function Home() {
     } finally {
       setIsLoading(false);
     }
-  }, [state.svgOutline, state.gridfinityConfig, setGenerationStatus, setGenerationId, wizard]);
+  }, [
+    state.svgOutline,
+    state.gridfinityConfig,
+    setGenerationStatus,
+    setGenerationId,
+    wizard,
+  ]);
 
-  const handleStepClick = useCallback((step: number) => {
-    wizard.goToStep(step);
-  }, [wizard]);
+  const handleStepClick = useCallback(
+    (step: number) => {
+      wizard.goToStep(step);
+    },
+    [wizard],
+  );
 
   const handleBack = useCallback(() => {
     wizard.goToPreviousStep();
@@ -248,9 +304,7 @@ export default function Home() {
   const renderStepContent = () => {
     switch (state.currentStep) {
       case 0: // Capture
-        return (
-          <CaptureStep onImageCaptured={handleImageCaptured} />
-        );
+        return <CaptureStep onImageCaptured={handleImageCaptured} />;
 
       case 1: // Segment
         return state.imageData ? (
@@ -292,7 +346,10 @@ export default function Home() {
       case 4: // Configure
         return (
           <ConfigureStep
-            svgDimensions={getSvgDimensions(state.svgOutline, state.calibration.pixelsPerMm)}
+            svgDimensions={getSvgDimensions(
+              state.svgOutline,
+              state.calibration.pixelsPerMm,
+            )}
             svgOutline={state.svgOutline || undefined}
             onConfigComplete={handleConfigComplete}
             initialConfig={{
@@ -314,7 +371,14 @@ export default function Home() {
             config={state.gridfinityConfig}
             svgContent={state.svgOutline || ""}
             onGenerate={handleGenerate}
-            generationStatus={generationStatus as "idle" | "queued" | "processing" | "complete" | "error"}
+            generationStatus={
+              generationStatus as
+                | "idle"
+                | "queued"
+                | "processing"
+                | "complete"
+                | "error"
+            }
             generationId={state.generationId || undefined}
             generationError={polling.error || state.error || undefined}
             progress={polling.progress}
@@ -336,7 +400,9 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-sm">SC</span>
+              <span className="text-primary-foreground font-bold text-sm">
+                SC
+              </span>
             </div>
             <h1 className="text-xl font-semibold">Snap Caddy</h1>
           </div>
@@ -357,7 +423,7 @@ export default function Home() {
         <div className="container mx-auto px-4 py-4">
           <StepIndicator
             currentStep={state.currentStep + 1}
-            completedSteps={Array.from(state.completedSteps).map(s => s + 1)}
+            completedSteps={Array.from(state.completedSteps).map((s) => s + 1)}
             onStepClick={(step) => handleStepClick(step - 1)}
           />
         </div>
@@ -431,7 +497,7 @@ function createFallbackSvg(width: number, height: number): string {
 // Helper function to get SVG dimensions in mm
 function getSvgDimensions(
   svgContent: string | null,
-  pixelsPerMm: number | null
+  pixelsPerMm: number | null,
 ): { width: number; height: number } | undefined {
   if (!svgContent) return undefined;
 

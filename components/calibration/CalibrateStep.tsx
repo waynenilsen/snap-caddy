@@ -20,7 +20,10 @@ interface CalibrateStepProps {
   onCalibrationComplete: (pixelsPerMm: number, unit: Unit) => void;
 }
 
-export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStepProps) {
+export function CalibrateStep({
+  imageUrl,
+  onCalibrationComplete,
+}: CalibrateStepProps) {
   const [line, setLine] = useState<[Point, Point] | null>(null);
   const [pixelDistance, setPixelDistance] = useState<number | null>(null);
   const [realDistance, setRealDistance] = useState<number>(100);
@@ -35,12 +38,14 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
 
     // Calculate pixel distance
     const dist = Math.sqrt(
-      (point2.x - point1.x) ** 2 + (point2.y - point1.y) ** 2
+      (point2.x - point1.x) ** 2 + (point2.y - point1.y) ** 2,
     );
 
     // Validate the line isn't too short
     if (dist < 10) {
-      setError("The calibration line is too short. Please select two points that are further apart for accurate calibration.");
+      setError(
+        "The calibration line is too short. Please select two points that are further apart for accurate calibration.",
+      );
       setPixelDistance(null);
       return;
     }
@@ -60,12 +65,16 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
 
     // Validate real distance
     if (realDistance > 10000) {
-      setError("The entered distance seems unusually large. Please verify your measurement.");
+      setError(
+        "The entered distance seems unusually large. Please verify your measurement.",
+      );
       return null;
     }
 
     if (realDistance < 0.1) {
-      setError("The entered distance is too small. Please enter a larger measurement for better accuracy.");
+      setError(
+        "The entered distance is too small. Please enter a larger measurement for better accuracy.",
+      );
       return null;
     }
 
@@ -86,7 +95,9 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
 
     // Validate the result is reasonable
     if (result < 0.1 || result > 100) {
-      setError("The calculated scale seems incorrect. Please verify your calibration line and distance measurement.");
+      setError(
+        "The calculated scale seems incorrect. Please verify your calibration line and distance measurement.",
+      );
       return null;
     }
 
@@ -110,7 +121,8 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
         <div className="space-y-2">
           <h1 className="text-3xl font-bold">Calibrate Scale</h1>
           <p className="text-muted-foreground">
-            Set the scale by drawing a line on a ruler or known measurement in your image.
+            Set the scale by drawing a line on a ruler or known measurement in
+            your image.
           </p>
         </div>
 
@@ -120,7 +132,9 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
           <AlertDescription>
             <strong>How to calibrate:</strong>
             <ol className="list-decimal list-inside mt-2 space-y-1">
-              <li>Click two points on a ruler or object with known dimensions</li>
+              <li>
+                Click two points on a ruler or object with known dimensions
+              </li>
               <li>Enter the real-world distance between those points</li>
               <li>Select the unit of measurement</li>
               <li>Review the calculated scale factor</li>
@@ -177,7 +191,8 @@ export function CalibrateStep({ imageUrl, onCalibrationComplete }: CalibrateStep
           <Alert>
             <AlertCircle className="h-4 w-4" />
             <AlertDescription>
-              Please select two points on the image to create a calibration line.
+              Please select two points on the image to create a calibration
+              line.
             </AlertDescription>
           </Alert>
         )}

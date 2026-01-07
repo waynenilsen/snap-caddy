@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useRef, useEffect, useState } from "react";
+import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface MaskOverlayProps {
   imageUrl: string;
@@ -23,7 +23,7 @@ export function MaskOverlay({
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const ctx = canvas.getContext('2d');
+    const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
     setIsLoading(true);
@@ -42,7 +42,7 @@ export function MaskOverlay({
     };
 
     const handleError = (e: ErrorEvent | Event) => {
-      setError('Failed to load image or mask');
+      setError("Failed to load image or mask");
       setIsLoading(false);
     };
 
@@ -59,21 +59,21 @@ export function MaskOverlay({
 
       // Draw mask with transparency and green tint
       ctx.globalAlpha = opacity;
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = "source-over";
 
       // Create a temporary canvas to tint the mask green
-      const tempCanvas = document.createElement('canvas');
+      const tempCanvas = document.createElement("canvas");
       tempCanvas.width = mask.naturalWidth;
       tempCanvas.height = mask.naturalHeight;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext("2d");
 
       if (tempCtx) {
         // Draw mask
         tempCtx.drawImage(mask, 0, 0);
 
         // Apply green tint
-        tempCtx.globalCompositeOperation = 'source-in';
-        tempCtx.fillStyle = '#22c55e'; // Green color
+        tempCtx.globalCompositeOperation = "source-in";
+        tempCtx.fillStyle = "#22c55e"; // Green color
         tempCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
 
         // Draw tinted mask onto main canvas
@@ -81,27 +81,35 @@ export function MaskOverlay({
       }
 
       ctx.globalAlpha = 1;
-      ctx.globalCompositeOperation = 'source-over';
+      ctx.globalCompositeOperation = "source-over";
 
       // Draw edge highlighting
       drawEdges(ctx, mask);
     };
 
-    const drawEdges = (ctx: CanvasRenderingContext2D, maskImg: HTMLImageElement) => {
+    const drawEdges = (
+      ctx: CanvasRenderingContext2D,
+      maskImg: HTMLImageElement,
+    ) => {
       // Create temporary canvas for edge detection
-      const tempCanvas = document.createElement('canvas');
+      const tempCanvas = document.createElement("canvas");
       tempCanvas.width = maskImg.naturalWidth;
       tempCanvas.height = maskImg.naturalHeight;
-      const tempCtx = tempCanvas.getContext('2d');
+      const tempCtx = tempCanvas.getContext("2d");
       if (!tempCtx) return;
 
       // Draw mask to temp canvas
       tempCtx.drawImage(maskImg, 0, 0);
-      const imageData = tempCtx.getImageData(0, 0, tempCanvas.width, tempCanvas.height);
+      const imageData = tempCtx.getImageData(
+        0,
+        0,
+        tempCanvas.width,
+        tempCanvas.height,
+      );
       const data = imageData.data;
 
       // Simple edge detection: check for boundaries
-      ctx.strokeStyle = '#16a34a'; // Darker green for edges
+      ctx.strokeStyle = "#16a34a"; // Darker green for edges
       ctx.lineWidth = 2;
 
       for (let y = 1; y < tempCanvas.height - 1; y++) {
@@ -118,7 +126,7 @@ export function MaskOverlay({
               data[(y * tempCanvas.width + (x + 1)) * 4 + 3] < 128;
 
             if (isEdge) {
-              ctx.fillStyle = '#16a34a';
+              ctx.fillStyle = "#16a34a";
               ctx.fillRect(x, y, 1, 1);
             }
           }
@@ -126,19 +134,19 @@ export function MaskOverlay({
       }
     };
 
-    image.addEventListener('load', checkLoaded);
-    image.addEventListener('error', handleError);
-    mask.addEventListener('load', checkLoaded);
-    mask.addEventListener('error', handleError);
+    image.addEventListener("load", checkLoaded);
+    image.addEventListener("error", handleError);
+    mask.addEventListener("load", checkLoaded);
+    mask.addEventListener("error", handleError);
 
     image.src = imageUrl;
     mask.src = maskData;
 
     return () => {
-      image.removeEventListener('load', checkLoaded);
-      image.removeEventListener('error', handleError);
-      mask.removeEventListener('load', checkLoaded);
-      mask.removeEventListener('error', handleError);
+      image.removeEventListener("load", checkLoaded);
+      image.removeEventListener("error", handleError);
+      mask.removeEventListener("load", checkLoaded);
+      mask.removeEventListener("error", handleError);
     };
   }, [imageUrl, maskData, opacity]);
 
@@ -147,8 +155,8 @@ export function MaskOverlay({
       <canvas
         ref={canvasRef}
         className={cn(
-          'w-full h-auto rounded-lg border',
-          isLoading && 'opacity-0'
+          "w-full h-auto rounded-lg border",
+          isLoading && "opacity-0",
         )}
       />
       {isLoading && (

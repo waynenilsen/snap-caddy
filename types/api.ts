@@ -8,15 +8,15 @@ import type {
   SegmentRequest as SchemaSegmentRequest,
   SegmentResponse as SchemaSegmentResponse,
   SegmentErrorResponse as SchemaSegmentErrorResponse,
-} from '@/schemas/segment';
+} from "@/schemas/segment";
 import type {
   GenerateRequest as SchemaGenerateRequest,
   GenerateResponse as SchemaGenerateResponse,
   GenerateErrorResponse as SchemaGenerateErrorResponse,
   GenerationStatus as SchemaGenerationStatus,
   GenerationStatusResponse as SchemaGenerationStatusResponse,
-} from '@/schemas/generate';
-import type { GridfinityConfig } from './gridfinity';
+} from "@/schemas/generate";
+import type { GridfinityConfig } from "./gridfinity";
 
 // ============================================================================
 // Segment API
@@ -78,7 +78,7 @@ export interface DownloadResponse {
 
 export interface DownloadErrorResponse {
   error: string;
-  code: 'NOT_FOUND' | 'EXPIRED' | 'INVALID_ID' | 'SERVER_ERROR';
+  code: "NOT_FOUND" | "EXPIRED" | "INVALID_ID" | "SERVER_ERROR";
 }
 
 // ============================================================================
@@ -91,7 +91,7 @@ export interface DownloadErrorResponse {
 export interface PreviewRequest {
   svg: string;
   config: GridfinityConfig;
-  quality?: 'low' | 'medium' | 'high';
+  quality?: "low" | "medium" | "high";
 }
 
 export interface PreviewResponse {
@@ -103,16 +103,16 @@ export interface PreviewResponse {
 // ============================================================================
 
 export type APIErrorCode =
-  | 'INVALID_INPUT'
-  | 'IMAGE_TOO_LARGE'
-  | 'INVALID_SVG'
-  | 'SAM_ERROR'
-  | 'OPENSCAD_ERROR'
-  | 'RATE_LIMIT'
-  | 'SERVER_ERROR'
-  | 'NOT_FOUND'
-  | 'EXPIRED'
-  | 'INVALID_ID';
+  | "INVALID_INPUT"
+  | "IMAGE_TOO_LARGE"
+  | "INVALID_SVG"
+  | "SAM_ERROR"
+  | "OPENSCAD_ERROR"
+  | "RATE_LIMIT"
+  | "SERVER_ERROR"
+  | "NOT_FOUND"
+  | "EXPIRED"
+  | "INVALID_ID";
 
 export interface APIError {
   success: false;
@@ -126,14 +126,14 @@ export interface APIError {
 // ============================================================================
 
 export interface RateLimitHeaders {
-  'X-RateLimit-Limit': string;
-  'X-RateLimit-Remaining': string;
-  'X-RateLimit-Reset': string;
-  'Retry-After'?: string;
+  "X-RateLimit-Limit": string;
+  "X-RateLimit-Remaining": string;
+  "X-RateLimit-Reset": string;
+  "Retry-After"?: string;
 }
 
 export interface RateLimitError extends APIError {
-  code: 'RATE_LIMIT';
+  code: "RATE_LIMIT";
   retryAfter: number; // Seconds until retry
 }
 
@@ -171,10 +171,10 @@ export class APIClientError extends Error {
     message: string,
     public code: APIErrorCode,
     public statusCode: number,
-    public details?: unknown
+    public details?: unknown,
   ) {
     super(message);
-    this.name = 'APIClientError';
+    this.name = "APIClientError";
   }
 }
 
@@ -182,34 +182,38 @@ export class APIClientError extends Error {
 // Type Guards
 // ============================================================================
 
-export function isSegmentResponse(response: unknown): response is SegmentResponse {
+export function isSegmentResponse(
+  response: unknown,
+): response is SegmentResponse {
   return (
-    typeof response === 'object' &&
+    typeof response === "object" &&
     response !== null &&
-    'success' in response &&
+    "success" in response &&
     response.success === true &&
-    'masks' in response &&
+    "masks" in response &&
     Array.isArray((response as SegmentResponse).masks)
   );
 }
 
-export function isGenerateResponse(response: unknown): response is GenerateResponse {
+export function isGenerateResponse(
+  response: unknown,
+): response is GenerateResponse {
   return (
-    typeof response === 'object' &&
+    typeof response === "object" &&
     response !== null &&
-    'success' in response &&
+    "success" in response &&
     response.success === true &&
-    'generationId' in response
+    "generationId" in response
   );
 }
 
 export function isAPIError(response: unknown): response is APIError {
   return (
-    typeof response === 'object' &&
+    typeof response === "object" &&
     response !== null &&
-    'success' in response &&
+    "success" in response &&
     response.success === false &&
-    'error' in response &&
-    'code' in response
+    "error" in response &&
+    "code" in response
   );
 }

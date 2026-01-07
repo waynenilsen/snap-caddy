@@ -15,9 +15,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="antialiased">
-        <WizardProvider>
-          {children}
-        </WizardProvider>
+        <WizardProvider>{children}</WizardProvider>
       </body>
     </html>
   );

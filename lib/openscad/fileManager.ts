@@ -3,11 +3,11 @@
  * Manages file operations for OpenSCAD/STL generation jobs
  */
 
-import { mkdir, writeFile, rm } from 'fs/promises';
-import { join } from 'path';
-import { randomBytes } from 'crypto';
-import { env } from '@/lib/env';
-import { logger } from '@/lib/logger';
+import { mkdir, writeFile, rm } from "fs/promises";
+import { join } from "path";
+import { randomBytes } from "crypto";
+import { env } from "@/lib/env";
+import { logger } from "@/lib/logger";
 
 /**
  * Job paths for STL generation
@@ -43,7 +43,7 @@ export class STLFileManager {
       const jobId = this.generateJobId();
 
       // Create job directory path
-      const jobDir = join(this.tempDir, 'stl-jobs', jobId);
+      const jobDir = join(this.tempDir, "stl-jobs", jobId);
 
       // Create the directory
       await mkdir(jobDir, { recursive: true });
@@ -55,18 +55,19 @@ export class STLFileManager {
       const paths: JobPaths = {
         jobId,
         jobDir,
-        svgPath: join(jobDir, 'cutout.svg'),
-        scadPath: join(jobDir, 'bin.scad'),
-        stlPath: join(jobDir, 'bin.stl'),
-        previewPath: join(jobDir, 'preview.png'),
+        svgPath: join(jobDir, "cutout.svg"),
+        scadPath: join(jobDir, "bin.scad"),
+        stlPath: join(jobDir, "bin.stl"),
+        previewPath: join(jobDir, "preview.png"),
       };
 
-      logger.debug('Created job paths', { jobId, jobDir });
+      logger.debug("Created job paths", { jobId, jobDir });
 
       return paths;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Failed to create job paths', { error: errorMessage });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to create job paths", { error: errorMessage });
       throw new Error(`Failed to create job paths: ${errorMessage}`);
     }
   }
@@ -78,7 +79,7 @@ export class STLFileManager {
   async createJobPathsWithId(jobId: string): Promise<JobPaths> {
     try {
       // Create job directory path
-      const jobDir = join(this.tempDir, 'stl-jobs', jobId);
+      const jobDir = join(this.tempDir, "stl-jobs", jobId);
 
       // Create the directory
       await mkdir(jobDir, { recursive: true });
@@ -90,18 +91,22 @@ export class STLFileManager {
       const paths: JobPaths = {
         jobId,
         jobDir,
-        svgPath: join(jobDir, 'cutout.svg'),
-        scadPath: join(jobDir, 'bin.scad'),
-        stlPath: join(jobDir, 'bin.stl'),
-        previewPath: join(jobDir, 'preview.png'),
+        svgPath: join(jobDir, "cutout.svg"),
+        scadPath: join(jobDir, "bin.scad"),
+        stlPath: join(jobDir, "bin.stl"),
+        previewPath: join(jobDir, "preview.png"),
       };
 
-      logger.debug('Created job paths with ID', { jobId, jobDir });
+      logger.debug("Created job paths with ID", { jobId, jobDir });
 
       return paths;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Failed to create job paths with ID', { error: errorMessage, jobId });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to create job paths with ID", {
+        error: errorMessage,
+        jobId,
+      });
       throw new Error(`Failed to create job paths: ${errorMessage}`);
     }
   }
@@ -111,11 +116,12 @@ export class STLFileManager {
    */
   async writeSVG(path: string, content: string): Promise<void> {
     try {
-      await writeFile(path, content, 'utf-8');
-      logger.debug('SVG file written', { path });
+      await writeFile(path, content, "utf-8");
+      logger.debug("SVG file written", { path });
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Failed to write SVG file', { error: errorMessage, path });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to write SVG file", { error: errorMessage, path });
       throw new Error(`Failed to write SVG file: ${errorMessage}`);
     }
   }
@@ -127,17 +133,17 @@ export class STLFileManager {
     const jobDir = this.jobDirs.get(jobId);
 
     if (!jobDir) {
-      logger.warn('Job not found', { jobId });
+      logger.warn("Job not found", { jobId });
       return null;
     }
 
     return {
       jobId,
       jobDir,
-      svgPath: join(jobDir, 'cutout.svg'),
-      scadPath: join(jobDir, 'bin.scad'),
-      stlPath: join(jobDir, 'bin.stl'),
-      previewPath: join(jobDir, 'preview.png'),
+      svgPath: join(jobDir, "cutout.svg"),
+      scadPath: join(jobDir, "bin.scad"),
+      stlPath: join(jobDir, "bin.stl"),
+      previewPath: join(jobDir, "preview.png"),
     };
   }
 
@@ -149,7 +155,7 @@ export class STLFileManager {
       const jobDir = this.jobDirs.get(jobId);
 
       if (!jobDir) {
-        logger.warn('Job not found for cleanup', { jobId });
+        logger.warn("Job not found for cleanup", { jobId });
         return false;
       }
 
@@ -159,11 +165,12 @@ export class STLFileManager {
       // Remove from tracking
       this.jobDirs.delete(jobId);
 
-      logger.info('Job cleaned up', { jobId });
+      logger.info("Job cleaned up", { jobId });
       return true;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      logger.error('Failed to cleanup job', { error: errorMessage, jobId });
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      logger.error("Failed to cleanup job", { error: errorMessage, jobId });
       return false;
     }
   }
@@ -181,7 +188,7 @@ export class STLFileManager {
       }
     }
 
-    logger.info('Cleaned up all jobs', { count: cleaned });
+    logger.info("Cleaned up all jobs", { count: cleaned });
     return cleaned;
   }
 
@@ -190,7 +197,7 @@ export class STLFileManager {
    */
   private generateJobId(): string {
     const timestamp = Date.now();
-    const random = randomBytes(8).toString('hex');
+    const random = randomBytes(8).toString("hex");
     return `${timestamp}-${random}`;
   }
 
@@ -212,7 +219,7 @@ export class STLFileManager {
    */
   async fileExists(filePath: string): Promise<boolean> {
     try {
-      const { access } = await import('fs/promises');
+      const { access } = await import("fs/promises");
       await access(filePath);
       return true;
     } catch {
@@ -225,7 +232,7 @@ export class STLFileManager {
    */
   async isFileExpired(filePath: string, maxAgeMs?: number): Promise<boolean> {
     try {
-      const { stat } = await import('fs/promises');
+      const { stat } = await import("fs/promises");
       const stats = await stat(filePath);
       const age = Date.now() - stats.mtimeMs;
       const maxAge = maxAgeMs ?? env.FILE_RETENTION_MS;
@@ -239,7 +246,7 @@ export class STLFileManager {
    * Read a file as Buffer
    */
   async readFile(filePath: string): Promise<Buffer> {
-    const { readFile } = await import('fs/promises');
+    const { readFile } = await import("fs/promises");
     return readFile(filePath);
   }
 }

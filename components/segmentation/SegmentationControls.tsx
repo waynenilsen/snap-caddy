@@ -1,10 +1,10 @@
-'use client';
+"use client";
 
-import React from 'react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, Trash2, Undo, Sparkles } from 'lucide-react';
+import React from "react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, Trash2, Undo, Sparkles } from "lucide-react";
 
 interface SegmentationControlsProps {
   pointCount: number;
@@ -71,7 +71,7 @@ export function SegmentationControls({
 
       <div className="flex items-center gap-3 text-sm">
         <Badge variant="secondary" className="tabular-nums">
-          {pointCount} {pointCount === 1 ? 'point' : 'points'}
+          {pointCount} {pointCount === 1 ? "point" : "points"}
         </Badge>
 
         {isLoading && (

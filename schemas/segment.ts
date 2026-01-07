@@ -6,7 +6,7 @@
  * to maintain a single source of truth for the API contract.
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Point schema - represents a click point for segmentation
@@ -29,7 +29,10 @@ export const SegmentRequestSchema = z.object({
   // Optional: return multiple mask options
   returnMultipleMasks: z.boolean().optional().default(false),
   // Optional: mask encoding format
-  maskFormat: z.enum(['base64png', 'rle', 'binary']).optional().default('base64png'),
+  maskFormat: z
+    .enum(["base64png", "rle", "binary"])
+    .optional()
+    .default("base64png"),
 });
 
 /**
@@ -69,7 +72,13 @@ export const SegmentResponseSchema = z.object({
 export const SegmentErrorResponseSchema = z.object({
   success: z.literal(false),
   error: z.string(),
-  code: z.enum(['INVALID_INPUT', 'IMAGE_TOO_LARGE', 'SAM_ERROR', 'RATE_LIMIT', 'SERVER_ERROR']),
+  code: z.enum([
+    "INVALID_INPUT",
+    "IMAGE_TOO_LARGE",
+    "SAM_ERROR",
+    "RATE_LIMIT",
+    "SERVER_ERROR",
+  ]),
   details: z.unknown().optional(),
 });
 

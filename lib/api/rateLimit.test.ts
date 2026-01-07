@@ -4,11 +4,7 @@
 
 import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
 import { type NextRequest, NextResponse } from "next/server";
-import {
-  withRateLimit,
-  getRateLimitStatus,
-  resetRateLimit,
-} from "./rateLimit";
+import { withRateLimit, getRateLimitStatus, resetRateLimit } from "./rateLimit";
 
 // Mock dependencies
 mock.module("@/lib/env", () => ({

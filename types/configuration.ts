@@ -12,8 +12,8 @@
  * - Frontend uses individual paddingTop/Bottom/Left/Right values
  */
 
-export type BaseType = 'solid' | 'magnet' | 'screw' | 'magnet_screw';
-export type LipStyle = 'normal' | 'reduced' | 'none';
+export type BaseType = "solid" | "magnet" | "screw" | "magnet_screw";
+export type LipStyle = "normal" | "reduced" | "none";
 
 /**
  * GridfinityBinConfig - Backend configuration for OpenSCAD generation
@@ -73,7 +73,9 @@ export interface ValidationResult {
 /**
  * Validates Gridfinity configuration
  */
-export function validateBinConfig(config: GridfinityBinConfig): ValidationResult {
+export function validateBinConfig(
+  config: GridfinityBinConfig,
+): ValidationResult {
   const errors: string[] = [];
   const warnings: string[] = [];
 
@@ -82,7 +84,7 @@ export function validateBinConfig(config: GridfinityBinConfig): ValidationResult
     config.gridUnitsX > GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS
   ) {
     errors.push(
-      `gridUnitsX must be between ${GRIDFINITY_CONSTRAINTS.MIN_GRID_UNITS} and ${GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS}`
+      `gridUnitsX must be between ${GRIDFINITY_CONSTRAINTS.MIN_GRID_UNITS} and ${GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS}`,
     );
   }
 
@@ -91,42 +93,54 @@ export function validateBinConfig(config: GridfinityBinConfig): ValidationResult
     config.gridUnitsY > GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS
   ) {
     errors.push(
-      `gridUnitsY must be between ${GRIDFINITY_CONSTRAINTS.MIN_GRID_UNITS} and ${GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS}`
+      `gridUnitsY must be between ${GRIDFINITY_CONSTRAINTS.MIN_GRID_UNITS} and ${GRIDFINITY_CONSTRAINTS.MAX_GRID_UNITS}`,
     );
   }
 
   if (config.binHeight < GRIDFINITY_CONSTRAINTS.MIN_BIN_HEIGHT) {
-    errors.push(`binHeight must be at least ${GRIDFINITY_CONSTRAINTS.MIN_BIN_HEIGHT}mm`);
+    errors.push(
+      `binHeight must be at least ${GRIDFINITY_CONSTRAINTS.MIN_BIN_HEIGHT}mm`,
+    );
   }
 
   if (config.binHeight > GRIDFINITY_CONSTRAINTS.MAX_BIN_HEIGHT) {
-    errors.push(`binHeight must be at most ${GRIDFINITY_CONSTRAINTS.MAX_BIN_HEIGHT}mm`);
+    errors.push(
+      `binHeight must be at most ${GRIDFINITY_CONSTRAINTS.MAX_BIN_HEIGHT}mm`,
+    );
   }
 
   if (config.binHeight % GRIDFINITY_CONSTRAINTS.HEIGHT_INCREMENT !== 0) {
     warnings.push(
-      `binHeight should be in ${GRIDFINITY_CONSTRAINTS.HEIGHT_INCREMENT}mm increments for standard Gridfinity compatibility`
+      `binHeight should be in ${GRIDFINITY_CONSTRAINTS.HEIGHT_INCREMENT}mm increments for standard Gridfinity compatibility`,
     );
   }
 
   if (config.cutoutDepth >= config.binHeight) {
-    errors.push(`cutoutDepth (${config.cutoutDepth}mm) must be less than binHeight (${config.binHeight}mm)`);
+    errors.push(
+      `cutoutDepth (${config.cutoutDepth}mm) must be less than binHeight (${config.binHeight}mm)`,
+    );
   }
 
   if (config.cutoutDepth < GRIDFINITY_CONSTRAINTS.MIN_CUTOUT_DEPTH) {
-    errors.push(`cutoutDepth must be at least ${GRIDFINITY_CONSTRAINTS.MIN_CUTOUT_DEPTH}mm`);
+    errors.push(
+      `cutoutDepth must be at least ${GRIDFINITY_CONSTRAINTS.MIN_CUTOUT_DEPTH}mm`,
+    );
   }
 
   if (config.wallThickness < GRIDFINITY_CONSTRAINTS.MIN_WALL_THICKNESS) {
-    errors.push(`wallThickness must be at least ${GRIDFINITY_CONSTRAINTS.MIN_WALL_THICKNESS}mm`);
+    errors.push(
+      `wallThickness must be at least ${GRIDFINITY_CONSTRAINTS.MIN_WALL_THICKNESS}mm`,
+    );
   }
 
   if (config.wallThickness < GRIDFINITY_CONSTRAINTS.RECOMMENDED_WALL) {
-    warnings.push(`wallThickness below ${GRIDFINITY_CONSTRAINTS.RECOMMENDED_WALL}mm may result in weak walls`);
+    warnings.push(
+      `wallThickness below ${GRIDFINITY_CONSTRAINTS.RECOMMENDED_WALL}mm may result in weak walls`,
+    );
   }
 
   if (config.cutoutPadding < 0) {
-    errors.push('cutoutPadding cannot be negative');
+    errors.push("cutoutPadding cannot be negative");
   }
 
   return { valid: errors.length === 0, errors, warnings };

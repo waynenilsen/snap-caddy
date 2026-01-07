@@ -2,7 +2,7 @@
  * Image and geometric types
  */
 
-import type { BoundingBox as SchemaBoundingBox } from '@/schemas/segment';
+import type { BoundingBox as SchemaBoundingBox } from "@/schemas/segment";
 
 /**
  * Point - basic 2D coordinate

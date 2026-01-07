@@ -32,21 +32,33 @@ export function KeyboardCameraControls({
   // Track pressed keys
   const keysPressed = new Set<string>();
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    if (!enabled) return;
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      if (!enabled) return;
 
-    // Only handle keyboard events when canvas is focused or document is active
-    const target = event.target as HTMLElement;
-    if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
+      // Only handle keyboard events when canvas is focused or document is active
+      const target = event.target as HTMLElement;
+      if (target.tagName === "INPUT" || target.tagName === "TEXTAREA") return;
 
-    keysPressed.add(event.key);
+      keysPressed.add(event.key);
 
-    // Prevent default browser behavior for our keys
-    const controlKeys = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "+", "=", "-", "_"];
-    if (controlKeys.includes(event.key)) {
-      event.preventDefault();
-    }
-  }, [enabled]);
+      // Prevent default browser behavior for our keys
+      const controlKeys = [
+        "ArrowUp",
+        "ArrowDown",
+        "ArrowLeft",
+        "ArrowRight",
+        "+",
+        "=",
+        "-",
+        "_",
+      ];
+      if (controlKeys.includes(event.key)) {
+        event.preventDefault();
+      }
+    },
+    [enabled],
+  );
 
   const handleKeyUp = useCallback((event: KeyboardEvent) => {
     keysPressed.delete(event.key);
