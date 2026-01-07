@@ -11,8 +11,12 @@ const envSchema = z.object({
 
   // SAM 2 Segmentation (auto-mask generation)
   REPLICATE_API_TOKEN: z.string().min(1).optional(),
-  // SAM 2 model ID from replicate.com/meta/sam-2
-  SAM_MODEL_VERSION: z.string().default("meta/sam-2"),
+  // SAM 2 version hash from replicate.com/meta/sam-2
+  SAM_MODEL_VERSION: z
+    .string()
+    .default(
+      "fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
+    ),
   // Base URL for Replicate API (can be overridden for mocking/testing)
   REPLICATE_BASE_URL: z.string().url().optional(),
   // Enable record/replay mode for Replicate API calls

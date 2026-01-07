@@ -19,11 +19,9 @@ import type {
   SAMSegmentationParams,
 } from "./types";
 
-// Use the models API for named models (meta/sam-2)
+// Use the predictions API (works for all models, official and community)
 // Base URL is now configurable via REPLICATE_BASE_URL env var
-const getModelsApiUrl = () => `${getReplicateBaseUrl()}/v1/models`;
 const getPredictionsApiUrl = () => `${getReplicateBaseUrl()}/v1/predictions`;
-
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second
 const MAX_POLL_ATTEMPTS = 120; // Maximum 120 seconds (SAM 2 can take longer)
 
@@ -135,14 +133,15 @@ function detectImageType(buffer: Buffer): string {
 
 /**
  * Create a prediction on Replicate API for SAM 2
- * Uses the models API endpoint: POST /v1/models/{owner}/{name}/predictions
+ * Uses the predictions API endpoint: POST /v1/predictions
  */
 async function createPrediction(
   params: SAMSegmentationParams,
   imageDataUri: string,
 ): Promise<ReplicatePrediction> {
-  // Build the request body (no version needed for models API)
+  // Build the request body with version ID for the predictions API
   const requestBody = {
+    version: env.SAM_MODEL_VERSION,
     input: {
       image: imageDataUri,
       points_per_side: params.pointsPerSide ?? 32,
@@ -152,9 +151,8 @@ async function createPrediction(
     },
   };
 
-  // Use the models API endpoint: /v1/models/meta/sam-2/predictions
-  const modelName = env.SAM_MODEL_VERSION; // e.g., "meta/sam-2"
-  const apiUrl = `${getModelsApiUrl()}/${modelName}/predictions`;
+  // Use the predictions API endpoint: POST /v1/predictions
+  const apiUrl = getPredictionsApiUrl();
 
   const recordableFetch = getRecordableFetch();
   const response = await recordableFetch(apiUrl, {
