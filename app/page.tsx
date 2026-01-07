@@ -19,6 +19,7 @@ import { useGenerationPolling } from "@/hooks/useGenerationPolling";
 import { useWizard } from "@/hooks/useWizard";
 import { APIClientError, api } from "@/lib/api/client";
 import { findContours, generateSVG } from "@/lib/canvas";
+import type { MaskData } from "@/types/segmentation";
 
 export default function Home() {
   const wizard = useWizard();
@@ -62,89 +63,80 @@ export default function Home() {
     [setImageData],
   );
 
-  const handleMaskGenerated = useCallback(
-    (maskDataUrl: string) => {
-      // Load the mask image from data URL and convert to ImageData
-      const img = new Image();
-      img.onload = () => {
-        // Create canvas to extract ImageData from the mask
-        const canvas = document.createElement("canvas");
-        canvas.width = img.width;
-        canvas.height = img.height;
-        const ctx = canvas.getContext("2d", { willReadFrequently: true });
+  /**
+   * Handle mask selection from SAM 2
+   * Combines selected masks into a single mask for downstream processing
+   */
+  const handleMasksSelected = useCallback(
+    (selectedMasks: MaskData[]) => {
+      if (selectedMasks.length === 0) {
+        wizard.setError("Please select at least one region");
+        return;
+      }
 
-        if (!ctx) {
-          console.error("Failed to get canvas context for mask processing");
+      // Store the selected masks
+      wizard.setSelectedMasks(selectedMasks);
+
+      // Get dimensions from the first mask
+      const firstMask = selectedMasks.find((m) => m.imageData !== null);
+      if (!firstMask?.imageData) {
+        wizard.setError("Failed to process selected masks");
+        return;
+      }
+
+      const width = firstMask.imageData.width;
+      const height = firstMask.imageData.height;
+
+      // Combine all selected masks into a single mask
+      const combinedMask = combineMasks(selectedMasks, width, height);
+      wizard.setSegmentationMask(combinedMask);
+
+      try {
+        // Detect contours from the combined mask
+        const contourResult = findContours(combinedMask, {
+          minArea: 200, // Ignore small noise
+          simplifyTolerance: 1.5, // Reduce points while preserving shape
+          smoothingIterations: 2, // Smooth edges
+          findHoles: true, // Detect inner holes
+        });
+
+        // Check if we found a valid contour
+        if (contourResult.outerContour.points.length === 0) {
+          console.warn("No contour detected in combined mask");
+          setSvgOutline(createFallbackSvg(width, height));
           return;
         }
 
-        // Draw mask image to canvas
-        ctx.drawImage(img, 0, 0);
+        // Use calibration data if available, otherwise use a sensible default
+        const pixelsPerMm = state.calibration.pixelsPerMm || 10;
 
-        // Get ImageData from the mask
-        const maskImageData = ctx.getImageData(
-          0,
-          0,
-          canvas.width,
-          canvas.height,
+        // Generate SVG from contours
+        const svgDoc = generateSVG(
+          contourResult.outerContour,
+          contourResult.holes,
+          {
+            pixelsPerMm,
+            padding: 3, // 3mm padding
+            useBezier: true, // Smooth curves for organic shapes
+            bezierTension: 0.4, // Moderate smoothing
+            decimals: 2, // 0.01mm precision
+            flipY: true, // SVG Y-axis convention
+          },
         );
 
-        // Store the mask in wizard state
-        wizard.setSegmentationMask(maskImageData);
+        // Store the generated SVG
+        setSvgOutline(svgDoc.fullSvg);
 
-        try {
-          // Detect contours from the binary mask
-          const contourResult = findContours(maskImageData, {
-            minArea: 200, // Ignore small noise
-            simplifyTolerance: 1.5, // Reduce points while preserving shape
-            smoothingIterations: 2, // Smooth edges
-            findHoles: true, // Detect inner holes
-          });
+        console.log(
+          `SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`,
+        );
 
-          // Check if we found a valid contour
-          if (contourResult.outerContour.points.length === 0) {
-            console.warn("No contour detected in mask");
-            // Use a fallback simple SVG if no contour detected
-            setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
-            return;
-          }
-
-          // Use calibration data if available, otherwise use a sensible default
-          // Default: 10 pixels per mm (typical for a phone camera at ~30cm distance)
-          const pixelsPerMm = state.calibration.pixelsPerMm || 10;
-
-          // Generate SVG from contours
-          const svgDoc = generateSVG(
-            contourResult.outerContour,
-            contourResult.holes,
-            {
-              pixelsPerMm,
-              padding: 3, // 3mm padding
-              useBezier: true, // Smooth curves for organic shapes
-              bezierTension: 0.4, // Moderate smoothing
-              decimals: 2, // 0.01mm precision
-              flipY: true, // SVG Y-axis convention
-            },
-          );
-
-          // Store the generated SVG
-          setSvgOutline(svgDoc.fullSvg);
-
-          console.log(
-            `SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`,
-          );
-        } catch (error) {
-          console.error("Error generating SVG from mask:", error);
-          // Use fallback on error
-          setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
-        }
-      };
-
-      img.onerror = () => {
-        console.error("Failed to load mask image");
-      };
-
-      img.src = maskDataUrl;
+        // Auto-advance to next step
+        wizard.goToNextStep();
+      } catch (error) {
+        console.error("Error generating SVG from mask:", error);
+        setSvgOutline(createFallbackSvg(width, height));
+      }
     },
     [wizard, setSvgOutline, state.calibration.pixelsPerMm],
   );
@@ -310,7 +302,7 @@ export default function Home() {
         return state.imageData ? (
           <SelectStep
             imageUrl={state.imageData}
-            onMaskGenerated={handleMaskGenerated}
+            onMasksSelected={handleMasksSelected}
           />
         ) : (
           <div className="text-center py-12 text-muted-foreground">
@@ -550,4 +542,47 @@ function getSvgDimensions(
   }
 
   return undefined;
+}
+
+/**
+ * Combine multiple masks into a single mask
+ * Uses OR operation - any pixel that's white in any mask becomes white
+ */
+function combineMasks(
+  masks: MaskData[],
+  width: number,
+  height: number,
+): ImageData {
+  // Create a new ImageData for the combined mask
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Could not get canvas context");
+
+  // Start with black canvas
+  ctx.fillStyle = "black";
+  ctx.fillRect(0, 0, width, height);
+
+  // Get the combined image data
+  const combinedData = ctx.getImageData(0, 0, width, height);
+  const data = combinedData.data;
+
+  // Combine all masks using OR operation
+  for (const mask of masks) {
+    if (!mask.imageData) continue;
+    const maskData = mask.imageData.data;
+
+    for (let i = 0; i < data.length; i += 4) {
+      // If any channel in the mask is above threshold, set pixel to white
+      if (maskData[i] > 10 || maskData[i + 1] > 10 || maskData[i + 2] > 10) {
+        data[i] = 255; // R
+        data[i + 1] = 255; // G
+        data[i + 2] = 255; // B
+        data[i + 3] = 255; // A
+      }
+    }
+  }
+
+  return combinedData;
 }

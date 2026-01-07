@@ -33,18 +33,12 @@ export {
   GridfinityConfigSchema,
 } from "./generate";
 export type {
-  BoundingBox,
-  MaskOption,
-  Point,
   SegmentErrorResponse,
   SegmentRequest,
   SegmentResponse,
 } from "./segment";
 // Segment schemas
 export {
-  BoundingBoxSchema,
-  MaskOptionSchema,
-  PointSchema,
   SegmentErrorResponseSchema,
   SegmentRequestSchema,
   SegmentResponseSchema,

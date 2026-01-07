@@ -2,8 +2,6 @@
  * Image and geometric types
  */
 
-import type { BoundingBox as SchemaBoundingBox } from "@/schemas/segment";
-
 /**
  * Point - basic 2D coordinate
  */
@@ -14,9 +12,13 @@ export interface Point {
 
 /**
  * BoundingBox - rectangular region
- * Uses schema-validated type to ensure consistency with API
  */
-export type BoundingBox = SchemaBoundingBox;
+export interface BoundingBox {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+}
 
 export interface ImageDimensions {
   width: number;

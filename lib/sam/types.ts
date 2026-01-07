@@ -1,52 +1,64 @@
 /**
- * SAM (Segment Anything Model) Types
- * Type definitions for SAM integration using Replicate API
+ * SAM 2 (Segment Anything Model 2) Types
+ * Type definitions for SAM 2 integration using Replicate API
+ *
+ * SAM 2 uses automatic mask generation - no point prompts needed.
+ * It returns all detected masks which users can then toggle on/off.
  */
 
-import type { MaskOption } from "@/types/segmentation";
+/**
+ * Individual mask returned from SAM 2
+ */
+export interface SAM2Mask {
+  /** URL to the mask image */
+  url: string;
+  /** Unique index for this mask */
+  index: number;
+}
 
 /**
- * Parameters for SAM segmentation request
+ * Parameters for SAM 2 segmentation request
+ * SAM 2 auto-generates all masks - no point prompts needed
  */
 export interface SAMSegmentationParams {
   /** Image data as a Buffer */
   imageBuffer: Buffer;
-  /** Point prompts for segmentation */
-  points: Array<{
-    x: number;
-    y: number;
-    label: 0 | 1; // 0 = background, 1 = foreground
-  }>;
   /** Width of the input image in pixels */
   imageWidth: number;
   /** Height of the input image in pixels */
   imageHeight: number;
-  /** Whether to return multiple mask options (default: false) */
-  returnMultiple?: boolean;
-  /** Output format for masks (default: 'base64png') */
-  outputFormat?: "base64png" | "rle" | "binary";
+  /** Points per side for mask generation (default: 32) */
+  pointsPerSide?: number;
+  /** Predicted IOU threshold (default: 0.88) */
+  predIouThresh?: number;
+  /** Stability score threshold (default: 0.95) */
+  stabilityScoreThresh?: number;
+  /** Use M2M (mask-to-mask) refinement (default: true) */
+  useM2M?: boolean;
 }
 
 /**
- * Result from SAM segmentation
+ * Result from SAM 2 segmentation
  */
 export interface SAMResult {
-  /** Array of mask options with metadata */
-  masks: MaskOption[];
+  /** URL to combined mask showing all segments */
+  combinedMaskUrl: string;
+  /** Array of individual mask URLs */
+  individualMaskUrls: string[];
 }
 
 /**
- * Replicate API prediction object
+ * SAM 2 Replicate API prediction object
  */
 export interface ReplicatePrediction {
   /** Unique prediction ID */
   id: string;
   /** Current status of the prediction */
   status: "starting" | "processing" | "succeeded" | "failed" | "canceled";
-  /** Output data (available when succeeded) */
+  /** Output data (available when succeeded) - SAM 2 format */
   output?: {
-    masks?: string[]; // URLs to mask images
-    scores?: number[]; // Confidence scores for each mask
+    combined_mask?: string; // URL to combined mask
+    individual_masks?: string[]; // URLs to individual mask images
   };
   /** Error information (available when failed) */
   error?: string;
@@ -70,15 +82,22 @@ export interface ReplicatePrediction {
 }
 
 /**
- * Request payload for Replicate API
+ * Request payload for SAM 2 Replicate API
+ * Uses automatic mask generation (no point prompts)
  */
 export interface ReplicateRequest {
   version: string;
   input: {
-    image: string; // Base64 data URI
-    point_coords: number[][]; // [[x1, y1], [x2, y2], ...]
-    point_labels: number[]; // [0, 1, ...]
-    multimask_output?: boolean;
+    /** Input image (data URI) */
+    image: string;
+    /** Points per side for mask generation */
+    points_per_side?: number;
+    /** Predicted IOU threshold */
+    pred_iou_thresh?: number;
+    /** Stability score threshold */
+    stability_score_thresh?: number;
+    /** Use M2M refinement */
+    use_m2m?: boolean;
   };
 }
 

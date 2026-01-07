@@ -117,26 +117,43 @@ export class SnapCaddyAPI {
   }
 
   /**
-   * Segment an image using SAM (Segment Anything Model)
+   * Segment an image using SAM 2 (Segment Anything Model 2)
+   * SAM 2 auto-generates all masks - no point prompts needed.
+   * Returns URLs to all detected masks.
+   *
    * @param params - Segmentation parameters
-   * @returns Segmentation response with masks
+   * @returns Segmentation response with mask URLs
    */
   async segment(params: {
     image: string;
-    points: Array<{ x: number; y: number; label: 0 | 1 }>;
     imageWidth: number;
     imageHeight: number;
-    returnMultipleMasks?: boolean;
+    /** Points per side for mask generation (default: 32) */
+    pointsPerSide?: number;
+    /** Predicted IOU threshold (default: 0.88) */
+    predIouThresh?: number;
+    /** Stability score threshold (default: 0.95) */
+    stabilityScoreThresh?: number;
+    /** Use M2M refinement (default: true) */
+    useM2M?: boolean;
   }): Promise<SegmentResponse> {
     const request: Partial<SegmentRequest> = {
       image: params.image,
-      points: params.points,
       imageWidth: params.imageWidth,
       imageHeight: params.imageHeight,
     };
 
-    if (params.returnMultipleMasks !== undefined) {
-      request.returnMultipleMasks = params.returnMultipleMasks;
+    if (params.pointsPerSide !== undefined) {
+      request.pointsPerSide = params.pointsPerSide;
+    }
+    if (params.predIouThresh !== undefined) {
+      request.predIouThresh = params.predIouThresh;
+    }
+    if (params.stabilityScoreThresh !== undefined) {
+      request.stabilityScoreThresh = params.stabilityScoreThresh;
+    }
+    if (params.useM2M !== undefined) {
+      request.useM2M = params.useM2M;
     }
 
     return this.fetch<SegmentResponse>("/api/segment", {

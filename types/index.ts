@@ -46,9 +46,7 @@ export { calculateBinDimensions, validateBinFit } from "./gridfinity";
 export type { BoundingBox, ImageData, ImageDimensions, Point } from "./image";
 // Segmentation types
 export type {
-  ClickPoint,
-  MaskOption,
-  SegmentationResult,
+  MaskData,
   SegmentationState,
 } from "./segmentation";
 // Wizard types
