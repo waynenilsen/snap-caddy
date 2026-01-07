@@ -1,0 +1,30 @@
+# docker-compose.redis.yml - Redis for snap-caddy development
+# Uses port 6397 to avoid collisions with default Redis (6379)
+#
+# Usage:
+#   docker compose -f docker-compose.redis.yml up -d
+#   docker compose -f docker-compose.redis.yml down
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: snap-caddy-redis
+    ports:
+      - "6397:6379"
+    command: >
+      redis-server
+      --appendonly no
+      --save ""
+      --maxmemory 100mb
+      --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+    volumes:
+      - snap-caddy-redis-data:/data
+
+volumes:
+  snap-caddy-redis-data:

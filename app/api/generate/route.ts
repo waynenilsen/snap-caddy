@@ -13,15 +13,32 @@ import { openscadExecutor } from '@/lib/openscad/executor';
 import { withRateLimit } from '@/lib/api/rateLimit';
 import { withErrorHandler, APIError } from '@/lib/api/errors';
 import { logger, metrics } from '@/lib/logger';
+import { addSTLJob, getJobStatus, initializeQueue } from '@/lib/queue';
 import type { GenerateResponse, GenerationStatusResponse } from '@/types/api';
 import type { GridfinityBinConfig } from '@/types/configuration';
+import type { STLJobData } from '@/lib/queue/types';
 
 // Runtime configuration
 export const runtime = 'nodejs';
 export const maxDuration = 60;
 
-// In-memory job status store (use Redis/database for production)
-const jobStatusStore = new Map<string, GenerationStatusResponse>();
+// Initialize queue on module load (for async processing)
+let queueInitialized = false;
+function ensureQueueInitialized() {
+  if (!queueInitialized) {
+    try {
+      initializeQueue();
+      queueInitialized = true;
+    } catch (error) {
+      logger.error('Failed to initialize queue', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
+}
+
+// In-memory job status store (for sync jobs only - async uses Redis)
+const syncJobStatusStore = new Map<string, GenerationStatusResponse>();
 
 /**
  * Convert API GridfinityConfig to GridfinityBinConfig
@@ -156,39 +173,65 @@ async function generateHandler(req: NextRequest): Promise<NextResponse> {
       config: binConfig,
     });
 
-    // Create job paths
+    // If async, queue the job and return immediately
+    if (request.async) {
+      // Ensure queue is initialized
+      ensureQueueInitialized();
+
+      // Generate unique job ID
+      const generationId = `${Date.now()}-${Math.random().toString(36).substring(2, 10)}`;
+      const createdAt = new Date().toISOString();
+
+      // Create job data
+      const jobData: STLJobData = {
+        generationId,
+        svg: request.svg,
+        binConfig,
+        webhookUrl: request.webhookUrl,
+        createdAt,
+      };
+
+      try {
+        // Add job to queue
+        const { queuePosition } = await addSTLJob(jobData);
+
+        logger.info('Queued async generation', { generationId, queuePosition });
+
+        const response: GenerateResponse = {
+          success: true,
+          generationId,
+          status: 'queued',
+          queuePosition,
+          estimatedTimeMs: 30000 + (queuePosition - 1) * 15000, // Estimate based on queue position
+        };
+
+        return NextResponse.json(response);
+      } catch (error) {
+        logger.error('Failed to queue job', {
+          error: error instanceof Error ? error.message : String(error),
+        });
+
+        throw new APIError(
+          'Failed to queue generation job',
+          'SERVER_ERROR',
+          500,
+          { originalError: error instanceof Error ? error.message : String(error) }
+        );
+      }
+    }
+
+    // Synchronous processing - create job paths and process immediately
     const jobPaths = await stlFileManager.createJobPaths();
     const generationId = jobPaths.jobId;
 
-    // Initialize job status
+    // Initialize job status for sync jobs
     const jobStatus: GenerationStatusResponse = {
       id: generationId,
-      status: request.async ? 'queued' : 'processing',
+      status: 'processing',
       progress: 0,
       createdAt: new Date().toISOString(),
     };
-    jobStatusStore.set(generationId, jobStatus);
-
-    // If async, return immediately with queued status
-    if (request.async) {
-      logger.info('Queued async generation', { generationId });
-
-      const response: GenerateResponse = {
-        success: true,
-        generationId,
-        status: 'queued',
-        queuePosition: 1, // For future implementation with real queue
-        estimatedTimeMs: 30000,
-      };
-
-      // Note: In a real implementation, you would queue this job for background processing
-      // For now, we just return the queued status but don't actually process it
-      logger.warn('Async generation not yet implemented - job will remain queued', {
-        generationId,
-      });
-
-      return NextResponse.json(response);
-    }
+    syncJobStatusStore.set(generationId, jobStatus);
 
     // Synchronous processing
     try {
@@ -319,8 +362,14 @@ async function getStatusHandler(req: NextRequest): Promise<NextResponse> {
       );
     }
 
-    // Get job status
-    const jobStatus = jobStatusStore.get(id);
+    // First check sync job status store
+    let jobStatus = syncJobStatusStore.get(id);
+
+    // If not in sync store, check async queue
+    if (!jobStatus) {
+      ensureQueueInitialized();
+      jobStatus = await getJobStatus(id);
+    }
 
     if (!jobStatus) {
       throw new APIError(
