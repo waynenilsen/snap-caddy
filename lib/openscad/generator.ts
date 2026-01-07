@@ -3,14 +3,14 @@
  * Populates OpenSCAD templates with configuration parameters
  */
 
-import { readFile, writeFile } from "fs/promises";
-import { join } from "path";
+import { readFile, writeFile } from "node:fs/promises";
+import { join } from "node:path";
+import { logger } from "@/lib/logger";
 import type {
-  GridfinityBinConfig,
   BaseType,
+  GridfinityBinConfig,
   LipStyle,
 } from "@/types/configuration";
-import { logger } from "@/lib/logger";
 
 /**
  * Result of template generation

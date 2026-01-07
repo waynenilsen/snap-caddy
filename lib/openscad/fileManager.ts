@@ -3,9 +3,9 @@
  * Manages file operations for OpenSCAD/STL generation jobs
  */
 
-import { mkdir, writeFile, rm } from "fs/promises";
-import { join } from "path";
-import { randomBytes } from "crypto";
+import { randomBytes } from "node:crypto";
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { join } from "node:path";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 
@@ -219,7 +219,7 @@ export class STLFileManager {
    */
   async fileExists(filePath: string): Promise<boolean> {
     try {
-      const { access } = await import("fs/promises");
+      const { access } = await import("node:fs/promises");
       await access(filePath);
       return true;
     } catch {
@@ -232,7 +232,7 @@ export class STLFileManager {
    */
   async isFileExpired(filePath: string, maxAgeMs?: number): Promise<boolean> {
     try {
-      const { stat } = await import("fs/promises");
+      const { stat } = await import("node:fs/promises");
       const stats = await stat(filePath);
       const age = Date.now() - stats.mtimeMs;
       const maxAge = maxAgeMs ?? env.FILE_RETENTION_MS;
@@ -246,7 +246,7 @@ export class STLFileManager {
    * Read a file as Buffer
    */
   async readFile(filePath: string): Promise<Buffer> {
-    const { readFile } = await import("fs/promises");
+    const { readFile } = await import("node:fs/promises");
     return readFile(filePath);
   }
 }

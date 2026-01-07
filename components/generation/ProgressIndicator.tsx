@@ -1,20 +1,19 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Progress } from "@/components/ui/progress";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import {
-  Circle,
-  Upload,
-  Settings,
+  AlertCircle,
   Box,
   CheckCircle,
-  AlertCircle,
+  Circle,
   RefreshCw,
+  Upload,
   X,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { cn } from "@/lib/utils";
 
 interface ProgressIndicatorProps {
   status: "idle" | "queued" | "processing" | "complete" | "error";

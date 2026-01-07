@@ -1,8 +1,8 @@
-import { describe, it, expect, mock, beforeEach } from "bun:test";
-import { renderHook, act } from "@testing-library/react";
-import { useWizard } from "./useWizard";
-import { WizardProvider, type WizardState } from "@/contexts/WizardContext";
+import { describe, expect, it, mock } from "bun:test";
+import { act, renderHook } from "@testing-library/react";
 import React from "react";
+import { WizardProvider } from "@/contexts/WizardContext";
+import { useWizard } from "./useWizard";
 
 // Helper function to create a wrapper with WizardProvider
 function createWrapper() {

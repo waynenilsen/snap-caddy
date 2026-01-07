@@ -1,12 +1,11 @@
 "use client";
 
-import * as React from "react";
+import { AlertCircle, Check, X } from "lucide-react";
 import { useState } from "react";
-import { SVGPreview } from "./SVGPreview";
-import { PaddingControls } from "./PaddingControls";
-import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Check, AlertCircle, X } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { PaddingControls } from "./PaddingControls";
+import { SVGPreview } from "./SVGPreview";
 
 interface ReviewStepProps {
   svgContent: string;
@@ -159,7 +158,7 @@ function applyPaddingToSvg(
       const parts = viewBox.split(" ").map(Number);
 
       // Validate viewBox values
-      if (parts.length !== 4 || parts.some(isNaN)) {
+      if (parts.length !== 4 || parts.some(Number.isNaN)) {
         throw new Error("Invalid viewBox format");
       }
 

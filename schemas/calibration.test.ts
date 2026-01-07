@@ -1,9 +1,9 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
   CalibrationPointSchema,
+  CalibrationRequestSchema,
   CalibrationSchema,
   ScaleSchema,
-  CalibrationRequestSchema,
 } from "./calibration";
 
 describe("CalibrationPointSchema", () => {

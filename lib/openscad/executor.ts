@@ -3,7 +3,7 @@
  * Handles execution of OpenSCAD commands for rendering STL files and previews
  */
 
-import { spawn } from "child_process";
+import { spawn } from "node:child_process";
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 

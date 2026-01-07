@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
-import { ClickToSegment, SegmentPoint } from "./ClickToSegment";
-import { MaskOverlay } from "./MaskOverlay";
-import { SegmentationControls } from "./SegmentationControls";
+import { AlertCircle, Info, RefreshCw, X } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, AlertCircle, X, RefreshCw } from "lucide-react";
-import { api, APIClientError } from "@/lib/api/client";
+import { APIClientError, api } from "@/lib/api/client";
 import type { ClickPoint } from "@/types/segmentation";
+import { ClickToSegment, type SegmentPoint } from "./ClickToSegment";
+import { MaskOverlay } from "./MaskOverlay";
+import { SegmentationControls } from "./SegmentationControls";
 
 interface SelectStepProps {
   imageUrl: string;

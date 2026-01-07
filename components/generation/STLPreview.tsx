@@ -1,15 +1,15 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { AlertCircle, Box, Image, Loader2, Rotate3d } from "lucide-react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Box, Loader2, AlertCircle, Rotate3d, Image } from "lucide-react";
 import { api } from "@/lib/api/client";
 import type { GridfinityConfig } from "@/types/gridfinity";
 import { STLViewer } from "./STLViewer";
@@ -57,7 +57,7 @@ export function STLPreview({
     if (is3DAvailable && viewMode === "static") {
       setViewMode("3d");
     }
-  }, [is3DAvailable]);
+  }, [is3DAvailable, viewMode]);
 
   // Cleanup function
   useEffect(() => {
@@ -73,6 +73,71 @@ export function STLPreview({
       }
     };
   }, [imageUrl]);
+
+  // Fetch preview from URL
+  const fetchPreviewFromUrl = useCallback(async (url: string) => {
+    setLoading(true);
+    setError(null);
+
+    try {
+      const response = await fetch(url);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch preview: ${response.statusText}`);
+      }
+
+      const blob = await response.blob();
+      const newImageUrl = URL.createObjectURL(blob);
+      setImageUrl(newImageUrl);
+      setLoading(false);
+    } catch (err) {
+      console.error("Preview fetch error:", err);
+      setError(err instanceof Error ? err.message : "Failed to load preview");
+      setLoading(false);
+    }
+  }, []);
+
+  // Generate preview from SVG and config
+  const generatePreview = useCallback(
+    async (
+      svgContent: string,
+      gridfinityConfig: GridfinityConfig,
+      previewQuality: "low" | "medium" | "high",
+    ) => {
+      // Create new abort controller for this request
+      const abortController = new AbortController();
+      abortControllerRef.current = abortController;
+
+      try {
+        const blob = await api.getPreview({
+          svg: svgContent,
+          config: gridfinityConfig,
+          quality: previewQuality,
+        });
+
+        // Check if request was aborted
+        if (abortController.signal.aborted) {
+          return;
+        }
+
+        const newImageUrl = URL.createObjectURL(blob);
+        setImageUrl(newImageUrl);
+        setLoading(false);
+      } catch (err) {
+        // Ignore abort errors
+        if (err instanceof Error && err.name === "AbortError") {
+          return;
+        }
+
+        console.error("Preview generation error:", err);
+        setError(
+          err instanceof Error ? err.message : "Failed to generate preview",
+        );
+        setLoading(false);
+      }
+    },
+    [],
+  );
 
   // Generate or fetch static preview
   useEffect(() => {
@@ -109,82 +174,8 @@ export function STLPreview({
 
     // No preview data provided
     setLoading(false);
-    if (imageUrl) {
-      URL.revokeObjectURL(imageUrl);
-      setImageUrl(null);
-    }
-  }, [previewUrl, svg, config, quality]);
-
-  const fetchPreviewFromUrl = async (url: string) => {
-    setLoading(true);
-    setError(null);
-
-    try {
-      const response = await fetch(url);
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch preview: ${response.statusText}`);
-      }
-
-      const blob = await response.blob();
-
-      // Revoke old URL if exists
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
-
-      const newImageUrl = URL.createObjectURL(blob);
-      setImageUrl(newImageUrl);
-      setLoading(false);
-    } catch (err) {
-      console.error("Preview fetch error:", err);
-      setError(err instanceof Error ? err.message : "Failed to load preview");
-      setLoading(false);
-    }
-  };
-
-  const generatePreview = async (
-    svgContent: string,
-    gridfinityConfig: GridfinityConfig,
-    previewQuality: "low" | "medium" | "high",
-  ) => {
-    // Create new abort controller for this request
-    const abortController = new AbortController();
-    abortControllerRef.current = abortController;
-
-    try {
-      const blob = await api.getPreview({
-        svg: svgContent,
-        config: gridfinityConfig,
-        quality: previewQuality,
-      });
-
-      // Check if request was aborted
-      if (abortController.signal.aborted) {
-        return;
-      }
-
-      // Revoke old URL if exists
-      if (imageUrl) {
-        URL.revokeObjectURL(imageUrl);
-      }
-
-      const newImageUrl = URL.createObjectURL(blob);
-      setImageUrl(newImageUrl);
-      setLoading(false);
-    } catch (err) {
-      // Ignore abort errors
-      if (err instanceof Error && err.name === "AbortError") {
-        return;
-      }
-
-      console.error("Preview generation error:", err);
-      setError(
-        err instanceof Error ? err.message : "Failed to generate preview",
-      );
-      setLoading(false);
-    }
-  };
+    setImageUrl(null);
+  }, [previewUrl, svg, config, quality, fetchPreviewFromUrl, generatePreview]);
 
   const handleSTLViewerError = (err: Error) => {
     setStlViewerError(err);
@@ -290,6 +281,7 @@ export function STLPreview({
             )}
 
             {imageUrl && !loading && (
+              // biome-ignore lint/performance/noImgElement: Dynamic blob URL, next/image not suitable
               <img
                 src={imageUrl}
                 alt="3D Preview"

@@ -1,8 +1,8 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
-  validateBinConfig,
   GRIDFINITY_CONSTRAINTS,
   type GridfinityBinConfig,
+  validateBinConfig,
 } from "./configuration";
 
 describe("GRIDFINITY_CONSTRAINTS", () => {

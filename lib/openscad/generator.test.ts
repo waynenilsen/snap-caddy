@@ -1,6 +1,6 @@
-import { describe, it, expect } from "bun:test";
-import { OpenSCADGenerator } from "./generator";
+import { describe, expect, it } from "bun:test";
 import type { GridfinityBinConfig } from "@/types/configuration";
+import { OpenSCADGenerator } from "./generator";
 
 describe("OpenSCADGenerator", () => {
   const generator = new OpenSCADGenerator();

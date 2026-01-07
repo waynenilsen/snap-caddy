@@ -3,23 +3,26 @@
  * Tests file download functionality, validation, and error handling
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
-import { GET } from "./route";
-import { NextRequest, NextResponse } from "next/server";
+import { beforeEach, describe, expect, it, mock } from "bun:test";
+import { NextRequest } from "next/server";
 import type { JobPaths } from "@/lib/openscad/fileManager";
+import { GET } from "./route";
 
 // Mock modules
 const mockStlFileManager = {
-  getJobPaths: mock((id: string) => null as JobPaths | null),
-  fileExists: mock(async (path: string) => false),
-  isFileExpired: mock(async (path: string, maxAge?: number) => false),
-  cleanupJob: mock(async (id: string) => true),
+  getJobPaths: mock((_id: string) => null as JobPaths | null),
+  fileExists: mock(async (_path: string) => false),
+  isFileExpired: mock(async (_path: string, _maxAge?: number) => false),
+  cleanupJob: mock(async (_id: string) => true),
 };
 
 const mockLogger = {
-  warn: mock((message: string, meta?: any) => {}),
-  info: mock((message: string, meta?: any) => {}),
-  error: mock((message: string, meta?: any) => {}),
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock - meta can be any object
+  warn: mock((_message: string, _meta?: any) => {}),
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock - meta can be any object
+  info: mock((_message: string, _meta?: any) => {}),
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock - meta can be any object
+  error: mock((_message: string, _meta?: any) => {}),
 };
 
 const mockMetrics = {
@@ -31,8 +34,8 @@ const mockEnv = {
 };
 
 const mockFs = {
-  readFile: mock(async (path: string) => Buffer.from("mock STL data")),
-  stat: mock(async (path: string) => ({
+  readFile: mock(async (_path: string) => Buffer.from("mock STL data")),
+  stat: mock(async (_path: string) => ({
     size: 12345,
     isDirectory: () => false,
     isFile: () => true,
@@ -96,14 +99,14 @@ describe("GET /api/download/[id]", () => {
     });
 
     mockStlFileManager.isFileExpired.mockImplementation(
-      async (path: string, maxAge?: number) => false,
+      async (_path: string, _maxAge?: number) => false,
     );
 
-    mockFs.readFile.mockImplementation(async (path: string) => {
+    mockFs.readFile.mockImplementation(async (_path: string) => {
       return Buffer.from("mock STL file content");
     });
 
-    mockFs.stat.mockImplementation(async (path: string) => ({
+    mockFs.stat.mockImplementation(async (_path: string) => ({
       size: 12345,
       isDirectory: () => false,
       isFile: () => true,
@@ -354,6 +357,7 @@ describe("GET /api/download/[id]", () => {
         size: mockBuffer.length,
         isDirectory: () => false,
         isFile: () => true,
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock for fs.stat
       } as any);
 
       const response = await GET(request, { params });
@@ -432,6 +436,7 @@ describe("GET /api/download/[id]", () => {
       mockFs.readFile.mockResolvedValue(mockBuffer);
       mockFs.stat.mockResolvedValue({
         size: mockBuffer.length,
+        // biome-ignore lint/suspicious/noExplicitAny: Test mock for fs.stat
       } as any);
 
       await GET(request, { params });
@@ -710,6 +715,7 @@ describe("GET /api/download/[id]", () => {
       mockStlFileManager.fileExists.mockResolvedValue(true);
       mockStlFileManager.isFileExpired.mockResolvedValue(false);
       mockFs.readFile.mockResolvedValue(mockBuffer);
+      // biome-ignore lint/suspicious/noExplicitAny: Test mock for fs.stat
       mockFs.stat.mockResolvedValue({ size: mockBuffer.length } as any);
 
       const response = await GET(request, { params });

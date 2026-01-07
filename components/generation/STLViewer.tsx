@@ -1,21 +1,18 @@
 "use client";
 
+import { ContactShadows, Grid, OrbitControls } from "@react-three/drei";
+import { Canvas, useThree } from "@react-three/fiber";
+import { AlertCircle, Loader2, Move3d, RotateCcw } from "lucide-react";
 import {
   Suspense,
-  useRef,
+  useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
-  useCallback,
 } from "react";
-import { Canvas, useThree, useFrame } from "@react-three/fiber";
-import {
-  OrbitControls,
-  Grid,
-  Environment,
-  ContactShadows,
-} from "@react-three/drei";
 import * as THREE from "three";
+import { Button } from "@/components/ui/button";
 import { useSTLLoader } from "@/hooks/useSTLLoader";
 import { createBinMaterial } from "@/lib/three/materials";
 import {
@@ -25,8 +22,6 @@ import {
   QUALITY_PRESETS,
   type QualityLevel,
 } from "@/lib/three/utils";
-import { Loader2, AlertCircle, RotateCcw, Move3d } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface STLViewerProps {
   stlUrl: string;
@@ -90,6 +85,7 @@ function CameraController({
   autoRotate: boolean;
 }) {
   const { camera } = useThree();
+  // biome-ignore lint/suspicious/noExplicitAny: OrbitControls from drei has complex ref type
   const controlsRef = useRef<any>(null);
   const initialPositionRef = useRef<THREE.Vector3 | null>(null);
   const initialTargetRef = useRef<THREE.Vector3 | null>(null);
@@ -153,7 +149,7 @@ function CameraController({
  * Grid floor component
  */
 function GridFloor({ geometry }: { geometry: THREE.BufferGeometry }) {
-  const { size, divisions } = useMemo(
+  const { size, divisions: _divisions } = useMemo(
     () => calculateGridSize(geometry),
     [geometry],
   );

@@ -14,7 +14,7 @@ import * as THREE from "three";
 export function calculateCameraPosition(
   geometry: THREE.BufferGeometry,
   fov: number = 50,
-  aspect: number = 1,
+  _aspect: number = 1,
 ): { position: THREE.Vector3; target: THREE.Vector3 } {
   geometry.computeBoundingBox();
   const boundingBox = geometry.boundingBox;
@@ -113,7 +113,9 @@ export function disposeResources(
 
   if (material) {
     if (Array.isArray(material)) {
-      material.forEach((m) => m.dispose());
+      for (const m of material) {
+        m.dispose();
+      }
     } else {
       material.dispose();
     }

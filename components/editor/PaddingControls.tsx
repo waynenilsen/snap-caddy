@@ -1,18 +1,18 @@
 "use client";
 
-import * as React from "react";
+import { Info } from "lucide-react";
+import type * as React from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
+  CardContent,
+  CardDescription,
   CardHeader,
   CardTitle,
-  CardDescription,
-  CardContent,
 } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Info } from "lucide-react";
+import { Slider } from "@/components/ui/slider";
 
 interface PaddingControlsProps {
   padding: number; // mm
@@ -31,7 +31,7 @@ export function PaddingControls({
 }: PaddingControlsProps) {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value);
-    if (!isNaN(value) && value >= min && value <= max) {
+    if (!Number.isNaN(value) && value >= min && value <= max) {
       onPaddingChange(value);
     }
   };

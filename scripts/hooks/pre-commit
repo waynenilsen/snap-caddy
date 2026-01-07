@@ -14,8 +14,8 @@ if [ -z "$STAGED_FILES" ]; then
     exit 0
 fi
 
-# Filter to only include files Biome can check
-BIOME_FILES=$(echo "$STAGED_FILES" | grep -E '\.(js|jsx|ts|tsx|json|jsonc)$' || true)
+# Filter to only include files Biome can check (excluding components/ui)
+BIOME_FILES=$(echo "$STAGED_FILES" | grep -E '\.(js|jsx|ts|tsx|json|jsonc)$' | grep -v 'components/ui/' || true)
 
 if [ -z "$BIOME_FILES" ]; then
     echo "No files to lint."

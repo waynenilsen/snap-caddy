@@ -4,17 +4,16 @@
  */
 
 import {
-  describe,
-  it,
-  expect,
-  beforeEach,
   afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
   mock,
   spyOn,
 } from "bun:test";
 import { promises as fs } from "node:fs";
 import { join } from "node:path";
-import { randomBytes } from "node:crypto";
 
 // Mock environment variables
 const MOCK_TEMP_DIR = "/tmp/test-snap-caddy";
@@ -361,7 +360,7 @@ describe("FileManager", () => {
 
       spyOn(fs, "readdir").mockResolvedValue(mockEntries as any);
 
-      let statCallCount = 0;
+      const _statCallCount = 0;
       spyOn(fs, "stat").mockImplementation(async (path: any) => {
         const pathStr = path.toString();
         if (pathStr.includes("old-file-1") || pathStr.includes("old-file-2")) {

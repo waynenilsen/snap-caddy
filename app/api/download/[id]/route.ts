@@ -3,12 +3,12 @@
  * GET /api/download/[id] - Download STL file by job ID
  */
 
+import { promises as fs } from "node:fs";
 import { type NextRequest, NextResponse } from "next/server";
-import { promises as fs } from "fs";
 import { z } from "zod";
-import { stlFileManager } from "@/lib/openscad";
-import { logger, metrics } from "@/lib/logger";
 import { env } from "@/lib/env";
+import { logger, metrics } from "@/lib/logger";
+import { stlFileManager } from "@/lib/openscad";
 
 // UUID validation schema
 const UUIDSchema = z.string().uuid();

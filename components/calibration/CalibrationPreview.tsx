@@ -1,5 +1,8 @@
 "use client";
 
+import { CheckCircle2, Info } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import {
   Card,
   CardContent,
@@ -7,9 +10,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Info } from "lucide-react";
 
 interface CalibrationPreviewProps {
   pixelsPerMm: number;
@@ -21,7 +21,7 @@ export function CalibrationPreview({
   unit,
 }: CalibrationPreviewProps) {
   // Calculate what 1mm equals in pixels
-  const mmToPixels = pixelsPerMm;
+  const _mmToPixels = pixelsPerMm;
 
   // Calculate what 1 unit equals in pixels
   const unitToPixels = {
@@ -32,9 +32,10 @@ export function CalibrationPreview({
 
   // Calculate accuracy indicator
   // Generally, good calibration has 10-50 pixels per mm
+  type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
   const getAccuracyLevel = (
     pxPerMm: number,
-  ): { level: string; color: string; message: string } => {
+  ): { level: string; color: BadgeVariant; message: string } => {
     if (pxPerMm < 5) {
       return {
         level: "Low Resolution",
@@ -75,7 +76,7 @@ export function CalibrationPreview({
             <CardTitle>Calibration Result</CardTitle>
             <CardDescription>Scale factor for measurements</CardDescription>
           </div>
-          <Badge variant={accuracy.color as any}>
+          <Badge variant={accuracy.color}>
             <CheckCircle2 className="w-3 h-3 mr-1" />
             {accuracy.level}
           </Badge>

@@ -1,11 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { BinConfigurator, BinConfig } from "./BinConfigurator";
-import { GridfinityPreview } from "./GridfinityPreview";
+import { AlertCircle, CheckCircle, Info } from "lucide-react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { Info, CheckCircle, AlertCircle } from "lucide-react";
+import { type BinConfig, BinConfigurator } from "./BinConfigurator";
+import { GridfinityPreview } from "./GridfinityPreview";
 
 interface ConfigureStepProps {
   svgDimensions?: { width: number; height: number }; // in mm
@@ -144,8 +144,8 @@ export function ConfigureStep({
                 Please fix the following issues before proceeding:
               </p>
               <ul className="list-disc list-inside space-y-1">
-                {validationErrors.map((error, idx) => (
-                  <li key={idx}>{error}</li>
+                {validationErrors.map((error) => (
+                  <li key={error}>{error}</li>
                 ))}
               </ul>
             </AlertDescription>

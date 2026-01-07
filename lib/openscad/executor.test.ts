@@ -2,10 +2,9 @@
  * Unit tests for OpenSCAD Executor
  */
 
-import { describe, it, expect, mock, beforeEach, afterEach } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { EventEmitter } from "node:events";
 import { OpenSCADExecutor } from "./executor";
-import type { ChildProcess } from "child_process";
-import { EventEmitter } from "events";
 
 // Mock logger to avoid console output during tests
 mock.module("@/lib/logger", () => ({
@@ -31,7 +30,7 @@ class MockChildProcess extends EventEmitter {
   stderr = new EventEmitter();
   killed = false;
 
-  kill(signal?: string) {
+  kill(_signal?: string) {
     this.killed = true;
     // Simulate process being killed
     setTimeout(() => {
@@ -50,7 +49,7 @@ describe("OpenSCADExecutor", () => {
     mockChildProcess = new MockChildProcess();
 
     // Mock child_process.spawn
-    mockSpawn = mock((command: string, args: string[], options: any) => {
+    mockSpawn = mock((_command: string, _args: string[], _options: any) => {
       return mockChildProcess;
     });
 

@@ -1,4 +1,4 @@
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 
 // UUID validation schema (same as in route.ts)

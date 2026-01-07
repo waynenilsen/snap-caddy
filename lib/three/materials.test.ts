@@ -1,10 +1,10 @@
-import { describe, it, expect, afterEach } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import * as THREE from "three";
 import {
   createBinMaterial,
+  createColoredMaterial,
   createGhostMaterial,
   createWireframeMaterial,
-  createColoredMaterial,
   FILAMENT_COLORS,
 } from "./materials";
 
@@ -113,7 +113,7 @@ describe("materials", () => {
     it("has valid hex color format for all colors", () => {
       const hexRegex = /^#[0-9a-f]{6}$/i;
 
-      for (const [name, color] of Object.entries(FILAMENT_COLORS)) {
+      for (const [_name, color] of Object.entries(FILAMENT_COLORS)) {
         expect(hexRegex.test(color)).toBe(true);
       }
     });

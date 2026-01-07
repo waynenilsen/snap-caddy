@@ -1,7 +1,9 @@
 "use client";
 
+import { AlertCircle, Camera, Upload, X } from "lucide-react";
 import { useState } from "react";
-import { Camera, Upload, AlertCircle, X } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -10,11 +12,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { CameraCapture } from "./CameraCapture";
-import { ImageUpload } from "./ImageUpload";
 import { ImagePreview } from "./ImagePreview";
+import { ImageUpload } from "./ImageUpload";
 
 interface CaptureStepProps {
   onImageCaptured: (imageDataUrl: string) => void;

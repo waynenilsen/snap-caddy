@@ -2,9 +2,9 @@
  * Unit tests for rate limiting middleware
  */
 
-import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
 import { type NextRequest, NextResponse } from "next/server";
-import { withRateLimit, getRateLimitStatus, resetRateLimit } from "./rateLimit";
+import { getRateLimitStatus, resetRateLimit, withRateLimit } from "./rateLimit";
 
 // Mock dependencies
 mock.module("@/lib/env", () => ({
@@ -36,7 +36,7 @@ function createMockRequest(
 
 // Helper function to create a simple handler
 function createMockHandler(responseData: object = { success: true }) {
-  return mock(async (req: NextRequest) => {
+  return mock(async (_req: NextRequest) => {
     return NextResponse.json(responseData);
   });
 }
@@ -305,7 +305,9 @@ describe("getRateLimitStatus", () => {
   beforeEach(() => {
     // Clear all rate limit records
     const testKeys = ["test-key-1", "test-key-2", "192.168.1.100"];
-    testKeys.forEach((key) => resetRateLimit(key));
+    for (const key of testKeys) {
+      resetRateLimit(key);
+    }
   });
 
   it("should return null for non-existent key", () => {

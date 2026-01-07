@@ -1,6 +1,6 @@
 "use client";
 
-import * as React from "react";
+import type * as React from "react";
 
 // Stub - react-resizable-panels integration needs to be fixed
 // This component is not used in the current app

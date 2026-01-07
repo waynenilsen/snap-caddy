@@ -3,7 +3,7 @@
  * Tests the Zod schema validation, defaults, and transformations
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 
 // Re-create the schema for testing purposes

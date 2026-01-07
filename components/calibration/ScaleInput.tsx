@@ -1,6 +1,9 @@
 "use client";
 
+import { AlertCircle, Info } from "lucide-react";
 import { useMemo, useState } from "react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,9 +20,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { AlertCircle, Info } from "lucide-react";
 
 type Unit = "mm" | "cm" | "in";
 
@@ -43,7 +43,7 @@ export function ScaleInput({
   const handleValueChange = (value: string) => {
     const numValue = parseFloat(value);
 
-    if (isNaN(numValue)) {
+    if (Number.isNaN(numValue)) {
       onDistanceChange(0);
       return;
     }

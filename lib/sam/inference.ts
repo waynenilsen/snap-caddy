@@ -5,14 +5,14 @@
 
 import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
+import type { MaskOption } from "@/types/segmentation";
 import type {
-  SAMSegmentationParams,
-  SAMResult,
+  MaskAnalysis,
   ReplicatePrediction,
   ReplicateRequest,
-  MaskAnalysis,
+  SAMResult,
+  SAMSegmentationParams,
 } from "./types";
-import type { MaskOption } from "@/types/segmentation";
 
 const REPLICATE_API_URL = "https://api.replicate.com/v1/predictions";
 const POLL_INTERVAL_MS = 1000; // Poll every 1 second

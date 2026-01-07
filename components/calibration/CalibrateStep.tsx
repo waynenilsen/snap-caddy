@@ -1,12 +1,12 @@
 "use client";
 
+import { AlertCircle, X } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { RulerSelector } from "./RulerSelector";
-import { ScaleInput } from "./ScaleInput";
-import { CalibrationPreview } from "./CalibrationPreview";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { AlertCircle, X } from "lucide-react";
+import { CalibrationPreview } from "./CalibrationPreview";
+import { RulerSelector } from "./RulerSelector";
+import { ScaleInput } from "./ScaleInput";
 
 interface Point {
   x: number;

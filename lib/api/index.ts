@@ -13,4 +13,4 @@ export { APIError, withErrorHandler } from "./errors";
 export { FileManager, fileManager } from "./files";
 
 // Rate limiting
-export { withRateLimit, getRateLimitStatus, resetRateLimit } from "./rateLimit";
+export { getRateLimitStatus, resetRateLimit, withRateLimit } from "./rateLimit";

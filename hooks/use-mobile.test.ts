@@ -1,5 +1,5 @@
-import { describe, it, expect, beforeEach, afterEach, mock } from "bun:test";
-import { renderHook, act } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import { act, renderHook } from "@testing-library/react";
 import { useIsMobile } from "./use-mobile";
 
 describe("useIsMobile", () => {

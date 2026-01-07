@@ -1,23 +1,23 @@
 "use client";
 
+import { AlertCircle, RotateCcw, X } from "lucide-react";
 import { useCallback, useState } from "react";
-import { useWizard } from "@/hooks/useWizard";
-import { useGenerationPolling } from "@/hooks/useGenerationPolling";
+import { CalibrateStep } from "@/components/calibration";
+import { CaptureStep } from "@/components/capture";
+import { ConfigureStep } from "@/components/configuration";
+import { ReviewStep } from "@/components/editor";
+import { GenerateStep } from "@/components/generation";
+import { SelectStep } from "@/components/segmentation";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import {
-  WizardLayout,
   StepIndicator,
+  WizardLayout,
   WizardNavigation,
 } from "@/components/wizard";
-import { CaptureStep } from "@/components/capture";
-import { SelectStep } from "@/components/segmentation";
-import { CalibrateStep } from "@/components/calibration";
-import { ReviewStep } from "@/components/editor";
-import { ConfigureStep } from "@/components/configuration";
-import { GenerateStep } from "@/components/generation";
-import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { RotateCcw, AlertCircle, X } from "lucide-react";
-import { api, APIClientError } from "@/lib/api/client";
+import { useGenerationPolling } from "@/hooks/useGenerationPolling";
+import { useWizard } from "@/hooks/useWizard";
+import { APIClientError, api } from "@/lib/api/client";
 import { findContours, generateSVG } from "@/lib/canvas";
 
 export default function Home() {
@@ -157,7 +157,7 @@ export default function Home() {
   );
 
   const handleReviewConfirm = useCallback(
-    (paddedSvg: string, padding: number) => {
+    (paddedSvg: string, _padding: number) => {
       setSvgOutline(paddedSvg);
     },
     [setSvgOutline],

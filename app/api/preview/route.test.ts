@@ -3,7 +3,7 @@
  * Tests the validation schemas and expected behaviors
  */
 
-import { describe, it, expect } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { z } from "zod";
 
 // Recreate the validation schema from the route

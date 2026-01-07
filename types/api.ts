@@ -5,17 +5,17 @@
  */
 
 import type {
-  SegmentRequest as SchemaSegmentRequest,
-  SegmentResponse as SchemaSegmentResponse,
-  SegmentErrorResponse as SchemaSegmentErrorResponse,
-} from "@/schemas/segment";
-import type {
+  GenerateErrorResponse as SchemaGenerateErrorResponse,
   GenerateRequest as SchemaGenerateRequest,
   GenerateResponse as SchemaGenerateResponse,
-  GenerateErrorResponse as SchemaGenerateErrorResponse,
   GenerationStatus as SchemaGenerationStatus,
   GenerationStatusResponse as SchemaGenerationStatusResponse,
 } from "@/schemas/generate";
+import type {
+  SegmentErrorResponse as SchemaSegmentErrorResponse,
+  SegmentRequest as SchemaSegmentRequest,
+  SegmentResponse as SchemaSegmentResponse,
+} from "@/schemas/segment";
 import type { GridfinityConfig } from "./gridfinity";
 
 // ============================================================================
