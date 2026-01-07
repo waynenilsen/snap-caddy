@@ -239,8 +239,19 @@ export class OpenSCADExecutor {
   }> {
     return new Promise((resolve) => {
       const timeout = options?.timeout || this.defaultTimeout;
+
+      // Set up OpenSCAD library path for Gridfinity
+      // OpenSCAD uses OPENSCADPATH (colon-separated on Linux) to find library files
+      const existingPath = process.env.OPENSCADPATH || "";
+      const openscadPath = env.GRIDFINITY_LIB_PATH
+        ? existingPath
+          ? `${env.GRIDFINITY_LIB_PATH}:${existingPath}`
+          : env.GRIDFINITY_LIB_PATH
+        : existingPath;
+
       const processEnv = {
         ...process.env,
+        ...(openscadPath && { OPENSCADPATH: openscadPath }),
         ...options?.env,
       };
 

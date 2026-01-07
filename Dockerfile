@@ -99,8 +99,10 @@ RUN addgroup --system --gid 1001 nodejs \
   && adduser --system --uid 1001 nextjs
 
 # Create directories for temp files and set permissions
+# Also ensure Gridfinity library is readable by nextjs user
 RUN mkdir -p /tmp/snap-caddy /data/snap-caddy \
-  && chown -R nextjs:nodejs /tmp/snap-caddy /data/snap-caddy
+  && chown -R nextjs:nodejs /tmp/snap-caddy /data/snap-caddy \
+  && chmod -R a+r /opt/gridfinity_extended_openscad
 
 # Set production environment
 ENV NODE_ENV=production
