@@ -21,8 +21,8 @@ Set the following environment variables:
 # Required: Your Replicate API token
 REPLICATE_API_TOKEN=r8_your_token_here
 
-# Optional: SAM model version (default: meta/sam-2-hiera-large)
-SAM_MODEL_VERSION=meta/sam-2-hiera-large
+# Optional: SAM model version (default: fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83 - latest SAM 2 version)
+SAM_MODEL_VERSION=fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83
 ```
 
 ## Usage

@@ -43,7 +43,7 @@ services:
       - key: REPLICATE_API_TOKEN
         sync: false  # Set manually in Render dashboard for security
       - key: SAM_MODEL_VERSION
-        value: meta/sam-2-hiera-large
+        value: fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83
 
       # OpenSCAD Configuration (pre-configured in Docker image)
       - key: OPENSCAD_PATH

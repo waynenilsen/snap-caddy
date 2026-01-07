@@ -12,7 +12,11 @@ import { z } from "zod";
 const envSchema = z.object({
   // SAM Segmentation
   REPLICATE_API_TOKEN: z.string().min(1).optional(),
-  SAM_MODEL_VERSION: z.string().default("meta/sam-2-hiera-large"),
+  SAM_MODEL_VERSION: z
+    .string()
+    .default(
+      "fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
+    ),
 
   // OpenSCAD
   OPENSCAD_PATH: z.string().default("openscad"),
@@ -87,7 +91,9 @@ describe("Environment Variable Schema", () => {
     it("should apply all default values when parsing empty object", () => {
       const result = envSchema.parse({});
 
-      expect(result.SAM_MODEL_VERSION).toBe("meta/sam-2-hiera-large");
+      expect(result.SAM_MODEL_VERSION).toBe(
+        "fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
+      );
       expect(result.OPENSCAD_PATH).toBe("openscad");
       expect(result.GRIDFINITY_LIB_PATH).toBe("/usr/local/share/gridfinity");
       expect(result.OPENSCAD_USE_XVFB).toBe(false);

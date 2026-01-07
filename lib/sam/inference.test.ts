@@ -16,7 +16,8 @@ import type { SAMSegmentationParams, ReplicatePrediction } from "./types";
 // Mock the env module
 const mockEnv = {
   REPLICATE_API_TOKEN: "",
-  SAM_MODEL_VERSION: "meta/sam-2-hiera-large",
+  SAM_MODEL_VERSION:
+    "fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83",
   OPENSCAD_PATH: "openscad",
   GRIDFINITY_LIB_PATH: "/usr/local/share/gridfinity",
   OPENSCAD_USE_XVFB: true,

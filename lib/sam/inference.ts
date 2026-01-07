@@ -225,11 +225,23 @@ async function processPredictionOutput(
   outputFormat: "base64png" | "rle" | "binary",
   returnMultiple: boolean,
 ): Promise<MaskOption[]> {
+  // Log the actual output structure for debugging
+  logger.debug("Processing prediction output", {
+    hasOutput: !!prediction.output,
+    outputKeys: prediction.output ? Object.keys(prediction.output) : [],
+    outputType: typeof prediction.output,
+    outputValue: JSON.stringify(prediction.output, null, 2).substring(0, 500),
+  });
+
   if (
     !prediction.output ||
     !prediction.output.masks ||
     prediction.output.masks.length === 0
   ) {
+    logger.error("No masks in prediction output", {
+      output: prediction.output,
+      outputString: JSON.stringify(prediction.output),
+    });
     throw new Error("No masks returned from prediction");
   }
 
