@@ -347,7 +347,7 @@ export function createRecordedFetch(
     const requestHash = generateRequestHash(method, url, body);
     const mode = getRecordMode();
 
-    // Replay mode: try to load from cache first
+    // Replay mode: try to load from cache first, then fall through to real API
     if (mode === "replay") {
       const recording = loadRecording(requestHash);
       if (recording) {
@@ -364,18 +364,19 @@ export function createRecordedFetch(
           headers: recording.response.headers,
         });
       }
-      // If no recording found in replay mode, throw error
-      throw new Error(
-        `No recording found for request: ${method} ${url} (hash: ${requestHash}). ` +
-          "Run in record mode first to capture this request.",
-      );
+      // No recording found - fall through to real API and record for next time
+      logger.info("No recording found, proxying to real API", {
+        hash: requestHash,
+        url,
+        method,
+      });
     }
 
     // Make the actual request
     const response = await originalFetch(input, init);
 
-    // Record mode: save the response
-    if (mode === "record") {
+    // Record mode OR replay mode cache miss: save the response
+    if (mode === "record" || mode === "replay") {
       // Clone response so we can read the body
       const clonedResponse = response.clone();
       const responseBody = await clonedResponse.json().catch(() => null);
