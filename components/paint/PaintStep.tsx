@@ -25,20 +25,19 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
   const backgroundCanvasRef = useRef<HTMLCanvasElement>(null);
   const paintCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const loadedImageRef = useRef<HTMLImageElement | null>(null);
+  const isInitializedRef = useRef(false);
 
-  // Load image and initialize canvases
-  useEffect(() => {
-    const img = new Image();
-    img.crossOrigin = "anonymous";
-    img.src = imageUrl;
+  // Initialize canvases when we have both a loaded image and valid container dimensions
+  const initializeCanvases = useCallback(
+    (
+      img: HTMLImageElement,
+      containerWidth: number,
+      containerHeight: number,
+    ) => {
+      if (isInitializedRef.current) return;
+      if (containerWidth <= 0 || containerHeight <= 0) return;
 
-    img.onload = () => {
-      const container = containerRef.current;
-      if (!container) return;
-
-      // Calculate canvas size to fit container while maintaining aspect ratio
-      const containerWidth = container.clientWidth;
-      const containerHeight = container.clientHeight;
       const imgAspect = img.width / img.height;
       const containerAspect = containerWidth / containerHeight;
 
@@ -50,6 +49,9 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
         height = containerHeight;
         width = containerHeight * imgAspect;
       }
+
+      // Final safety check
+      if (width <= 0 || height <= 0) return;
 
       setCanvasSize({ width, height });
 
@@ -77,14 +79,57 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
           const initialImageData = paintCtx.getImageData(0, 0, width, height);
           setHistory([{ imageData: initialImageData }]);
           setHistoryIndex(0);
+          isInitializedRef.current = true;
         }
+      }
+    },
+    [],
+  );
+
+  // Load image
+  useEffect(() => {
+    isInitializedRef.current = false;
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.src = imageUrl;
+
+    img.onload = () => {
+      loadedImageRef.current = img;
+      const container = containerRef.current;
+      if (container) {
+        initializeCanvases(img, container.clientWidth, container.clientHeight);
       }
     };
 
     img.onerror = () => {
       console.error("Failed to load image:", imageUrl);
     };
-  }, [imageUrl]);
+
+    return () => {
+      loadedImageRef.current = null;
+    };
+  }, [imageUrl, initializeCanvases]);
+
+  // Use ResizeObserver to initialize when container gets valid dimensions
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver((entries) => {
+      const entry = entries[0];
+      if (!entry) return;
+
+      const { width, height } = entry.contentRect;
+      const img = loadedImageRef.current;
+
+      if (img && width > 0 && height > 0) {
+        initializeCanvases(img, width, height);
+      }
+    });
+
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [initializeCanvases]);
 
   // Check if the canvas has any painted content
   const checkIfEmpty = useCallback((imageData: ImageData) => {
@@ -105,6 +150,9 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Guard against zero dimensions
+    if (canvas.width <= 0 || canvas.height <= 0) return;
 
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -259,12 +307,81 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
     }
   };
 
+  // Get touch position relative to canvas
+  const getTouchPos = useCallback((touch: Touch) => {
+    const canvas = paintCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+
+    const rect = canvas.getBoundingClientRect();
+    return {
+      x: touch.clientX - rect.left,
+      y: touch.clientY - rect.top,
+    };
+  }, []);
+
+  // Touch event handlers for mobile painting
+  const handleTouchStart = useCallback(
+    (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+
+      setIsDrawing(true);
+      const pos = getTouchPos(e.touches[0]);
+      lastPosRef.current = pos;
+      drawCircle(pos.x, pos.y);
+    },
+    [getTouchPos, drawCircle],
+  );
+
+  const handleTouchMove = useCallback(
+    (e: TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      e.preventDefault();
+
+      const pos = getTouchPos(e.touches[0]);
+      if (lastPosRef.current) {
+        drawLine(lastPosRef.current.x, lastPosRef.current.y, pos.x, pos.y);
+      }
+      lastPosRef.current = pos;
+    },
+    [getTouchPos, drawLine],
+  );
+
+  const handleTouchEnd = useCallback(() => {
+    if (isDrawing) {
+      setIsDrawing(false);
+      lastPosRef.current = null;
+      saveToHistory();
+    }
+  }, [isDrawing, saveToHistory]);
+
+  // Register native touch event listeners with passive: false to prevent scrolling while painting
+  useEffect(() => {
+    const canvas = paintCanvasRef.current;
+    if (!canvas) return;
+
+    canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+    canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+    canvas.addEventListener("touchend", handleTouchEnd, { passive: true });
+    canvas.addEventListener("touchcancel", handleTouchEnd, { passive: true });
+
+    return () => {
+      canvas.removeEventListener("touchstart", handleTouchStart);
+      canvas.removeEventListener("touchmove", handleTouchMove);
+      canvas.removeEventListener("touchend", handleTouchEnd);
+      canvas.removeEventListener("touchcancel", handleTouchEnd);
+    };
+  }, [handleTouchStart, handleTouchMove, handleTouchEnd]);
+
   const handleConfirm = () => {
     const canvas = paintCanvasRef.current;
     if (!canvas) return;
 
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
+
+    // Guard against zero dimensions
+    if (canvas.width <= 0 || canvas.height <= 0) return;
 
     const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     onPaintingComplete(maskImageData);
@@ -334,7 +451,7 @@ export function PaintStep({ imageUrl, onPaintingComplete }: PaintStepProps) {
       {/* Canvas Area */}
       <div
         ref={containerRef}
-        className="relative flex-1 overflow-hidden rounded-lg border bg-muted"
+        className="relative flex-1 min-h-[300px] overflow-hidden rounded-lg border bg-muted"
       >
         <div
           className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
