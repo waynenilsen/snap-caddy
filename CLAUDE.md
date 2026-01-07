@@ -254,6 +254,7 @@ Detailed architecture docs in `/docs`:
 - `04-OPENSCAD-GENERATION.md` - STL generation
 - `05-API-ARCHITECTURE.md` - Backend design
 - `06-STATE-MANAGEMENT.md` - React state flow
+- `conventional-commits.md` - Commit message conventions
 
 Feature tickets in `/tickets`:
 - Implementation specs for planned features
