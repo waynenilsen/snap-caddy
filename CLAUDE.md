@@ -215,10 +215,10 @@ A pre-commit hook is installed automatically when you run `bun install`. The hoo
 
 ### Before Staging/Committing
 
-**Always format and lint your code before staging:**
+**Always format and lint the entire codebase before staging:**
 ```bash
-bun format           # Auto-format code
-bun lint:fix         # Auto-fix lint issues
+bun format           # Auto-format entire codebase
+bun lint:fix         # Auto-fix lint issues across codebase
 git add .            # Stage changes
 git commit -m "..."  # Commit
 ```
@@ -227,6 +227,8 @@ Or use this one-liner:
 ```bash
 bun format && bun lint:fix && git add . && git commit -m "your message"
 ```
+
+**Important:** Run format and lint on the entire codebase, not just the files you modified. This ensures consistent formatting and catches any issues that may have been introduced elsewhere.
 
 ### Manual Hook Installation
 
