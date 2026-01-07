@@ -1,17 +1,25 @@
-# SAM (Segment Anything Model) Integration
+# SAM 2 (Segment Anything Model 2) Integration
 
-This directory contains the integration for Meta's Segment Anything Model (SAM) using the Replicate API.
+This directory contains the integration for Meta's Segment Anything Model 2 (SAM 2) using the Replicate API.
 
 ## Overview
 
-The SAM integration allows you to perform image segmentation by providing point prompts (foreground/background) to generate precise object masks.
+SAM 2 uses **automatic mask generation** - it detects and returns all object masks in an image without requiring point prompts. Users can then toggle masks on/off in the UI to select which segments to include.
+
+### Key Differences from SAM 1
+
+| Feature | SAM 1 | SAM 2 (Current) |
+|---------|-------|-----------------|
+| Input | Point prompts (foreground/background) | Image only |
+| Output | Single mask based on points | All detected masks |
+| User Flow | Click to prompt | Toggle masks on/off |
+| API Calls | Multiple (per selection) | Single call |
 
 ## Files
 
-- **`types.ts`**: TypeScript type definitions for SAM integration
+- **`types.ts`**: TypeScript type definitions for SAM 2 integration
 - **`inference.ts`**: Main implementation with Replicate API integration
 - **`index.ts`**: Public API exports
-- **`example.ts`**: Usage examples and patterns
 
 ## Configuration
 
@@ -21,8 +29,8 @@ Set the following environment variables:
 # Required: Your Replicate API token
 REPLICATE_API_TOKEN=r8_your_token_here
 
-# Optional: SAM model version (default: fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83 - latest SAM 2 version)
-SAM_MODEL_VERSION=fe97b453a6455861e3bac769b441ca1f1086110da7466dbb65cf1eecfd60dc83
+# Optional: SAM model version (default: meta/sam-2)
+SAM_MODEL_VERSION=meta/sam-2
 ```
 
 ## Usage
@@ -36,32 +44,31 @@ const imageBuffer = await readFile('image.png');
 
 const result = await runSAMSegmentation({
   imageBuffer,
-  points: [
-    { x: 100, y: 100, label: 1 }, // Foreground point
-  ],
   imageWidth: 800,
   imageHeight: 600,
-  outputFormat: 'base64png',
-  returnMultiple: false,
 });
 
-console.log('Masks:', result.masks);
+console.log('Combined mask URL:', result.combinedMaskUrl);
+console.log('Individual masks:', result.individualMaskUrls.length);
+
+// Each URL points to a mask image on Replicate's CDN
+for (const maskUrl of result.individualMaskUrls) {
+  console.log('Mask:', maskUrl);
+}
 ```
 
-### Advanced Example with Multiple Points
+### With Custom Parameters
 
 ```typescript
 const result = await runSAMSegmentation({
   imageBuffer,
-  points: [
-    { x: 150, y: 200, label: 1 }, // Foreground
-    { x: 160, y: 210, label: 1 }, // Foreground
-    { x: 50, y: 50, label: 0 },   // Background
-  ],
   imageWidth: 800,
   imageHeight: 600,
-  outputFormat: 'rle',
-  returnMultiple: true,
+  // Fine-tune mask generation
+  pointsPerSide: 32,        // Grid density for detection (default: 32)
+  predIouThresh: 0.88,      // Quality threshold (default: 0.88)
+  stabilityScoreThresh: 0.95, // Stability threshold (default: 0.95)
+  useM2M: true,             // Mask refinement (default: true)
 });
 ```
 
@@ -69,53 +76,60 @@ const result = await runSAMSegmentation({
 
 ### `runSAMSegmentation(params: SAMSegmentationParams): Promise<SAMResult>`
 
-Main function to run SAM segmentation.
+Main function to run SAM 2 automatic mask generation.
 
 **Parameters:**
 - `imageBuffer`: Buffer - The image data
-- `points`: Array - Point prompts with x, y coordinates and label (0=background, 1=foreground)
 - `imageWidth`: number - Image width in pixels
 - `imageHeight`: number - Image height in pixels
-- `outputFormat`: 'base64png' | 'rle' | 'binary' - Output format (default: 'base64png')
-- `returnMultiple`: boolean - Return multiple mask options (default: false)
+- `pointsPerSide`: number (optional) - Grid density for automatic point sampling (default: 32)
+- `predIouThresh`: number (optional) - Minimum quality threshold for masks (default: 0.88)
+- `stabilityScoreThresh`: number (optional) - Minimum stability for mask inclusion (default: 0.95)
+- `useM2M`: boolean (optional) - Enable mask-to-mask refinement (default: true)
 
 **Returns:**
 ```typescript
 {
-  masks: Array<{
-    mask: string;           // Base64 PNG or RLE encoded
-    confidence: number;     // 0-1 score
-    boundingBox: {          // Tight bounding box
-      x: number;
-      y: number;
-      width: number;
-      height: number;
-    };
-    area: number;           // Pixel count
-  }>
+  combinedMaskUrl: string;      // URL to image showing all masks combined
+  individualMaskUrls: string[]; // URLs to individual mask images
 }
 ```
 
-### Helper Functions
+### Types
 
-#### `analyzeMask(maskBuffer: Buffer, width: number, height: number): MaskAnalysis`
+```typescript
+interface SAMSegmentationParams {
+  imageBuffer: Buffer;
+  imageWidth: number;
+  imageHeight: number;
+  pointsPerSide?: number;
+  predIouThresh?: number;
+  stabilityScoreThresh?: number;
+  useM2M?: boolean;
+}
 
-Analyzes a mask to calculate bounding box and area.
-
-#### `encodeRLE(maskBuffer: Buffer, width: number, height: number): string`
-
-Encodes a mask using Run-Length Encoding for compact representation.
+interface SAMResult {
+  combinedMaskUrl: string;
+  individualMaskUrls: string[];
+}
+```
 
 ## Implementation Details
 
 ### Replicate API Integration
 
 1. **Image Upload**: Converts image buffer to base64 data URI
-2. **Prediction Creation**: POSTs to Replicate API with model version and input parameters
-3. **Polling**: Polls prediction status every 1 second (max 60 seconds)
-4. **Result Processing**: Downloads mask images and processes them
-5. **Format Conversion**: Converts masks to requested format (base64png, RLE, or binary)
-6. **Analysis**: Calculates bounding box and area for each mask
+2. **Prediction Creation**: POSTs to Replicate models API (`/v1/models/meta/sam-2/predictions`)
+3. **Polling**: Polls prediction status every 1 second (max 120 seconds)
+4. **Result Extraction**: Extracts `combined_mask` and `individual_masks` URLs from output
+
+### Frontend Integration
+
+The frontend (`components/segmentation/`) handles mask display and selection:
+
+1. `SelectStep.tsx` - Calls API when image loads, manages mask selection state
+2. `MaskToggleOverlay.tsx` - Canvas-based display with click-to-toggle interaction
+3. Selected masks are combined using OR operation before SVG generation
 
 ### Error Handling
 
@@ -123,34 +137,32 @@ The implementation includes comprehensive error handling:
 
 - **Missing API Token**: Throws descriptive error if `REPLICATE_API_TOKEN` is not set
 - **API Failures**: Captures and reports Replicate API errors
-- **Timeouts**: Fails gracefully after 60 seconds
-- **Network Issues**: Handles download failures
-- **Invalid Inputs**: Validates parameters before processing
+- **Timeouts**: Fails gracefully after 120 seconds
+- **No Masks**: Throws error if no masks returned
 
 ### Logging
 
 All operations are logged using the project's logger:
 
 - Info: Start/completion of segmentation with metrics
-- Debug: Prediction creation and polling status
+- Debug: Prediction creation, polling status, output structure
 - Error: Failures with detailed context
 
 ## Performance
 
-- **Typical Duration**: 2-10 seconds depending on image size and model load
-- **Timeout**: 60 seconds maximum
+- **Typical Duration**: 5-30 seconds depending on image size and complexity
+- **Timeout**: 120 seconds maximum
 - **Poll Interval**: 1 second between status checks
+- **Max Masks**: Varies by image (typically 10-50 objects detected)
 
-## Output Formats
+## SAM 2 Parameters Explained
 
-### base64png (default)
-Base64-encoded PNG image of the mask. Easy to use but larger size.
-
-### rle (Run-Length Encoding)
-Compact string representation: `width,height:run1,run2,run3,...`
-
-### binary
-Raw binary mask data (still base64-encoded for transport).
+| Parameter | Default | Effect |
+|-----------|---------|--------|
+| `points_per_side` | 32 | Higher = more detection points, more masks, slower |
+| `pred_iou_thresh` | 0.88 | Higher = stricter quality filter, fewer masks |
+| `stability_score_thresh` | 0.95 | Higher = only very stable masks included |
+| `use_m2m` | true | Enables mask refinement for better boundaries |
 
 ## Error Codes
 
@@ -158,22 +170,19 @@ Common errors you might encounter:
 
 - `REPLICATE_API_TOKEN is not configured`: Set the environment variable
 - `Prediction failed`: Check Replicate API status and logs
-- `Prediction timed out`: Image too large or service overloaded
-- `Failed to download mask`: Network issue or invalid URL
-
-## Testing
-
-See `example.ts` for comprehensive usage examples and test patterns.
+- `Prediction timed out after 120 attempts`: Image too large or service overloaded
+- `No combined mask returned`: API response format issue
+- `No individual masks returned`: No objects detected in image
 
 ## Dependencies
 
 - `@/lib/env`: Environment configuration
 - `@/lib/logger`: Logging utilities
-- `@/types/api`: API type definitions
 - Replicate API: External service (requires API token)
 
 ## Notes
 
-- The mask analysis functions use heuristics for PNG files. For production use, consider using a proper image processing library like `sharp` or `jimp` for accurate mask analysis.
-- RLE encoding is simplified and suitable for binary masks. For complex scenarios, consider more advanced compression.
-- Multiple masks are sorted by confidence score when `returnMultiple: true`.
+- Mask URLs are temporary (hosted on Replicate's CDN) - download/process them promptly
+- The frontend loads all mask images in parallel for fast display
+- Masks are binary images (white = object, black = background)
+- The `combined_mask` shows all detected objects; `individual_masks` are per-object

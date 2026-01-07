@@ -1,4 +1,4 @@
-# SAM Integration Quick Start
+# SAM 2 Integration Quick Start
 
 ## Setup
 
@@ -12,6 +12,14 @@
    export REPLICATE_API_TOKEN=r8_your_token_here
    ```
 
+## How SAM 2 Works
+
+Unlike SAM 1 which required point prompts, **SAM 2 automatically detects all objects** in an image and returns them as individual masks. Users then toggle which masks to include.
+
+```
+Image → SAM 2 API → All Masks → User Selection → Combined Mask → SVG
+```
+
 ## Basic Usage
 
 ```typescript
@@ -21,22 +29,21 @@ import { readFile } from 'fs/promises';
 // Load image
 const imageBuffer = await readFile('path/to/image.png');
 
-// Run segmentation with a single point
+// Run segmentation - no points needed!
 const result = await runSAMSegmentation({
   imageBuffer,
-  points: [
-    { x: 150, y: 200, label: 1 } // Click on object
-  ],
   imageWidth: 800,
   imageHeight: 600,
 });
 
-// Use the mask
-const mask = result.masks[0];
-console.log('Confidence:', mask.confidence);
-console.log('Bounding Box:', mask.boundingBox);
-console.log('Area:', mask.area, 'pixels');
-console.log('Mask Data:', mask.mask); // Base64 PNG
+// Result contains URLs to all detected masks
+console.log('Found', result.individualMaskUrls.length, 'objects');
+console.log('Combined mask:', result.combinedMaskUrl);
+
+// Each individual mask is a separate image
+result.individualMaskUrls.forEach((url, i) => {
+  console.log(`Mask ${i}:`, url);
+});
 ```
 
 ## In a Next.js API Route
@@ -45,27 +52,27 @@ console.log('Mask Data:', mask.mask); // Base64 PNG
 // app/api/segment/route.ts
 import { NextRequest, NextResponse } from 'next/server';
 import { runSAMSegmentation } from '@/lib/sam';
+import { decodeBase64Image } from '@/lib/validation/image';
 
 export async function POST(request: NextRequest) {
   try {
-    const formData = await request.formData();
-    const imageFile = formData.get('image') as File;
-    const points = JSON.parse(formData.get('points') as string);
+    const { image, imageWidth, imageHeight } = await request.json();
 
-    const imageBuffer = Buffer.from(await imageFile.arrayBuffer());
+    // Decode base64 image to buffer
+    const imageBuffer = decodeBase64Image(image);
 
+    // Run SAM 2 - returns all masks automatically
     const result = await runSAMSegmentation({
       imageBuffer,
-      points,
-      imageWidth: parseInt(formData.get('width') as string),
-      imageHeight: parseInt(formData.get('height') as string),
-      outputFormat: 'base64png',
-      returnMultiple: false,
+      imageWidth,
+      imageHeight,
     });
 
     return NextResponse.json({
       success: true,
-      masks: result.masks,
+      combinedMaskUrl: result.combinedMaskUrl,
+      individualMaskUrls: result.individualMaskUrls,
+      maskCount: result.individualMaskUrls.length,
     });
   } catch (error) {
     return NextResponse.json({
@@ -76,45 +83,51 @@ export async function POST(request: NextRequest) {
 }
 ```
 
-## Advanced: Multiple Points
+## Fine-Tuning Parameters
 
 ```typescript
 const result = await runSAMSegmentation({
   imageBuffer,
-  points: [
-    { x: 100, y: 100, label: 1 }, // Include this area
-    { x: 120, y: 110, label: 1 }, // Include this area too
-    { x: 50, y: 50, label: 0 },   // Exclude this area
-  ],
   imageWidth: 800,
   imageHeight: 600,
-  returnMultiple: true, // Get multiple mask options
+
+  // Adjust detection sensitivity
+  pointsPerSide: 32,         // 16-64, higher = more masks, slower
+  predIouThresh: 0.88,       // 0-1, higher = stricter quality filter
+  stabilityScoreThresh: 0.95, // 0-1, higher = more stable masks only
+  useM2M: true,              // Enable mask refinement
 });
-
-// Get best mask
-const bestMask = result.masks.reduce((best, current) =>
-  current.confidence > best.confidence ? current : best
-);
 ```
 
-## Output Formats
+### Parameter Guide
 
-### Base64 PNG (default)
-```typescript
-outputFormat: 'base64png'
-// Returns: "iVBORw0KGgoAAAANSUhEUgAA..."
-```
+| Want | Adjust |
+|------|--------|
+| More objects detected | Lower `pointsPerSide` or `predIouThresh` |
+| Fewer, higher quality masks | Raise `predIouThresh` and `stabilityScoreThresh` |
+| Faster processing | Lower `pointsPerSide` (e.g., 16) |
+| Better mask boundaries | Keep `useM2M: true` |
 
-### RLE (Compact)
-```typescript
-outputFormat: 'rle'
-// Returns: "800,600:1234,567,890,..."
-```
+## Frontend Integration
 
-### Binary (Raw)
+The Snap Caddy frontend handles mask selection automatically:
+
+1. **SelectStep** calls the API when an image is uploaded
+2. **MaskToggleOverlay** displays all masks with distinct colors
+3. Users tap/click masks to toggle selection
+4. Selected masks are combined and converted to SVG
+
 ```typescript
-outputFormat: 'binary'
-// Returns: base64 encoded binary data
+// In your component
+import { SelectStep } from '@/components/segmentation';
+
+<SelectStep
+  imageUrl={capturedImage}
+  onMasksSelected={(selectedMasks) => {
+    // selectedMasks is MaskData[] with only user-selected masks
+    console.log('User selected', selectedMasks.length, 'masks');
+  }}
+/>
 ```
 
 ## Error Handling
@@ -125,20 +138,23 @@ try {
 } catch (error) {
   if (error.message.includes('REPLICATE_API_TOKEN')) {
     // API token not configured
+    console.error('Set REPLICATE_API_TOKEN environment variable');
   } else if (error.message.includes('timed out')) {
-    // Request took too long
-  } else if (error.message.includes('failed')) {
-    // API request failed
+    // Request took too long (>120 seconds)
+    console.error('Try a smaller image or retry later');
+  } else if (error.message.includes('No individual masks')) {
+    // No objects detected
+    console.error('No objects found in image');
   }
 }
 ```
 
 ## Performance Tips
 
-- **Timeout**: Default 60 seconds max
-- **Image Size**: Smaller images process faster
-- **Multiple Masks**: Set `returnMultiple: false` for single best mask
-- **Format**: Use RLE for smaller payload sizes
+- **Timeout**: 120 seconds max (SAM 2 can be slow)
+- **Image Size**: Smaller images process faster (max 4096x4096)
+- **Mask Count**: Expect 10-50 masks per image
+- **CDN URLs**: Mask URLs are temporary - process them promptly
 
 ## Common Issues
 
@@ -149,17 +165,22 @@ REPLICATE_API_TOKEN=r8_your_token_here
 ```
 
 ### "Prediction timed out"
-- Image too large (try resizing)
+- Image too large (try resizing to under 2000px)
 - Replicate service overloaded (retry later)
-- Increase MAX_POLL_ATTEMPTS in inference.ts
+- Check Replicate status: https://status.replicate.com
 
-### "No masks returned"
-- Points may be outside image bounds
-- Image format not supported
-- Try different point coordinates
+### "No individual masks returned"
+- Image may not contain distinct objects
+- Try adjusting `pointsPerSide` lower (e.g., 16)
+- Ensure image has good contrast
+
+### Masks look wrong
+- Adjust `predIouThresh` (lower = more permissive)
+- Adjust `stabilityScoreThresh` (lower = include less stable masks)
+- Check image quality and lighting
 
 ## Next Steps
 
-- See `example.ts` for more usage patterns
-- Read `README.md` for detailed API documentation
-- Check Replicate docs: https://replicate.com/meta/sam-2
+- See `README.md` for detailed API documentation
+- Check `inference.ts` for implementation details
+- Replicate SAM 2 docs: https://replicate.com/meta/sam-2
