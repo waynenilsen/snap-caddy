@@ -127,10 +127,20 @@ function parseEnv() {
       parsed.error.flatten().fieldErrors,
     );
     // Return defaults instead of throwing in development
-    return envSchema.parse({});
+    return applyDevDefaults(envSchema.parse({}));
   }
 
-  return parsed.data;
+  return applyDevDefaults(parsed.data);
+}
+
+// Apply dev-specific defaults after parsing
+function applyDevDefaults(config: z.infer<typeof envSchema>) {
+  // In dev mode, default to replay mode for cost savings (acts as caching proxy)
+  // Only apply if REPLICATE_RECORD_MODE wasn't explicitly set
+  if (config.STAGE === "dev" && !process.env.REPLICATE_RECORD_MODE) {
+    config.REPLICATE_RECORD_MODE = "replay";
+  }
+  return config;
 }
 
 export const env = parseEnv();
