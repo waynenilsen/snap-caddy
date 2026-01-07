@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-Snap Caddy automates the creation of custom Gridfinity bin cutouts using AI image segmentation and 3D model generation. Users photograph any object with a ruler for scale, and the application generates a 3D-printable STL file. It reduces a complex 7-step manual Inkscape/OpenSCAD workflow into a simple 6-step wizard interface.
+Snap Caddy automates the creation of custom Gridfinity bin cutouts using manual paintbrush masking and 3D model generation. Users photograph any object with a ruler for scale, paint the desired shape, and the application generates a 3D-printable STL file. It reduces a complex 7-step manual Inkscape/OpenSCAD workflow into a simple 6-step wizard interface.
 
 **Repository:** https://github.com/waynenilsen/snap-caddy
 **Status:** Work in Progress (WIP) - Active development
@@ -15,7 +15,6 @@ Snap Caddy automates the creation of custom Gridfinity bin cutouts using AI imag
 | Styling | Tailwind CSS v4, shadcn/ui components |
 | Forms | React Hook Form + Zod validation |
 | Backend | Next.js API Routes (Node.js) |
-| AI/ML | Meta SAM via Replicate API |
 | 3D Generation | OpenSCAD CLI + Gridfinity Extended library |
 | Testing | Bun test runner, Playwright (E2E) |
 | Package Manager | Bun (primary), npm/yarn supported |
@@ -30,7 +29,6 @@ For Claude Code web sessions, run the initialization script first:
 
 This script automatically:
 - Installs dependencies (via Bun or npm)
-- Starts Redis on port 6397
 - Installs git hooks
 - Runs TypeScript and lint checks
 - Creates required temp directories
@@ -69,7 +67,6 @@ docker compose down            # Stop services
 snap-caddy/
 ├── app/                      # Next.js App Router
 │   ├── api/                  # API endpoints
-│   │   ├── segment/          # SAM segmentation
 │   │   ├── generate/         # STL generation
 │   │   ├── preview/          # Quick preview
 │   │   └── download/[id]/    # File download
@@ -81,7 +78,7 @@ snap-caddy/
 │   ├── ui/                   # shadcn/ui primitives (20+ components)
 │   ├── wizard/               # Wizard layout, steps, navigation
 │   ├── capture/              # Image capture (camera/upload)
-│   ├── segmentation/         # SAM object selection
+│   ├── paint/                # Paintbrush mask creation
 │   ├── calibration/          # Ruler-based scale calibration
 │   ├── editor/               # SVG preview and adjustment
 │   ├── configuration/        # Gridfinity bin config
@@ -92,12 +89,6 @@ snap-caddy/
 │   │   ├── generator.ts      # SCAD template generation
 │   │   ├── executor.ts       # CLI execution
 │   │   └── fileManager.ts    # Job/file management
-│   ├── sam/                  # SAM integration
-│   │   ├── inference.ts      # Replicate API calls
-│   │   └── types.ts          # SAM types
-│   ├── replicate/            # Replicate API utilities
-│   │   ├── recorder.ts       # Record/replay functionality
-│   │   └── index.ts          # Module exports
 │   ├── api/                  # API utilities
 │   │   ├── rateLimit.ts      # Rate limiting middleware
 │   │   ├── errors.ts         # Error handling
@@ -121,13 +112,11 @@ snap-caddy/
 │   └── ...                   # Other domain types
 │
 ├── schemas/                  # Zod validation schemas
-│   ├── segment.ts            # SAM request schema
 │   ├── generate.ts           # STL generation schema
 │   └── calibration.ts        # Calibration schema
 │
 ├── e2e/                      # Playwright E2E tests
 ├── fixtures/                 # Test fixtures
-│   └── replicate/            # Recorded API responses
 ├── docs/                     # Architecture documentation
 ├── tickets/                  # Feature implementation tickets
 └── scripts/                  # Build/test scripts
@@ -142,25 +131,15 @@ snap-caddy/
 | `hooks/useWizard.ts` | Wizard navigation and state |
 | `lib/openscad/generator.ts` | SCAD template generation |
 | `lib/openscad/executor.ts` | OpenSCAD CLI execution |
-| `lib/sam/inference.ts` | SAM API integration |
 | `lib/env.ts` | Environment variable config |
 | `components/ui/` | shadcn/ui component library |
 
 ## Environment Variables
 
-Required:
-```bash
-REPLICATE_API_TOKEN=xxx      # Get from replicate.com/account/api-tokens
-```
-
 Optional (with defaults):
 ```bash
 # Stage/Environment
 STAGE=dev                                   # dev, staging, or production
-
-# Replicate API
-REPLICATE_BASE_URL=                         # Override Replicate API base URL
-REPLICATE_RECORD_MODE=off                   # off, record, or replay
 
 # OpenSCAD
 OPENSCAD_PATH=openscad                      # Path to OpenSCAD binary
@@ -173,37 +152,20 @@ RATE_LIMIT_WINDOW=60000                     # Window duration (1 min)
 LOG_LEVEL=info                              # Logging level
 ```
 
-See `docs/record-replay.md` for detailed documentation on the record/replay system.
-
 ## API Endpoints
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| POST | `/api/segment` | SAM segmentation (AI object detection) |
 | POST | `/api/generate` | STL file generation |
 | GET | `/api/generate?id=...` | Get generation status |
 | POST | `/api/preview` | Quick 3D preview |
 | GET | `/api/preview/[id]` | Retrieve preview image |
 | GET | `/api/download/[id]` | Download STL file |
 
-### Dev-only Endpoints (STAGE=dev)
-
-| Method | Endpoint | Purpose |
-|--------|----------|---------|
-| GET | `/api/dev/record-replay/status` | Record/replay configuration |
-| GET/DELETE | `/api/dev/record-replay/recordings` | List/clear recordings |
-| GET/DELETE | `/api/dev/record-replay/recordings/[hash]` | Get/delete specific recording |
-
-### Hidden Dev Pages
-
-| Path | Purpose |
-|------|---------|
-| `/dev/record-replay` | UI for managing Replicate API recordings |
-
 ## Wizard Flow (6 Steps)
 
 1. **Capture** - Camera or file upload for image input
-2. **Segment** - AI object selection using SAM model
+2. **Paint** - Paint the shape you want for the cutout
 3. **Calibrate** - Set scale using ruler reference
 4. **Review** - Adjust SVG outline with padding
 5. **Configure** - Set Gridfinity bin parameters
@@ -322,7 +284,7 @@ EOF
 - Unit tests: `*.test.ts` files alongside source
 - E2E tests: `e2e/*.e2e.ts` files
 - Use `describe`/`it` pattern with Bun test runner
-- Mock external services (Replicate API, OpenSCAD)
+- Mock external services (OpenSCAD)
 - Run `bun test --coverage` to verify coverage before committing
 
 ### Styling
@@ -364,14 +326,8 @@ bun test --grep "pattern"      # Tests matching pattern
 - Executes OpenSCAD CLI with xvfb for headless rendering
 - Files cleaned up after retention period (1 hour default)
 
-### SAM Integration
-- Uses Replicate API for inference (cloud-based)
-- Supports point prompts (positive/negative clicks)
-- Returns segmentation mask as base64 image
-- Future: ONNX-based client-side inference
-
 ### File Management
-- Jobs tracked by UUID in memory (production: use Redis)
+- Jobs tracked by UUID in memory
 - Files stored in `TEMP_DIR` organized by job ID
 - Automatic cleanup via `FileManager.cleanupOldFiles()`
 
@@ -381,7 +337,6 @@ Detailed architecture docs in `/docs`:
 - `00-MASTER-ARCHITECTURE.md` - System overview
 - `01-FRONTEND-UI.md` - UI component specs
 - `02-IMAGE-PROCESSING.md` - Canvas & contour detection
-- `03-SAM-INTEGRATION.md` - SAM setup & inference
 - `04-OPENSCAD-GENERATION.md` - STL generation
 - `05-API-ARCHITECTURE.md` - Backend design
 - `06-STATE-MANAGEMENT.md` - React state flow
@@ -420,11 +375,6 @@ tickets/
 - Ensure Gridfinity library is installed at `GRIDFINITY_LIB_PATH`
 - Review logs for template generation errors
 - Check xvfb is available for headless rendering
-
-### SAM API Issues
-- Verify `REPLICATE_API_TOKEN` is set and valid
-- Check rate limits (10 req/min default)
-- Review inference.ts for API response handling
 
 ### Build/Type Errors
 - Run `bun lint` to check for issues

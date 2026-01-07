@@ -75,18 +75,7 @@ main() {
     fi
     log_success "Dependencies installed"
 
-    # Step 3: Start Redis
-    log_step "Starting Redis"
-    if [ -f "$SCRIPT_DIR/start-redis.sh" ]; then
-        chmod +x "$SCRIPT_DIR/start-redis.sh"
-        "$SCRIPT_DIR/start-redis.sh" start
-        log_success "Redis is running"
-    else
-        log_warn "start-redis.sh not found. Skipping Redis setup."
-        log_info "Some features may require Redis. Install with: apt-get install redis-server"
-    fi
-
-    # Step 4: Install git hooks
+    # Step 3: Install git hooks
     log_step "Installing Git Hooks"
     if [ -f "$SCRIPT_DIR/install-hooks.sh" ]; then
         chmod +x "$SCRIPT_DIR/install-hooks.sh"
@@ -95,7 +84,7 @@ main() {
         log_warn "install-hooks.sh not found. Skipping hook installation."
     fi
 
-    # Step 5: Verify TypeScript compilation
+    # Step 4: Verify TypeScript compilation
     log_step "Verifying TypeScript"
     log_info "Running typecheck..."
     if [ "$PKG_MANAGER" = "bun" ]; then
@@ -112,7 +101,7 @@ main() {
         fi
     fi
 
-    # Step 6: Run linting check
+    # Step 5: Run linting check
     log_step "Checking Code Quality"
     log_info "Running Biome lint check..."
     if [ "$PKG_MANAGER" = "bun" ]; then
@@ -121,7 +110,7 @@ main() {
         npm run lint || log_warn "Some lint issues found (run 'npm run lint:fix' to auto-fix)"
     fi
 
-    # Step 7: Create temp directories
+    # Step 6: Create temp directories
     log_step "Creating Required Directories"
     TEMP_DIR="${TEMP_DIR:-/tmp/snap-caddy}"
     mkdir -p "$TEMP_DIR"
@@ -138,14 +127,6 @@ main() {
     echo "  ${GREEN}bun lint:fix${NC}     - Fix lint issues"
     echo "  ${GREEN}bun format${NC}       - Format code"
     echo ""
-
-    # Print Redis connection info
-    if command_exists redis-cli; then
-        REDIS_PORT=${REDIS_PORT:-6397}
-        echo "Redis:"
-        echo "  ${GREEN}redis://localhost:$REDIS_PORT${NC}"
-        echo ""
-    fi
 }
 
 # Run main function

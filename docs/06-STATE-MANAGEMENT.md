@@ -103,7 +103,7 @@ export function isStateValidForStep(state: AppState, step: Step): boolean {
     case 'segment':
       return state.capture.imageData !== null;
     case 'calibrate':
-      return state.segmentation.mask !== null;
+      return state.segmentation.paintMask !== null;
     case 'review':
       return state.calibration.pixelsPerMm !== null;
     case 'configure':
@@ -143,8 +143,8 @@ export function validateAppState(state: AppState): ValidationResult {
   }
 
   // Segmentation validation
-  if (state.navigation.currentStep !== 'capture' && state.navigation.currentStep !== 'segment' && !state.segmentation.mask) {
-    errors.push('No object segmented');
+  if (state.navigation.currentStep !== 'capture' && state.navigation.currentStep !== 'segment' && !state.segmentation.paintMask) {
+    errors.push('No mask painted');
   }
 
   // Calibration validation
@@ -189,7 +189,7 @@ export function validateAppState(state: AppState): ValidationResult {
  */
 export type Step =
   | 'capture'    // Image capture (camera/upload)
-  | 'segment'    // Object selection (SAM segmentation)
+  | 'segment'    // Paint mask (manual painting)
   | 'calibrate'  // Scale calibration (ruler measurement)
   | 'review'     // Outline review (SVG preview)
   | 'configure'  // Bin configuration (Gridfinity params)
@@ -255,9 +255,9 @@ export const STEP_METADATA: Record<Step, StepMetadata> = {
   },
   segment: {
     id: 'segment',
-    title: 'Select Object',
-    description: 'Click on the object to segment',
-    icon: 'mouse-pointer',
+    title: 'Paint Mask',
+    description: 'Paint over the object to create mask',
+    icon: 'paintbrush',
     requiresCompletion: ['capture'],
   },
   calibrate: {
@@ -507,22 +507,18 @@ export interface BoundingBox {
 }
 
 export interface SegmentationState {
-  clickPoints: ClickPoint[];
-  mask: ImageData | null;
+  paintMask: ImageData | null;
   boundingBox: BoundingBox | null;
-  isSegmenting: boolean;
+  isPainting: boolean;
   error: string | null;
-  confidence: number | null;
 }
 
 export function createInitialSegmentationState(): SegmentationState {
   return {
-    clickPoints: [],
-    mask: null,
+    paintMask: null,
     boundingBox: null,
-    isSegmenting: false,
+    isPainting: false,
     error: null,
-    confidence: null,
   };
 }
 ```
@@ -926,102 +922,60 @@ import { createInitialSegmentationState } from '@/types/segmentation';
 
 export interface UseSegmentationReturn {
   // State
-  clickPoints: ClickPoint[];
-  mask: ImageData | null;
+  paintMask: ImageData | null;
   boundingBox: BoundingBox | null;
-  isSegmenting: boolean;
+  isPainting: boolean;
   error: string | null;
-  confidence: number | null;
 
   // Actions
-  addClickPoint: (x: number, y: number, label: 0 | 1) => void;
-  removeLastPoint: () => void;
-  clearPoints: () => void;
-  segment: (imageData: string) => Promise<void>;
+  setPaintMask: (mask: ImageData) => void;
+  clearMask: () => void;
   resetSegmentation: () => void;
 }
 
 export function useSegmentation(): UseSegmentationReturn {
   const [state, setState] = useState<SegmentationState>(createInitialSegmentationState);
 
-  // Add click point
-  const addClickPoint = useCallback((x: number, y: number, label: 0 | 1) => {
-    setState((prev) => ({
-      ...prev,
-      clickPoints: [...prev.clickPoints, { x, y, label }],
-    }));
-  }, []);
+  // Set paint mask
+  const setPaintMask = useCallback((mask: ImageData) => {
+    // Calculate bounding box from mask
+    let minX = mask.width, minY = mask.height, maxX = 0, maxY = 0;
 
-  // Remove last point
-  const removeLastPoint = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      clickPoints: prev.clickPoints.slice(0, -1),
-    }));
-  }, []);
-
-  // Clear all points
-  const clearPoints = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      clickPoints: [],
-    }));
-  }, []);
-
-  // Perform segmentation
-  const segment = useCallback(async (imageData: string) => {
-    setState((prev) => ({ ...prev, isSegmenting: true, error: null }));
-
-    try {
-      // Call SAM API
-      const response = await fetch('/api/segment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          image: imageData,
-          points: state.clickPoints,
-        }),
-      });
-
-      if (!response.ok) {
-        throw new Error('Segmentation failed');
+    for (let y = 0; y < mask.height; y++) {
+      for (let x = 0; x < mask.width; x++) {
+        const idx = (y * mask.width + x) * 4;
+        if (mask.data[idx + 3] > 0) { // Check alpha channel
+          minX = Math.min(minX, x);
+          minY = Math.min(minY, y);
+          maxX = Math.max(maxX, x);
+          maxY = Math.max(maxY, y);
+        }
       }
-
-      const result = await response.json();
-
-      // Convert mask data to ImageData
-      const maskImage = new Image();
-      await new Promise<void>((resolve, reject) => {
-        maskImage.onload = () => resolve();
-        maskImage.onerror = () => reject(new Error('Failed to load mask'));
-        maskImage.src = result.mask;
-      });
-
-      const canvas = document.createElement('canvas');
-      canvas.width = maskImage.width;
-      canvas.height = maskImage.height;
-      const ctx = canvas.getContext('2d');
-
-      if (!ctx) throw new Error('Failed to create canvas context');
-
-      ctx.drawImage(maskImage, 0, 0);
-      const maskData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-
-      setState((prev) => ({
-        ...prev,
-        mask: maskData,
-        boundingBox: result.boundingBox,
-        confidence: result.confidence,
-        isSegmenting: false,
-      }));
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        isSegmenting: false,
-        error: error instanceof Error ? error.message : 'Segmentation failed',
-      }));
     }
-  }, [state.clickPoints]);
+
+    const boundingBox = {
+      x: minX,
+      y: minY,
+      width: maxX - minX,
+      height: maxY - minY,
+    };
+
+    setState((prev) => ({
+      ...prev,
+      paintMask: mask,
+      boundingBox,
+      error: null,
+    }));
+  }, []);
+
+  // Clear mask
+  const clearMask = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      paintMask: null,
+      boundingBox: null,
+    }));
+  }, []);
 
   // Reset segmentation
   const resetSegmentation = useCallback(() => {
@@ -1030,18 +984,14 @@ export function useSegmentation(): UseSegmentationReturn {
 
   return {
     // State
-    clickPoints: state.clickPoints,
-    mask: state.mask,
+    paintMask: state.paintMask,
     boundingBox: state.boundingBox,
-    isSegmenting: state.isSegmenting,
+    isPainting: state.isPainting,
     error: state.error,
-    confidence: state.confidence,
 
     // Actions
-    addClickPoint,
-    removeLastPoint,
-    clearPoints,
-    segment,
+    setPaintMask,
+    clearMask,
     resetSegmentation,
   };
 }
@@ -1541,12 +1491,10 @@ export function AppProvider({ children }: { children: ReactNode }) {
       error: capture.error,
     },
     segmentation: {
-      clickPoints: segmentation.clickPoints,
-      mask: segmentation.mask,
+      paintMask: segmentation.paintMask,
       boundingBox: segmentation.boundingBox,
-      isSegmenting: segmentation.isSegmenting,
+      isPainting: segmentation.isPainting,
       error: segmentation.error,
-      confidence: segmentation.confidence,
     },
     calibration: {
       rulerPoints: calibration.rulerPoints,
@@ -1826,12 +1774,10 @@ export const boundingBoxSchema = z.object({
  * Segmentation state schema
  */
 export const segmentationStateSchema = z.object({
-  clickPoints: z.array(clickPointSchema),
-  mask: z.custom<ImageData>().nullable(),
+  paintMask: z.custom<ImageData>().nullable(),
   boundingBox: boundingBoxSchema.nullable(),
-  isSegmenting: z.boolean(),
+  isPainting: z.boolean(),
   error: z.string().nullable(),
-  confidence: z.number().min(0).max(1).nullable(),
 });
 
 /**
@@ -2067,7 +2013,7 @@ export function usePersistence(): UsePersistenceReturn {
         segmentation: {
           ...state.segmentation,
           // Don't persist mask data
-          mask: null,
+          paintMask: null,
         },
         generation: {
           ...state.generation,
@@ -2376,8 +2322,8 @@ export function useDerivedState(app: AppContextValue): DerivedState {
   );
 
   const canProceedToCalibrate = useMemo(
-    () => canProceedToSegment && app.segmentation.mask !== null,
-    [canProceedToSegment, app.segmentation.mask]
+    () => canProceedToSegment && app.segmentation.paintMask !== null,
+    [canProceedToSegment, app.segmentation.paintMask]
   );
 
   const canProceedToReview = useMemo(
@@ -2429,7 +2375,7 @@ export function useDerivedState(app: AppContextValue): DerivedState {
     let progress = 0;
 
     if (app.capture.imageData) progress += 16.67;
-    if (app.segmentation.mask) progress += 16.67;
+    if (app.segmentation.paintMask) progress += 16.67;
     if (app.calibration.pixelsPerMm) progress += 16.67;
     if (app.svg.svgContent) progress += 16.67;
     if (app.binConfig.gridUnitsX > 0) progress += 16.67;
@@ -2438,7 +2384,7 @@ export function useDerivedState(app: AppContextValue): DerivedState {
     return Math.round(progress);
   }, [
     app.capture.imageData,
-    app.segmentation.mask,
+    app.segmentation.paintMask,
     app.calibration.pixelsPerMm,
     app.svg.svgContent,
     app.binConfig.gridUnitsX,

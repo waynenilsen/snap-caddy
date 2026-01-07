@@ -54,9 +54,6 @@ export const GridfinityConfigSchema = z.object({
 export const GenerateRequestSchema = z.object({
   svg: z.string().min(10), // SVG content
   config: GridfinityConfigSchema,
-  // Optional: request async generation with webhook
-  async: z.boolean().optional().default(false),
-  webhookUrl: z.string().url().optional(),
 });
 
 /**
@@ -79,7 +76,6 @@ export const GenerateResponseSchema = z.object({
   estimatedTimeMs: z.number().positive().optional(),
   downloadUrl: z.string().url().optional(), // Available when complete
   previewUrl: z.string().url().optional(), // PNG preview of model
-  queuePosition: z.number().int().positive().optional(), // If queued
 });
 
 /**

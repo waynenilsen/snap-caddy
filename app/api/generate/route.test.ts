@@ -153,31 +153,6 @@ mock.module("@/lib/api/errors", () => ({
   APIError,
 }));
 
-// Mock queue functions
-const mockAddSTLJob = mock(async (data: { generationId: string }) => ({
-  jobId: data.generationId,
-  queuePosition: 1,
-}));
-
-const mockGetJobStatus = mock(
-  async (
-    _id: string,
-  ): Promise<{
-    id: string;
-    status: string;
-    progress: number;
-    createdAt: string;
-  } | null> => null,
-);
-
-const mockInitializeQueue = mock(() => {});
-
-mock.module("@/lib/queue", () => ({
-  addSTLJob: mockAddSTLJob,
-  getJobStatus: mockGetJobStatus,
-  initializeQueue: mockInitializeQueue,
-}));
-
 // Import the route handlers after mocking
 // Note: We need to import the internal functions for testing
 // In a real implementation, you might export these or use a different testing approach
@@ -411,9 +386,6 @@ beforeEach(() => {
   mockLogger.error.mockClear();
   mockLogger.debug.mockClear();
   mockMetrics.recordGeneration.mockClear();
-  mockAddSTLJob.mockClear();
-  mockGetJobStatus.mockClear();
-  mockInitializeQueue.mockClear();
 
   // Set default mock behaviors
   mockValidateSVG.mockImplementation(() => ({ valid: true as boolean }));
@@ -448,20 +420,6 @@ beforeEach(() => {
     stderr: undefined as string | undefined,
     stdout: undefined as string | undefined,
   }));
-  mockAddSTLJob.mockImplementation(async (data: { generationId: string }) => ({
-    jobId: data.generationId,
-    queuePosition: 1,
-  }));
-  mockGetJobStatus.mockImplementation(
-    async (
-      _id: string,
-    ): Promise<{
-      id: string;
-      status: string;
-      progress: number;
-      createdAt: string;
-    } | null> => null,
-  );
 });
 
 describe("POST /api/generate", () => {
@@ -587,27 +545,6 @@ describe("POST /api/generate", () => {
     expect(mockLogger.info).toHaveBeenCalledWith("Config validation warnings", {
       warnings: ["wallThickness below 2.0mm may result in weak walls"],
     });
-  });
-
-  it("returns queued status for async request", async () => {
-    const requestBody = createValidRequestBody({ async: true });
-    const request = createMockRequest("POST", requestBody);
-
-    const response = await routeModule.POST(request);
-    const data = await response.json();
-
-    expect(response.status).toBe(200);
-    expect(data.success).toBe(true);
-    expect(data.status).toBe("queued");
-    expect(data.queuePosition).toBe(1);
-    expect(data.generationId).toBeDefined();
-    expect(typeof data.generationId).toBe("string");
-    expect(data.estimatedTimeMs).toBeGreaterThan(0);
-
-    // Should not call render for async requests (goes to queue)
-    expect(mockRender).not.toHaveBeenCalled();
-    // Queue job should have been called
-    expect(mockAddSTLJob).toHaveBeenCalled();
   });
 
   it("returns 500 when OpenSCAD generation fails", async () => {
@@ -838,43 +775,6 @@ describe("GET /api/generate", () => {
         status: "complete",
       },
     );
-  });
-
-  it("returns queued status for async job", async () => {
-    // Create async job
-    const postRequest = createMockRequest(
-      "POST",
-      createValidRequestBody({ async: true }),
-    );
-    const postResponse = await routeModule.POST(postRequest);
-    const postData = await postResponse.json();
-    const generationId = postData.generationId;
-
-    // Mock getJobStatus to return queued status for this job
-    mockGetJobStatus.mockImplementation(async (id: string) => {
-      if (id === generationId) {
-        return {
-          id: generationId,
-          status: "queued" as const,
-          progress: 0 as const,
-          createdAt: new Date().toISOString(),
-        };
-      }
-      return null;
-    });
-
-    // Get status
-    const getRequest = createMockRequest(
-      "GET",
-      undefined,
-      `http://localhost:3000/api/generate?id=${generationId}`,
-    );
-    const getResponse = await routeModule.GET(getRequest);
-    const getData = await getResponse.json();
-
-    expect(getResponse.status).toBe(200);
-    expect(getData.status).toBe("queued");
-    expect(getData.progress).toBe(0);
   });
 
   it("handles generic errors and returns 500", async () => {

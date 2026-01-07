@@ -11,31 +11,7 @@ import type {
   GenerationStatus as SchemaGenerationStatus,
   GenerationStatusResponse as SchemaGenerationStatusResponse,
 } from "@/schemas/generate";
-import type {
-  SegmentErrorResponse as SchemaSegmentErrorResponse,
-  SegmentRequest as SchemaSegmentRequest,
-  SegmentResponse as SchemaSegmentResponse,
-} from "@/schemas/segment";
 import type { GridfinityConfig } from "./gridfinity";
-
-// ============================================================================
-// Segment API
-// ============================================================================
-
-/**
- * SegmentRequest - uses schema-validated type
- */
-export type SegmentRequest = SchemaSegmentRequest;
-
-/**
- * SegmentResponse - uses schema-validated type
- */
-export type SegmentResponse = SchemaSegmentResponse;
-
-/**
- * SegmentErrorResponse - uses schema-validated type
- */
-export type SegmentErrorResponse = SchemaSegmentErrorResponse;
 
 // ============================================================================
 // Generate API
@@ -106,7 +82,6 @@ export type APIErrorCode =
   | "INVALID_INPUT"
   | "IMAGE_TOO_LARGE"
   | "INVALID_SVG"
-  | "SAM_ERROR"
   | "OPENSCAD_ERROR"
   | "RATE_LIMIT"
   | "SERVER_ERROR"
@@ -181,20 +156,6 @@ export class APIClientError extends Error {
 // ============================================================================
 // Type Guards
 // ============================================================================
-
-export function isSegmentResponse(
-  response: unknown,
-): response is SegmentResponse {
-  return (
-    typeof response === "object" &&
-    response !== null &&
-    "success" in response &&
-    response.success === true &&
-    "combinedMaskUrl" in response &&
-    "individualMaskUrls" in response &&
-    Array.isArray((response as SegmentResponse).individualMaskUrls)
-  );
-}
 
 export function isGenerateResponse(
   response: unknown,

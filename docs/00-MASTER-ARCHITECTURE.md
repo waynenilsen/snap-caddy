@@ -4,7 +4,7 @@
 
 Snap Caddy automates the creation of custom Gridfinity bin cutouts. Users can:
 1. Take a photo or upload an image of any object with a ruler for scale
-2. AI automatically extracts the object silhouette
+2. Paint a mask over the object to define its silhouette
 3. System generates a 3D-printable STL file for a custom Gridfinity bin
 
 This replaces the manual process documented at: https://docs.ostat.com/docs/openscad/gridfinity-extended/custom-cutout/
@@ -28,9 +28,9 @@ The original workflow requires:
 └─────────────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────┐    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│   CAPTURE    │───▶│   SEGMENT    │───▶│   CALIBRATE  │───▶│   GENERATE   │
+│   CAPTURE    │───▶│   PAINT MASK │───▶│   CALIBRATE  │───▶│   GENERATE   │
 │              │    │              │    │              │    │              │
-│ Camera/Upload│    │ SAM Model    │    │ Ruler Scale  │    │ OpenSCAD STL │
+│ Camera/Upload│    │ Paint Tool   │    │ Ruler Scale  │    │ OpenSCAD STL │
 └──────────────┘    └──────────────┘    └──────────────┘    └──────────────┘
       │                   │                   │                    │
       ▼                   ▼                   ▼                    ▼
@@ -51,14 +51,12 @@ The original workflow requires:
 
 ### Backend (Server-Side)
 - **Runtime**: Node.js via Next.js API routes
-- **AI Model**: Meta SAM (Segment Anything Model) via ONNX or API
 - **3D Generation**: OpenSCAD CLI
 - **File Handling**: Temporary file storage for processing
 
 ### External Dependencies
 - **OpenSCAD**: CLI tool for 3D model generation (installed on server)
 - **Gridfinity OpenSCAD Library**: For bin generation
-- **SAM Model**: For automatic object segmentation
 
 ## System Architecture
 
@@ -102,16 +100,16 @@ The original workflow requires:
 │  ┌────────────────────────────────────────────────────────────────────┐     │
 │  │                        API ROUTES                                   │     │
 │  ├────────────────┬────────────────┬────────────────┬────────────────┤     │
-│  │ POST           │ POST           │ POST           │ GET            │     │
-│  │ /api/segment   │ /api/generate  │ /api/preview   │ /api/download  │     │
+│  │ POST           │ POST           │ GET            │                │     │
+│  │ /api/generate  │ /api/preview   │ /api/download  │                │     │
 │  │                │                │                │                │     │
-│  │ SAM inference  │ OpenSCAD STL   │ Quick preview  │ Final STL      │     │
-│  └────────┬───────┴────────┬───────┴────────┬───────┴────────┬───────┘     │
-│           │                │                │                │              │
-│           ▼                ▼                ▼                ▼              │
+│  │ OpenSCAD STL   │ Quick preview  │ Final STL      │                │     │
+│  └────────┬───────┴────────┬───────┴────────┬───────┘                      │
+│           │                │                │                               │
+│           ▼                ▼                ▼                               │
 │  ┌────────────────┐  ┌────────────────┐  ┌────────────────┐                │
-│  │  SAM Runtime   │  │  OpenSCAD CLI  │  │  File Manager  │                │
-│  │  (ONNX/API)    │  │  + Gridfinity  │  │  (temp files)  │                │
+│  │  OpenSCAD CLI  │  │  OpenSCAD CLI  │  │  File Manager  │                │
+│  │  + Gridfinity  │  │  + Preview     │  │  (temp files)  │                │
 │  └────────────────┘  └────────────────┘  └────────────────┘                │
 │                                                                              │
 └─────────────────────────────────────────────────────────────────────────────┘
@@ -124,7 +122,7 @@ The original workflow requires:
 ```
 /                           # Main application page
 ├── Step 1: Image Capture   # Camera or upload
-├── Step 2: Object Selection # Click to select object, SAM segments
+├── Step 2: Paint Mask      # Paint over the object to create mask
 ├── Step 3: Scale Calibration # Identify ruler, set known measurement
 ├── Step 4: Review & Adjust  # Preview silhouette, adjust padding
 ├── Step 5: Bin Configuration # Set Gridfinity dimensions
@@ -145,11 +143,10 @@ interface CaptureState {
 }
 ```
 
-### Step 2: Object Selection
+### Step 2: Paint Mask
 ```typescript
 interface SegmentationState {
-  clickPoints: Array<{x: number, y: number}>;
-  segmentationMask: ImageData;    // Binary mask from SAM
+  paintMask: ImageData | null;    // Binary mask painted by user
   objectBoundingBox: {
     x: number;
     y: number;
@@ -205,35 +202,6 @@ interface GenerationState {
 
 ## API Endpoints
 
-### POST /api/segment
-Performs SAM segmentation on the uploaded image.
-
-**Request:**
-```typescript
-{
-  image: string;            // Base64 encoded image
-  points: Array<{
-    x: number;
-    y: number;
-    label: 0 | 1;           // 0 = background, 1 = foreground
-  }>;
-}
-```
-
-**Response:**
-```typescript
-{
-  mask: string;             // Base64 encoded mask image
-  boundingBox: {
-    x: number;
-    y: number;
-    width: number;
-    height: number;
-  };
-  confidence: number;
-}
-```
-
 ### POST /api/generate
 Generates STL file from SVG and configuration.
 
@@ -265,8 +233,6 @@ snap-caddy/
 │   ├── page.tsx                    # Main single-page app
 │   ├── globals.css
 │   └── api/
-│       ├── segment/
-│       │   └── route.ts            # SAM segmentation endpoint
 │       ├── generate/
 │       │   └── route.ts            # OpenSCAD generation
 │       ├── preview/
@@ -281,9 +247,9 @@ snap-caddy/
 │   │   ├── ImageUpload.tsx
 │   │   └── ImagePreview.tsx
 │   ├── segmentation/
-│   │   ├── ClickToSegment.tsx
+│   │   ├── PaintTool.tsx
 │   │   ├── MaskOverlay.tsx
-│   │   └── SegmentationControls.tsx
+│   │   └── PaintControls.tsx
 │   ├── calibration/
 │   │   ├── RulerSelector.tsx
 │   │   ├── ScaleInput.tsx
@@ -309,9 +275,6 @@ snap-caddy/
 │   ├── calibration/
 │   │   ├── rulerDetection.ts       # Auto-detect ruler markings
 │   │   └── scaleCalculation.ts     # Calculate pixels-to-mm ratio
-│   ├── sam/
-│   │   ├── client.ts               # SAM API client
-│   │   └── types.ts                # SAM-related types
 │   └── openscad/
 │       ├── templates/              # OpenSCAD template files
 │       │   ├── gridfinity-base.scad
@@ -321,7 +284,7 @@ snap-caddy/
 ├── hooks/
 │   ├── useCamera.ts                # Camera access hook
 │   ├── useImageUpload.ts           # File upload hook
-│   ├── useSegmentation.ts          # SAM interaction hook
+│   ├── useSegmentation.ts          # Paint mask interaction hook
 │   ├── useCalibration.ts           # Scale calibration hook
 │   └── useGeneration.ts            # STL generation hook
 ├── types/
@@ -369,25 +332,6 @@ The OpenSCAD script takes:
 5. STL stored with unique ID
 6. Client receives ID for download
 
-## SAM Integration Options
-
-### Option A: ONNX Runtime (Client-Side)
-- Download SAM ONNX model (~300MB)
-- Run inference in browser via onnxruntime-web
-- Pros: No server cost, works offline
-- Cons: Large download, slower on weak devices
-
-### Option B: Server-Side API
-- Run SAM on server with GPU
-- Or use hosted API (Replicate, Roboflow)
-- Pros: Fast, no client download
-- Cons: Server cost, requires connectivity
-
-### Option C: Hybrid
-- Use lightweight encoder on client
-- Send embeddings to server for mask generation
-- Best balance of performance and cost
-
 ## Implementation Phases
 
 ### Phase 1: Core Infrastructure
@@ -402,11 +346,11 @@ The OpenSCAD script takes:
 - Image preview with zoom/pan
 - Client-side image preprocessing
 
-### Phase 3: Segmentation
-- SAM integration (start with server-side API)
-- Click-to-segment UI
-- Mask visualization
-- Multi-object selection
+### Phase 3: Paint Mask
+- Canvas-based paint tool
+- Brush size and opacity controls
+- Mask visualization and overlay
+- Undo/redo functionality
 
 ### Phase 4: Calibration
 - Ruler detection/selection UI

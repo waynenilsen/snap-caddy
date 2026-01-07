@@ -7,7 +7,6 @@ Snap Caddy's server architecture uses Next.js 16 App Router for API routes, prov
 ### Technology Stack
 - **Runtime**: Node.js (Next.js API Routes)
 - **Validation**: Zod for schema validation
-- **AI Processing**: SAM via Replicate API or ONNX runtime
 - **3D Generation**: OpenSCAD CLI with Gridfinity library
 - **File Storage**: Temporary file system with automatic cleanup
 - **Rate Limiting**: In-memory token bucket algorithm
@@ -16,8 +15,6 @@ Snap Caddy's server architecture uses Next.js 16 App Router for API routes, prov
 
 ```
 app/api/
-├── segment/
-│   └── route.ts           # POST: SAM segmentation
 ├── generate/
 │   └── route.ts           # POST: OpenSCAD STL generation
 ├── preview/
@@ -29,341 +26,7 @@ app/api/
 
 ---
 
-## 1. POST /api/segment
-
-Performs SAM (Segment Anything Model) segmentation on uploaded images with user-provided click points.
-
-### Request Schema
-
-```typescript
-// schemas/segment.ts
-import { z } from 'zod';
-
-export const PointSchema = z.object({
-  x: z.number().min(0),
-  y: z.number().min(0),
-  label: z.union([z.literal(0), z.literal(1)]), // 0=background, 1=foreground
-});
-
-export const SegmentRequestSchema = z.object({
-  image: z.string().min(1), // Base64 encoded image (data URI or raw)
-  points: z.array(PointSchema).min(1).max(20), // At least 1 point, max 20
-  imageWidth: z.number().int().min(1).max(8192),
-  imageHeight: z.number().int().min(1).max(8192),
-  // Optional: return multiple mask options
-  returnMultipleMasks: z.boolean().optional().default(false),
-  // Optional: mask encoding format
-  maskFormat: z.enum(['base64png', 'rle', 'binary']).optional().default('base64png'),
-});
-
-export type SegmentRequest = z.infer<typeof SegmentRequestSchema>;
-```
-
-### Response Schema
-
-```typescript
-// types/api.ts
-export interface BoundingBox {
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-}
-
-export interface MaskOption {
-  mask: string; // Base64 PNG or RLE encoded
-  confidence: number; // 0-1 score
-  boundingBox: BoundingBox;
-  area: number; // Pixel count
-}
-
-export interface SegmentResponse {
-  success: boolean;
-  masks: MaskOption[]; // Primary mask first, alternatives if requested
-  imageWidth: number;
-  imageHeight: number;
-  processingTimeMs: number;
-}
-
-export interface SegmentErrorResponse {
-  success: false;
-  error: string;
-  code: 'INVALID_INPUT' | 'IMAGE_TOO_LARGE' | 'SAM_ERROR' | 'RATE_LIMIT' | 'SERVER_ERROR';
-  details?: unknown;
-}
-```
-
-### Route Implementation
-
-```typescript
-// app/api/segment/route.ts
-import { type NextRequest, NextResponse } from 'next/server';
-import { SegmentRequestSchema } from '@/schemas/segment';
-import { runSAMSegmentation } from '@/lib/sam/inference';
-import { validateBase64Image, decodeBase64Image } from '@/lib/validation/image';
-import { withRateLimit } from '@/lib/api/rateLimit';
-import { withErrorHandler } from '@/lib/api/errors';
-import { logger } from '@/lib/logger';
-
-const MAX_IMAGE_SIZE = 10 * 1024 * 1024; // 10MB
-const MAX_DIMENSION = 4096;
-
-async function segmentHandler(request: NextRequest) {
-  const startTime = Date.now();
-
-  // Parse and validate request body
-  const body = await request.json();
-  const parseResult = SegmentRequestSchema.safeParse(body);
-
-  if (!parseResult.success) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Invalid request parameters',
-        code: 'INVALID_INPUT',
-        details: parseResult.error.flatten(),
-      },
-      { status: 400 }
-    );
-  }
-
-  const { image, points, imageWidth, imageHeight, returnMultipleMasks, maskFormat } = parseResult.data;
-
-  // Validate image data
-  const imageValidation = validateBase64Image(image, {
-    maxSize: MAX_IMAGE_SIZE,
-    maxWidth: MAX_DIMENSION,
-    maxHeight: MAX_DIMENSION,
-  });
-
-  if (!imageValidation.valid) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: imageValidation.error,
-        code: 'INVALID_INPUT',
-      },
-      { status: 400 }
-    );
-  }
-
-  try {
-    // Decode image to buffer
-    const imageBuffer = decodeBase64Image(image);
-
-    // Run SAM segmentation
-    const segmentationResult = await runSAMSegmentation({
-      imageBuffer,
-      points,
-      imageWidth,
-      imageHeight,
-      returnMultiple: returnMultipleMasks,
-      outputFormat: maskFormat,
-    });
-
-    const processingTime = Date.now() - startTime;
-
-    logger.info('Segmentation completed', {
-      processingTimeMs: processingTime,
-      imageSize: { width: imageWidth, height: imageHeight },
-      pointCount: points.length,
-      maskCount: segmentationResult.masks.length,
-    });
-
-    return NextResponse.json({
-      success: true,
-      masks: segmentationResult.masks,
-      imageWidth,
-      imageHeight,
-      processingTimeMs: processingTime,
-    });
-
-  } catch (error) {
-    logger.error('Segmentation error', { error });
-
-    return NextResponse.json(
-      {
-        success: false,
-        error: 'Segmentation failed',
-        code: 'SAM_ERROR',
-        details: error instanceof Error ? error.message : 'Unknown error',
-      },
-      { status: 500 }
-    );
-  }
-}
-
-// Apply middleware: rate limiting -> error handling
-export const POST = withRateLimit(
-  withErrorHandler(segmentHandler),
-  {
-    maxRequests: 10,
-    windowMs: 60000, // 1 minute
-    keyGenerator: (req) => req.headers.get('x-forwarded-for') || 'anonymous',
-  }
-);
-
-// Disable body size limit (we handle it manually)
-export const runtime = 'nodejs';
-export const maxDuration = 30; // 30 seconds max
-```
-
-### SAM Inference Implementation
-
-```typescript
-// lib/sam/inference.ts
-import type { MaskOption } from '@/types/api';
-
-interface SAMSegmentationParams {
-  imageBuffer: Buffer;
-  points: Array<{ x: number; y: number; label: 0 | 1 }>;
-  imageWidth: number;
-  imageHeight: number;
-  returnMultiple?: boolean;
-  outputFormat?: 'base64png' | 'rle' | 'binary';
-}
-
-interface SAMResult {
-  masks: MaskOption[];
-}
-
-// Option A: Using Replicate API
-export async function runSAMSegmentation(params: SAMSegmentationParams): Promise<SAMResult> {
-  const { imageBuffer, points, imageWidth, imageHeight, returnMultiple, outputFormat } = params;
-
-  // Convert buffer to base64 for API
-  const imageBase64 = imageBuffer.toString('base64');
-  const imageDataUri = `data:image/png;base64,${imageBase64}`;
-
-  // Call Replicate API
-  const response = await fetch('https://api.replicate.com/v1/predictions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      version: process.env.SAM_MODEL_VERSION,
-      input: {
-        image: imageDataUri,
-        input_points: points.map(p => [p.x, p.y]),
-        input_labels: points.map(p => p.label),
-        multimask_output: returnMultiple || false,
-      },
-    }),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Replicate API error: ${response.statusText}`);
-  }
-
-  const prediction = await response.json();
-
-  // Poll for completion
-  let result = prediction;
-  while (result.status === 'starting' || result.status === 'processing') {
-    await new Promise(resolve => setTimeout(resolve, 500));
-
-    const pollResponse = await fetch(result.urls.get, {
-      headers: { 'Authorization': `Token ${process.env.REPLICATE_API_TOKEN}` },
-    });
-
-    result = await pollResponse.json();
-  }
-
-  if (result.status !== 'succeeded') {
-    throw new Error(`SAM prediction failed: ${result.error}`);
-  }
-
-  // Process masks from result
-  const masks: MaskOption[] = await Promise.all(
-    result.output.masks.map(async (maskUrl: string, idx: number) => {
-      // Download mask image
-      const maskResponse = await fetch(maskUrl);
-      const maskBuffer = Buffer.from(await maskResponse.arrayBuffer());
-
-      // Convert to requested format
-      let encodedMask: string;
-      if (outputFormat === 'base64png') {
-        encodedMask = maskBuffer.toString('base64');
-      } else if (outputFormat === 'rle') {
-        encodedMask = encodeRLE(maskBuffer);
-      } else {
-        encodedMask = maskBuffer.toString('binary');
-      }
-
-      // Calculate bounding box and area
-      const { boundingBox, area } = analyzeMask(maskBuffer, imageWidth, imageHeight);
-
-      return {
-        mask: encodedMask,
-        confidence: result.output.scores[idx] || 0.9,
-        boundingBox,
-        area,
-      };
-    })
-  );
-
-  return { masks };
-}
-
-// Helper: Analyze mask to get bounding box and area
-function analyzeMask(maskBuffer: Buffer, width: number, height: number) {
-  // Parse PNG or raw binary mask
-  let minX = width, minY = height, maxX = 0, maxY = 0;
-  let area = 0;
-
-  // Simplified: assumes binary mask as grayscale PNG
-  // In production, use sharp or canvas to properly parse
-  for (let y = 0; y < height; y++) {
-    for (let x = 0; x < width; x++) {
-      const idx = y * width + x;
-      if (maskBuffer[idx] > 128) { // Threshold for binary mask
-        area++;
-        minX = Math.min(minX, x);
-        minY = Math.min(minY, y);
-        maxX = Math.max(maxX, x);
-        maxY = Math.max(maxY, y);
-      }
-    }
-  }
-
-  return {
-    boundingBox: {
-      x: minX,
-      y: minY,
-      width: maxX - minX,
-      height: maxY - minY,
-    },
-    area,
-  };
-}
-
-// Helper: RLE encoding for compact mask transfer
-function encodeRLE(maskBuffer: Buffer): string {
-  const rle: number[] = [];
-  let current = maskBuffer[0] > 128 ? 1 : 0;
-  let count = 1;
-
-  for (let i = 1; i < maskBuffer.length; i++) {
-    const pixel = maskBuffer[i] > 128 ? 1 : 0;
-    if (pixel === current) {
-      count++;
-    } else {
-      rle.push(count);
-      current = pixel;
-      count = 1;
-    }
-  }
-  rle.push(count);
-
-  return JSON.stringify(rle);
-}
-```
-
----
-
-## 2. POST /api/generate
+## 1. POST /api/generate
 
 Generates STL files from SVG contours and Gridfinity configuration using OpenSCAD.
 
@@ -475,7 +138,7 @@ async function generateHandler(request: NextRequest) {
     );
   }
 
-  const { svg, config, async, webhookUrl } = parseResult.data;
+  const { svg, config } = parseResult.data;
 
   // Validate SVG content
   const svgValidation = validateSVG(svg);
@@ -493,38 +156,20 @@ async function generateHandler(request: NextRequest) {
   const generationId = randomUUID();
 
   try {
-    if (async) {
-      // Queue the generation job
-      await createGenerationJob({
-        id: generationId,
-        svg,
-        config,
-        webhookUrl,
-      });
+    // Synchronous generation
+    const result = await generateSTL({
+      id: generationId,
+      svg,
+      config,
+    });
 
-      return NextResponse.json({
-        success: true,
-        generationId,
-        status: 'queued',
-        estimatedTimeMs: 5000,
-        queuePosition: await getQueuePosition(generationId),
-      });
-    } else {
-      // Synchronous generation
-      const result = await generateSTL({
-        id: generationId,
-        svg,
-        config,
-      });
-
-      return NextResponse.json({
-        success: true,
-        generationId,
-        status: 'complete',
-        downloadUrl: `/api/download/${generationId}`,
-        previewUrl: result.previewUrl,
-      });
-    }
+    return NextResponse.json({
+      success: true,
+      generationId,
+      status: 'complete',
+      downloadUrl: `/api/download/${generationId}`,
+      previewUrl: result.previewUrl,
+    });
   } catch (error) {
     logger.error('Generation error', { error, generationId });
 
@@ -548,31 +193,8 @@ export const POST = withRateLimit(
   }
 );
 
-// Status polling endpoint
-export async function GET(request: NextRequest) {
-  const { searchParams } = new URL(request.url);
-  const id = searchParams.get('id');
-
-  if (!id) {
-    return NextResponse.json({ error: 'Missing generation ID' }, { status: 400 });
-  }
-
-  const status = await getJobStatus(id);
-
-  if (!status) {
-    return NextResponse.json({ error: 'Generation not found' }, { status: 404 });
-  }
-
-  return NextResponse.json(status);
-}
-
 export const runtime = 'nodejs';
 export const maxDuration = 60; // 60 seconds for STL generation
-
-async function getQueuePosition(id: string): Promise<number> {
-  // Implementation depends on queue system
-  return 1;
-}
 ```
 
 ### OpenSCAD Generator Implementation
@@ -753,7 +375,7 @@ async function cleanupDirectory(directory: string): Promise<void> {
 
 ---
 
-## 3. GET /api/download/[id]
+## 2. GET /api/download/[id]
 
 Serves generated STL files with proper headers and security validation.
 
@@ -852,7 +474,7 @@ export const runtime = 'nodejs';
 
 ---
 
-## 4. POST /api/preview
+## 3. POST /api/preview
 
 Generates quick preview images without full STL generation for faster feedback.
 
@@ -913,7 +535,7 @@ export const maxDuration = 15; // 15 seconds for preview
 
 ---
 
-## 5. Shared Utilities
+## 4. Shared Utilities
 
 ### Validation Module
 
@@ -1254,14 +876,10 @@ setInterval(async () => {
 
 ---
 
-## 6. Environment Variables
+## 5. Environment Variables
 
 ```bash
 # .env.local
-
-# SAM Segmentation
-REPLICATE_API_TOKEN=r8_xxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-SAM_MODEL_VERSION=facebook/sam2-hiera-large
 
 # OpenSCAD
 OPENSCAD_PATH=/usr/bin/openscad
@@ -1291,8 +909,6 @@ LOG_LEVEL=info
 import { z } from 'zod';
 
 const envSchema = z.object({
-  REPLICATE_API_TOKEN: z.string().min(1).optional(),
-  SAM_MODEL_VERSION: z.string().default('facebook/sam2-hiera-large'),
   OPENSCAD_PATH: z.string().default('openscad'),
   GRIDFINITY_LIB_PATH: z.string().default('/usr/local/share/gridfinity'),
   TEMP_DIR: z.string().default('/tmp/snap-caddy'),
@@ -1310,7 +926,7 @@ export const env = envSchema.parse(process.env);
 
 ---
 
-## 7. Client API Wrapper
+## 6. Client API Wrapper
 
 Complete type-safe API client for frontend usage.
 
@@ -1332,36 +948,11 @@ class SnapCaddyAPI {
   }
 
   /**
-   * Perform SAM segmentation on an image
-   */
-  async segment(params: {
-    image: string;
-    points: Array<{ x: number; y: number; label: 0 | 1 }>;
-    imageWidth: number;
-    imageHeight: number;
-    returnMultipleMasks?: boolean;
-  }): Promise<SegmentResponse> {
-    const response = await fetch(`${this.baseUrl}/api/segment`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(params satisfies SegmentRequest),
-    });
-
-    if (!response.ok) {
-      const error = await response.json();
-      throw new APIClientError(error.error, error.code, response.status);
-    }
-
-    return response.json();
-  }
-
-  /**
    * Generate STL file from SVG and configuration
    */
   async generate(params: {
     svg: string;
     config: GenerateRequest['config'];
-    async?: boolean;
   }): Promise<GenerateResponse> {
     const response = await fetch(`${this.baseUrl}/api/generate`, {
       method: 'POST',
@@ -1372,19 +963,6 @@ class SnapCaddyAPI {
     if (!response.ok) {
       const error = await response.json();
       throw new APIClientError(error.error, error.code, response.status);
-    }
-
-    return response.json();
-  }
-
-  /**
-   * Poll generation status (for async generations)
-   */
-  async getGenerationStatus(id: string): Promise<GenerationStatus> {
-    const response = await fetch(`${this.baseUrl}/api/generate?id=${id}`);
-
-    if (!response.ok) {
-      throw new APIClientError('Failed to get status', 'STATUS_ERROR', response.status);
     }
 
     return response.json();
@@ -1431,7 +1009,7 @@ class SnapCaddyAPI {
     svg: string;
     config: GenerateRequest['config'];
   }): Promise<Blob> {
-    const generateResult = await this.generate({ ...params, async: false });
+    const generateResult = await this.generate(params);
 
     if (generateResult.status !== 'complete') {
       throw new Error('Generation did not complete');
@@ -1485,59 +1063,6 @@ export { SnapCaddyAPI };
 ```
 
 ### React Hooks for API Integration
-
-```typescript
-// hooks/useSegmentation.ts
-import { useState, useCallback } from 'react';
-import { api, APIClientError } from '@/lib/api/client';
-import type { SegmentResponse } from '@/types/api';
-
-interface UseSegmentationResult {
-  segment: (params: {
-    image: string;
-    points: Array<{ x: number; y: number; label: 0 | 1 }>;
-    imageWidth: number;
-    imageHeight: number;
-  }) => Promise<SegmentResponse | null>;
-  isLoading: boolean;
-  error: string | null;
-  result: SegmentResponse | null;
-  reset: () => void;
-}
-
-export function useSegmentation(): UseSegmentationResult {
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<SegmentResponse | null>(null);
-
-  const segment = useCallback(async (params: Parameters<typeof api.segment>[0]) => {
-    setIsLoading(true);
-    setError(null);
-
-    try {
-      const response = await api.segment(params);
-      setResult(response);
-      return response;
-    } catch (err) {
-      const errorMessage = err instanceof APIClientError
-        ? err.message
-        : 'Segmentation failed';
-      setError(errorMessage);
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  const reset = useCallback(() => {
-    setIsLoading(false);
-    setError(null);
-    setResult(null);
-  }, []);
-
-  return { segment, isLoading, error, result, reset };
-}
-```
 
 ```typescript
 // hooks/useGeneration.ts
@@ -1605,22 +1130,22 @@ export function useGeneration(): UseGenerationResult {
 
 ---
 
-## 8. Testing Strategies
+## 7. Testing Strategies
 
 ### Unit Tests for API Routes
 
 ```typescript
-// __tests__/api/segment.test.ts
-import { POST } from '@/app/api/segment/route';
+// __tests__/api/generate.test.ts
+import { POST } from '@/app/api/generate/route';
 import { NextRequest } from 'next/server';
 
-describe('POST /api/segment', () => {
+describe('POST /api/generate', () => {
   it('should validate request schema', async () => {
-    const request = new NextRequest('http://localhost/api/segment', {
+    const request = new NextRequest('http://localhost/api/generate', {
       method: 'POST',
       body: JSON.stringify({
-        image: 'invalid',
-        points: [],
+        svg: '',
+        config: {},
       }),
     });
 
@@ -1631,32 +1156,18 @@ describe('POST /api/segment', () => {
     expect(data.code).toBe('INVALID_INPUT');
   });
 
-  it('should reject oversized images', async () => {
-    const largeImage = 'data:image/png;base64,' + 'A'.repeat(20 * 1024 * 1024);
-
-    const request = new NextRequest('http://localhost/api/segment', {
+  it('should successfully generate STL', async () => {
+    const request = new NextRequest('http://localhost/api/generate', {
       method: 'POST',
       body: JSON.stringify({
-        image: largeImage,
-        points: [{ x: 100, y: 100, label: 1 }],
-        imageWidth: 1000,
-        imageHeight: 1000,
-      }),
-    });
-
-    const response = await POST(request);
-    expect(response.status).toBe(400);
-  });
-
-  it('should successfully segment valid image', async () => {
-    // Mock SAM API
-    const request = new NextRequest('http://localhost/api/segment', {
-      method: 'POST',
-      body: JSON.stringify({
-        image: 'data:image/png;base64,iVBORw0KG...',
-        points: [{ x: 100, y: 100, label: 1 }],
-        imageWidth: 500,
-        imageHeight: 500,
+        svg: '<svg>...</svg>',
+        config: {
+          gridUnitsX: 2,
+          gridUnitsY: 2,
+          binHeight: 42,
+          cutoutDepth: 10,
+          wallThickness: 1.2,
+        },
       }),
     });
 
@@ -1665,7 +1176,7 @@ describe('POST /api/segment', () => {
 
     const data = await response.json();
     expect(data.success).toBe(true);
-    expect(data.masks).toHaveLength(1);
+    expect(data.generationId).toBeDefined();
   });
 });
 ```
@@ -1677,21 +1188,11 @@ describe('POST /api/segment', () => {
 import { api } from '@/lib/api/client';
 
 describe('Full generation flow', () => {
-  it('should complete segment -> generate -> download', async () => {
-    // 1. Segment
-    const segmentResult = await api.segment({
-      image: testImageBase64,
-      points: [{ x: 250, y: 250, label: 1 }],
-      imageWidth: 500,
-      imageHeight: 500,
-    });
+  it('should complete paint -> generate -> download', async () => {
+    // 1. Paint mask (client-side)
+    const svg = createSVGFromMask(paintedMask);
 
-    expect(segmentResult.masks).toHaveLength(1);
-
-    // 2. Convert mask to SVG (client-side)
-    const svg = maskToSVG(segmentResult.masks[0].mask);
-
-    // 3. Generate STL
+    // 2. Generate STL
     const generateResult = await api.generate({
       svg,
       config: {
@@ -1706,7 +1207,7 @@ describe('Full generation flow', () => {
     expect(generateResult.generationId).toBeDefined();
     expect(generateResult.status).toBe('complete');
 
-    // 4. Download
+    // 3. Download
     const stlBlob = await api.downloadSTL(generateResult.generationId);
     expect(stlBlob.size).toBeGreaterThan(0);
     expect(stlBlob.type).toBe('application/sla');
@@ -1764,7 +1265,7 @@ loadTest();
 
 ---
 
-## 9. Production Deployment Checklist
+## 8. Production Deployment Checklist
 
 ### Infrastructure Requirements
 
@@ -1835,13 +1336,11 @@ export const metrics = {
 
 ---
 
-## 10. API Reference Summary
+## 9. API Reference Summary
 
 | Endpoint | Method | Purpose | Rate Limit |
 |----------|--------|---------|------------|
-| `/api/segment` | POST | SAM segmentation | 10 req/min |
 | `/api/generate` | POST | STL generation | 5 req/min |
-| `/api/generate?id={id}` | GET | Poll status | 20 req/min |
 | `/api/download/{id}` | GET | Download STL | 20 req/min |
 | `/api/preview` | POST | Quick preview | 20 req/min |
 
@@ -1861,5 +1360,4 @@ export const metrics = {
 - [Next.js API Routes Documentation](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)
 - [Zod Validation](https://zod.dev/)
 - [OpenSCAD Manual](https://openscad.org/documentation.html)
-- [SAM Model Documentation](https://github.com/facebookresearch/segment-anything)
 - [Gridfinity OpenSCAD Library](https://github.com/ostat/gridfinity_extended_openscad)

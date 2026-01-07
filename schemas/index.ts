@@ -32,17 +32,6 @@ export {
   GenerationStatusSchema,
   GridfinityConfigSchema,
 } from "./generate";
-export type {
-  SegmentErrorResponse,
-  SegmentRequest,
-  SegmentResponse,
-} from "./segment";
-// Segment schemas
-export {
-  SegmentErrorResponseSchema,
-  SegmentRequestSchema,
-  SegmentResponseSchema,
-} from "./segment";
 
 // Helper validation functions
 import type { z } from "zod";

@@ -616,18 +616,6 @@ describe("GenerateRequestSchema", () => {
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(true);
     });
-
-    it("should validate a request with all optional fields", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        async: true,
-        webhookUrl: "https://example.com/webhook",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(true);
-    });
   });
 
   describe("svg validation", () => {
@@ -659,107 +647,6 @@ describe("GenerateRequestSchema", () => {
 
       const result = GenerateRequestSchema.safeParse(request);
       expect(result.success).toBe(false);
-    });
-  });
-
-  describe("async field", () => {
-    it("should default async to false when not provided", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-      };
-
-      const result = GenerateRequestSchema.parse(request);
-      expect(result.async).toBe(false);
-    });
-
-    it("should accept explicit async true value", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        async: true,
-      };
-
-      const result = GenerateRequestSchema.parse(request);
-      expect(result.async).toBe(true);
-    });
-
-    it("should accept explicit async false value", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        async: false,
-      };
-
-      const result = GenerateRequestSchema.parse(request);
-      expect(result.async).toBe(false);
-    });
-  });
-
-  describe("webhookUrl validation", () => {
-    it("should accept valid HTTP URL", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        webhookUrl: "http://example.com/webhook",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(true);
-    });
-
-    it("should accept valid HTTPS URL", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        webhookUrl: "https://example.com/webhook",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(true);
-    });
-
-    it("should accept URL with path and query parameters", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        webhookUrl: "https://example.com/api/webhook?token=abc123",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(true);
-    });
-
-    it("should reject invalid URL format", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        webhookUrl: "not-a-valid-url",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(false);
-    });
-
-    it("should reject empty string as webhookUrl", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-        webhookUrl: "",
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(false);
-    });
-
-    it("should allow webhookUrl to be omitted", () => {
-      const request = {
-        svg: '<svg><rect width="100" height="100"/></svg>',
-        config: validConfig,
-      };
-
-      const result = GenerateRequestSchema.safeParse(request);
-      expect(result.success).toBe(true);
     });
   });
 
@@ -848,7 +735,6 @@ describe("GenerateResponseSchema", () => {
       estimatedTimeMs: 5000,
       downloadUrl: "https://example.com/download/model.stl",
       previewUrl: "https://example.com/preview/model.png",
-      queuePosition: 1,
     };
 
     const result = GenerateResponseSchema.safeParse(response);
@@ -860,19 +746,6 @@ describe("GenerateResponseSchema", () => {
       success: true,
       generationId: "550e8400-e29b-41d4-a716-446655440000",
       status: "queued" as const,
-    };
-
-    const result = GenerateResponseSchema.safeParse(response);
-    expect(result.success).toBe(true);
-  });
-
-  it("should validate response with queued status", () => {
-    const response = {
-      success: true,
-      generationId: "550e8400-e29b-41d4-a716-446655440000",
-      status: "queued" as const,
-      queuePosition: 5,
-      estimatedTimeMs: 30000,
     };
 
     const result = GenerateResponseSchema.safeParse(response);
@@ -942,42 +815,6 @@ describe("GenerateResponseSchema", () => {
       generationId: "550e8400-e29b-41d4-a716-446655440000",
       status: "complete" as const,
       downloadUrl: "not-a-url",
-    };
-
-    const result = GenerateResponseSchema.safeParse(response);
-    expect(result.success).toBe(false);
-  });
-
-  it("should reject negative queuePosition", () => {
-    const response = {
-      success: true,
-      generationId: "550e8400-e29b-41d4-a716-446655440000",
-      status: "queued" as const,
-      queuePosition: -1,
-    };
-
-    const result = GenerateResponseSchema.safeParse(response);
-    expect(result.success).toBe(false);
-  });
-
-  it("should reject zero queuePosition", () => {
-    const response = {
-      success: true,
-      generationId: "550e8400-e29b-41d4-a716-446655440000",
-      status: "queued" as const,
-      queuePosition: 0,
-    };
-
-    const result = GenerateResponseSchema.safeParse(response);
-    expect(result.success).toBe(false);
-  });
-
-  it("should reject non-integer queuePosition", () => {
-    const response = {
-      success: true,
-      generationId: "550e8400-e29b-41d4-a716-446655440000",
-      status: "queued" as const,
-      queuePosition: 1.5,
     };
 
     const result = GenerateResponseSchema.safeParse(response);

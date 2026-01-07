@@ -98,7 +98,7 @@ describe("useWizard", () => {
 
       const stepNames = [
         { step: 0, name: "Capture" },
-        { step: 1, name: "Segment" },
+        { step: 1, name: "Paint" },
         { step: 2, name: "Calibrate" },
         { step: 3, name: "Review" },
         { step: 4, name: "Configure" },
@@ -142,7 +142,7 @@ describe("useWizard", () => {
       expect(result.current.canProceedToNext()).toBe(true);
     });
 
-    it("checks for segmentationMask on step 1", () => {
+    it("checks for paintMask on step 1", () => {
       const { result } = renderHook(() => useWizard(), {
         wrapper: createWrapper(),
       });
@@ -155,7 +155,7 @@ describe("useWizard", () => {
 
       const mockImageData = new ImageData(100, 100);
       act(() => {
-        result.current.setSegmentationMask(mockImageData);
+        result.current.setPaintMask(mockImageData);
       });
 
       expect(result.current.canProceedToNext()).toBe(true);
@@ -469,7 +469,7 @@ describe("useWizard", () => {
       // Step 1 -> 2
       const mockImageData = new ImageData(100, 100);
       act(() => {
-        result.current.setSegmentationMask(mockImageData);
+        result.current.setPaintMask(mockImageData);
       });
 
       act(() => {
@@ -600,12 +600,12 @@ describe("useWizard", () => {
         result.current.goToNextStep();
       });
       expect(result.current.state.currentStep).toBe(1);
-      expect(result.current.stepName).toBe("Segment");
+      expect(result.current.stepName).toBe("Paint");
 
       // Complete step 1
       const mockImageData = new ImageData(100, 100);
       act(() => {
-        result.current.setSegmentationMask(mockImageData);
+        result.current.setPaintMask(mockImageData);
       });
       act(() => {
         result.current.goToNextStep();
@@ -663,7 +663,7 @@ describe("useWizard", () => {
       });
 
       act(() => {
-        result.current.setSegmentationMask(new ImageData(100, 100));
+        result.current.setPaintMask(new ImageData(100, 100));
       });
       act(() => {
         result.current.goToNextStep();
@@ -735,7 +735,7 @@ describe("useWizard", () => {
 
       act(() => {
         result.current.setStep(1);
-        result.current.setSegmentationMask(null);
+        result.current.setPaintMask(null);
       });
       expect(result.current.canProceedToNext()).toBe(false);
 

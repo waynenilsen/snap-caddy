@@ -7,7 +7,7 @@ import { CaptureStep } from "@/components/capture";
 import { ConfigureStep } from "@/components/configuration";
 import { ReviewStep } from "@/components/editor";
 import { GenerateStep } from "@/components/generation";
-import { SelectStep } from "@/components/segmentation";
+import { PaintStep } from "@/components/paint";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,11 +15,9 @@ import {
   WizardLayout,
   WizardNavigation,
 } from "@/components/wizard";
-import { useGenerationPolling } from "@/hooks/useGenerationPolling";
 import { useWizard } from "@/hooks/useWizard";
 import { APIClientError, api } from "@/lib/api/client";
 import { findContours, generateSVG } from "@/lib/canvas";
-import type { MaskData } from "@/types/segmentation";
 
 export default function Home() {
   const wizard = useWizard();
@@ -34,27 +32,6 @@ export default function Home() {
   } = wizard;
   const [isLoading, setIsLoading] = useState(false);
 
-  // Use polling hook to track generation status
-  const polling = useGenerationPolling(state.generationId, {
-    enabled:
-      !!state.generationId &&
-      (state.generationStatus === "queued" ||
-        state.generationStatus === "processing"),
-    pollingInterval: 2500, // Poll every 2.5 seconds
-    onComplete: (data) => {
-      console.log("Generation complete:", data);
-      setGenerationStatus("complete");
-    },
-    onError: (error) => {
-      console.error("Generation error:", error);
-      setGenerationStatus("error");
-      wizard.setError(error);
-    },
-  });
-
-  // Use polling status if available, otherwise use wizard state
-  const generationStatus = polling.status || state.generationStatus;
-
   // Step handlers
   const handleImageCaptured = useCallback(
     (imageDataUrl: string) => {
@@ -63,79 +40,53 @@ export default function Home() {
     [setImageData],
   );
 
-  /**
-   * Handle mask selection from SAM 2
-   * Combines selected masks into a single mask for downstream processing
-   */
-  const handleMasksSelected = useCallback(
-    (selectedMasks: MaskData[]) => {
-      if (selectedMasks.length === 0) {
-        wizard.setError("Please select at least one region");
-        return;
-      }
-
-      // Store the selected masks
-      wizard.setSelectedMasks(selectedMasks);
-
-      // Get dimensions from the first mask
-      const firstMask = selectedMasks.find((m) => m.imageData !== null);
-      if (!firstMask?.imageData) {
-        wizard.setError("Failed to process selected masks");
-        return;
-      }
-
-      const width = firstMask.imageData.width;
-      const height = firstMask.imageData.height;
-
-      // Combine all selected masks into a single mask
-      const combinedMask = combineMasks(selectedMasks, width, height);
-      wizard.setSegmentationMask(combinedMask);
+  const handlePaintingComplete = useCallback(
+    (paintMask: ImageData) => {
+      // Store the painted mask
+      wizard.setPaintMask(paintMask);
 
       try {
-        // Detect contours from the combined mask
-        const contourResult = findContours(combinedMask, {
-          minArea: 200, // Ignore small noise
-          simplifyTolerance: 1.5, // Reduce points while preserving shape
-          smoothingIterations: 2, // Smooth edges
-          findHoles: true, // Detect inner holes
+        // Detect contours from the painted mask
+        const contourResult = findContours(paintMask, {
+          minArea: 200,
+          simplifyTolerance: 1.5,
+          smoothingIterations: 2,
+          findHoles: true,
         });
 
-        // Check if we found a valid contour
         if (contourResult.outerContour.points.length === 0) {
-          console.warn("No contour detected in combined mask");
+          console.warn("No contour detected in painted mask");
+          const { width, height } = paintMask;
           setSvgOutline(createFallbackSvg(width, height));
+          wizard.goToNextStep();
           return;
         }
 
-        // Use calibration data if available, otherwise use a sensible default
         const pixelsPerMm = state.calibration.pixelsPerMm || 10;
 
-        // Generate SVG from contours
         const svgDoc = generateSVG(
           contourResult.outerContour,
           contourResult.holes,
           {
             pixelsPerMm,
-            padding: 3, // 3mm padding
-            useBezier: true, // Smooth curves for organic shapes
-            bezierTension: 0.4, // Moderate smoothing
-            decimals: 2, // 0.01mm precision
-            flipY: true, // SVG Y-axis convention
+            padding: 3,
+            useBezier: true,
+            bezierTension: 0.4,
+            decimals: 2,
+            flipY: true,
           },
         );
 
-        // Store the generated SVG
         setSvgOutline(svgDoc.fullSvg);
-
         console.log(
-          `SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`,
+          `SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm`,
         );
-
-        // Auto-advance to next step
         wizard.goToNextStep();
       } catch (error) {
         console.error("Error generating SVG from mask:", error);
+        const { width, height } = paintMask;
         setSvgOutline(createFallbackSvg(width, height));
+        wizard.goToNextStep();
       }
     },
     [wizard, setSvgOutline, state.calibration.pixelsPerMm],
@@ -205,17 +156,11 @@ export default function Home() {
           cornerRadius: state.gridfinityConfig.cornerRadius,
           baseThickness: state.gridfinityConfig.baseThickness,
         },
-        async: true, // Request async generation for polling
       });
 
-      // Set the generation ID to start polling
+      // Set the generation ID and status
       setGenerationId(response.generationId);
-      // Update status from response - polling hook will monitor progress and update to "complete"
-      if (response.status === "queued" || response.status === "processing") {
-        setGenerationStatus(response.status);
-      } else if (response.status === "complete") {
-        setGenerationStatus("complete");
-      }
+      setGenerationStatus("complete");
     } catch (error) {
       console.error("Generation failed:", error);
       setGenerationStatus("error");
@@ -298,11 +243,11 @@ export default function Home() {
       case 0: // Capture
         return <CaptureStep onImageCaptured={handleImageCaptured} />;
 
-      case 1: // Segment
+      case 1: // Paint
         return state.imageData ? (
-          <SelectStep
+          <PaintStep
             imageUrl={state.imageData}
-            onMasksSelected={handleMasksSelected}
+            onPaintingComplete={handlePaintingComplete}
           />
         ) : (
           <div className="text-center py-12 text-muted-foreground">
@@ -364,7 +309,7 @@ export default function Home() {
             svgContent={state.svgOutline || ""}
             onGenerate={handleGenerate}
             generationStatus={
-              generationStatus as
+              state.generationStatus as
                 | "idle"
                 | "queued"
                 | "processing"
@@ -372,10 +317,7 @@ export default function Home() {
                 | "error"
             }
             generationId={state.generationId || undefined}
-            generationError={polling.error || state.error || undefined}
-            progress={polling.progress}
-            downloadUrl={polling.downloadUrl}
-            previewUrl={polling.previewUrl}
+            generationError={state.error || undefined}
             onDismissError={handleDismissError}
           />
         );
@@ -542,47 +484,4 @@ function getSvgDimensions(
   }
 
   return undefined;
-}
-
-/**
- * Combine multiple masks into a single mask
- * Uses OR operation - any pixel that's white in any mask becomes white
- */
-function combineMasks(
-  masks: MaskData[],
-  width: number,
-  height: number,
-): ImageData {
-  // Create a new ImageData for the combined mask
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const ctx = canvas.getContext("2d");
-  if (!ctx) throw new Error("Could not get canvas context");
-
-  // Start with black canvas
-  ctx.fillStyle = "black";
-  ctx.fillRect(0, 0, width, height);
-
-  // Get the combined image data
-  const combinedData = ctx.getImageData(0, 0, width, height);
-  const data = combinedData.data;
-
-  // Combine all masks using OR operation
-  for (const mask of masks) {
-    if (!mask.imageData) continue;
-    const maskData = mask.imageData.data;
-
-    for (let i = 0; i < data.length; i += 4) {
-      // If any channel in the mask is above threshold, set pixel to white
-      if (maskData[i] > 10 || maskData[i + 1] > 10 || maskData[i + 2] > 10) {
-        data[i] = 255; // R
-        data[i + 1] = 255; // G
-        data[i + 2] = 255; // B
-        data[i + 3] = 255; // A
-      }
-    }
-  }
-
-  return combinedData;
 }

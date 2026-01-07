@@ -18,18 +18,10 @@ export type {
   PreviewResponse,
   RateLimitError,
   RateLimitHeaders,
-  SegmentErrorResponse,
-  SegmentRequest,
-  SegmentResponse,
   SVGValidationResult,
   ValidationResult,
 } from "./api";
-export {
-  APIClientError,
-  isAPIError,
-  isGenerateResponse,
-  isSegmentResponse,
-} from "./api";
+export { APIClientError, isAPIError, isGenerateResponse } from "./api";
 
 // Calibration types
 export type { CalibrationPoints, CalibrationState, Scale } from "./calibration";
@@ -44,11 +36,6 @@ export type {
 export { calculateBinDimensions, validateBinFit } from "./gridfinity";
 // Image and geometric types
 export type { BoundingBox, ImageData, ImageDimensions, Point } from "./image";
-// Segmentation types
-export type {
-  MaskData,
-  SegmentationState,
-} from "./segmentation";
 // Wizard types
 export type {
   NavigationState,
