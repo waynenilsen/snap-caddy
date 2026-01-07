@@ -4,15 +4,29 @@ import { GlobalWindow } from "happy-dom";
 const globalWindow = new GlobalWindow();
 const window = globalWindow.window;
 
+// Type the global object properly for test environment extensions
+interface GlobalWithDOM {
+  window: typeof window;
+  document: typeof window.document;
+  navigator: typeof window.navigator;
+  HTMLElement: typeof window.HTMLElement;
+  Element: typeof window.Element;
+  Node: typeof window.Node;
+  Text: typeof window.Text;
+  DocumentFragment: typeof window.DocumentFragment;
+  ImageData: typeof ImageDataPolyfill;
+}
+
 // Expose globals to the test environment
-(global as any).window = window;
-(global as any).document = window.document;
-(global as any).navigator = window.navigator;
-(global as any).HTMLElement = window.HTMLElement;
-(global as any).Element = window.Element;
-(global as any).Node = window.Node;
-(global as any).Text = window.Text;
-(global as any).DocumentFragment = window.DocumentFragment;
+const globalWithDOM = global as unknown as GlobalWithDOM;
+globalWithDOM.window = window;
+globalWithDOM.document = window.document;
+globalWithDOM.navigator = window.navigator;
+globalWithDOM.HTMLElement = window.HTMLElement;
+globalWithDOM.Element = window.Element;
+globalWithDOM.Node = window.Node;
+globalWithDOM.Text = window.Text;
+globalWithDOM.DocumentFragment = window.DocumentFragment;
 
 // Create ImageData polyfill for happy-dom (which doesn't include it)
 class ImageDataPolyfill {
@@ -27,4 +41,4 @@ class ImageDataPolyfill {
   }
 }
 
-(global as any).ImageData = ImageDataPolyfill;
+globalWithDOM.ImageData = ImageDataPolyfill;

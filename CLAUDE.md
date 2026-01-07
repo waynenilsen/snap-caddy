@@ -95,6 +95,9 @@ snap-caddy/
 │   ├── sam/                  # SAM integration
 │   │   ├── inference.ts      # Replicate API calls
 │   │   └── types.ts          # SAM types
+│   ├── replicate/            # Replicate API utilities
+│   │   ├── recorder.ts       # Record/replay functionality
+│   │   └── index.ts          # Module exports
 │   ├── api/                  # API utilities
 │   │   ├── rateLimit.ts      # Rate limiting middleware
 │   │   ├── errors.ts         # Error handling
@@ -123,6 +126,8 @@ snap-caddy/
 │   └── calibration.ts        # Calibration schema
 │
 ├── e2e/                      # Playwright E2E tests
+├── fixtures/                 # Test fixtures
+│   └── replicate/            # Recorded API responses
 ├── docs/                     # Architecture documentation
 ├── tickets/                  # Feature implementation tickets
 └── scripts/                  # Build/test scripts
@@ -150,6 +155,14 @@ REPLICATE_API_TOKEN=xxx      # Get from replicate.com/account/api-tokens
 
 Optional (with defaults):
 ```bash
+# Stage/Environment
+STAGE=dev                                   # dev, staging, or production
+
+# Replicate API
+REPLICATE_BASE_URL=                         # Override Replicate API base URL
+REPLICATE_RECORD_MODE=off                   # off, record, or replay
+
+# OpenSCAD
 OPENSCAD_PATH=openscad                      # Path to OpenSCAD binary
 GRIDFINITY_LIB_PATH=/usr/local/share/gridfinity  # Gridfinity library path
 TEMP_DIR=/tmp/snap-caddy                    # Temp file storage
@@ -159,6 +172,8 @@ RATE_LIMIT_REQUESTS=10                      # Requests per window
 RATE_LIMIT_WINDOW=60000                     # Window duration (1 min)
 LOG_LEVEL=info                              # Logging level
 ```
+
+See `docs/record-replay.md` for detailed documentation on the record/replay system.
 
 ## API Endpoints
 
@@ -170,6 +185,20 @@ LOG_LEVEL=info                              # Logging level
 | POST | `/api/preview` | Quick 3D preview |
 | GET | `/api/preview/[id]` | Retrieve preview image |
 | GET | `/api/download/[id]` | Download STL file |
+
+### Dev-only Endpoints (STAGE=dev)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| GET | `/api/dev/record-replay/status` | Record/replay configuration |
+| GET/DELETE | `/api/dev/record-replay/recordings` | List/clear recordings |
+| GET/DELETE | `/api/dev/record-replay/recordings/[hash]` | Get/delete specific recording |
+
+### Hidden Dev Pages
+
+| Path | Purpose |
+|------|---------|
+| `/dev/record-replay` | UI for managing Replicate API recordings |
 
 ## Wizard Flow (6 Steps)
 
@@ -186,10 +215,10 @@ A pre-commit hook is installed automatically when you run `bun install`. The hoo
 
 ### Before Staging/Committing
 
-**Always format and lint your code before staging:**
+**Always format and lint the entire codebase before staging:**
 ```bash
-bun format           # Auto-format code
-bun lint:fix         # Auto-fix lint issues
+bun format           # Auto-format entire codebase
+bun lint:fix         # Auto-fix lint issues across codebase
 git add .            # Stage changes
 git commit -m "..."  # Commit
 ```
@@ -198,6 +227,8 @@ Or use this one-liner:
 ```bash
 bun format && bun lint:fix && git add . && git commit -m "your message"
 ```
+
+**Important:** Run format and lint on the entire codebase, not just the files you modified. This ensures consistent formatting and catches any issues that may have been introduced elsewhere.
 
 ### Manual Hook Installation
 

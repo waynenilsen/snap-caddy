@@ -3,6 +3,7 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it, mock } from "bun:test";
+import type { SpawnOptions } from "node:child_process";
 import { EventEmitter } from "node:events";
 import { OpenSCADExecutor } from "./executor";
 
@@ -50,9 +51,11 @@ describe("OpenSCADExecutor", () => {
     mockChildProcess = new MockChildProcess();
 
     // Mock child_process.spawn
-    mockSpawn = mock((_command: string, _args: string[], _options: any) => {
-      return mockChildProcess;
-    });
+    mockSpawn = mock(
+      (_command: string, _args: string[], _options: SpawnOptions) => {
+        return mockChildProcess;
+      },
+    );
 
     mock.module("child_process", () => ({
       spawn: mockSpawn,

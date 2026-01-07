@@ -30,7 +30,7 @@ describe("useIsMobile", () => {
       dispatchEvent: mock(() => true),
     }));
 
-    window.matchMedia = matchMediaMock as any;
+    window.matchMedia = matchMediaMock as unknown as typeof window.matchMedia;
   });
 
   afterEach(() => {

@@ -41,7 +41,7 @@ describe("validateBase64Image", () => {
     });
 
     it("returns invalid for null-like input", () => {
-      const result = validateBase64Image(null as any, {
+      const result = validateBase64Image(null as unknown as string, {
         maxSize: 1024,
         maxWidth: 100,
         maxHeight: 100,

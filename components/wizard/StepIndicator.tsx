@@ -102,6 +102,7 @@ export function StepIndicator({
           {STEPS.map((step, _index) => (
             <React.Fragment key={step.id}>
               <button
+                type="button"
                 onClick={() => handleStepClick(step.id)}
                 disabled={!isStepClickable(step.id)}
                 aria-label={`Step ${step.id}: ${step.title}`}
@@ -129,6 +130,7 @@ export function StepIndicator({
           return (
             <React.Fragment key={step.id}>
               <button
+                type="button"
                 onClick={() => handleStepClick(step.id)}
                 disabled={!isClickable}
                 aria-label={`Step ${step.id}: ${step.title} - ${step.description}`}
