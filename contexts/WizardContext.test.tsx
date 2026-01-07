@@ -60,6 +60,7 @@ const initialState: WizardState = {
   currentStep: 0,
   completedSteps: new Set(),
   imageData: null,
+  selectedMasks: [],
   segmentationMask: null,
   calibration: {
     pixelsPerMm: null,
@@ -648,6 +649,7 @@ describe("WizardContext", () => {
           currentStep: 3,
           completedSteps: new Set([0, 1, 2]),
           imageData: "data:image/png;base64,xyz",
+          selectedMasks: [],
           segmentationMask: new ImageData(100, 100),
           calibration: { pixelsPerMm: 10, unit: "cm" },
           svgOutline: "<svg></svg>",
