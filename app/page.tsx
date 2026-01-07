@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { RotateCcw, AlertCircle, X } from "lucide-react";
 import { api, APIClientError } from "@/lib/api/client";
+import { findContours, generateSVG } from "@/lib/canvas";
 
 export default function Home() {
   const wizard = useWizard();
@@ -43,22 +44,82 @@ export default function Home() {
     setImageData(imageDataUrl);
   }, [setImageData]);
 
-  const handleMaskGenerated = useCallback((maskData: string) => {
-    // For now, store the mask data as a string
-    // In production, this would be converted to ImageData
-    // The segmentation step already calls onMaskGenerated when complete
-    // We'll create a temporary ImageData for state tracking
-    const canvas = document.createElement("canvas");
-    canvas.width = 512;
-    canvas.height = 512;
-    const ctx = canvas.getContext("2d");
-    if (ctx) {
-      const imageData = ctx.createImageData(512, 512);
-      wizard.setSegmentationMask(imageData);
-    }
-    // Also store the SVG outline (mock for now - will be generated from mask)
-    setSvgOutline(generateMockSvg());
-  }, [wizard, setSvgOutline]);
+  const handleMaskGenerated = useCallback((maskDataUrl: string) => {
+    // Load the mask image from data URL and convert to ImageData
+    const img = new Image();
+    img.onload = () => {
+      // Create canvas to extract ImageData from the mask
+      const canvas = document.createElement("canvas");
+      canvas.width = img.width;
+      canvas.height = img.height;
+      const ctx = canvas.getContext("2d", { willReadFrequently: true });
+
+      if (!ctx) {
+        console.error("Failed to get canvas context for mask processing");
+        return;
+      }
+
+      // Draw mask image to canvas
+      ctx.drawImage(img, 0, 0);
+
+      // Get ImageData from the mask
+      const maskImageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+
+      // Store the mask in wizard state
+      wizard.setSegmentationMask(maskImageData);
+
+      try {
+        // Detect contours from the binary mask
+        const contourResult = findContours(maskImageData, {
+          minArea: 200,           // Ignore small noise
+          simplifyTolerance: 1.5, // Reduce points while preserving shape
+          smoothingIterations: 2, // Smooth edges
+          findHoles: true,        // Detect inner holes
+        });
+
+        // Check if we found a valid contour
+        if (contourResult.outerContour.points.length === 0) {
+          console.warn("No contour detected in mask");
+          // Use a fallback simple SVG if no contour detected
+          setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
+          return;
+        }
+
+        // Use calibration data if available, otherwise use a sensible default
+        // Default: 10 pixels per mm (typical for a phone camera at ~30cm distance)
+        const pixelsPerMm = state.calibration.pixelsPerMm || 10;
+
+        // Generate SVG from contours
+        const svgDoc = generateSVG(
+          contourResult.outerContour,
+          contourResult.holes,
+          {
+            pixelsPerMm,
+            padding: 3,           // 3mm padding
+            useBezier: true,      // Smooth curves for organic shapes
+            bezierTension: 0.4,   // Moderate smoothing
+            decimals: 2,          // 0.01mm precision
+            flipY: true,          // SVG Y-axis convention
+          }
+        );
+
+        // Store the generated SVG
+        setSvgOutline(svgDoc.fullSvg);
+
+        console.log(`SVG generated: ${svgDoc.width.toFixed(1)}mm x ${svgDoc.height.toFixed(1)}mm, ${contourResult.outerContour.points.length} points`);
+      } catch (error) {
+        console.error("Error generating SVG from mask:", error);
+        // Use fallback on error
+        setSvgOutline(createFallbackSvg(canvas.width, canvas.height));
+      }
+    };
+
+    img.onerror = () => {
+      console.error("Failed to load mask image");
+    };
+
+    img.src = maskDataUrl;
+  }, [wizard, setSvgOutline, state.calibration.pixelsPerMm]);
 
   const handleCalibrationComplete = useCallback((pixelsPerMm: number, unit: "mm" | "cm" | "in") => {
     setCalibration({ pixelsPerMm, unit });
@@ -348,11 +409,23 @@ export default function Home() {
   );
 }
 
-// Helper function to generate mock SVG for testing
-function generateMockSvg(): string {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 150" width="200" height="150">
-    <path d="M50,25 L150,25 L175,75 L150,125 L50,125 L25,75 Z" fill="none" stroke="currentColor" stroke-width="2"/>
-  </svg>`;
+// Helper function to create a fallback SVG when contour detection fails
+function createFallbackSvg(width: number, height: number): string {
+  // Create a simple rectangle placeholder
+  const padding = 10;
+  const w = Math.max(10, width - padding * 2);
+  const h = Math.max(10, height - padding * 2);
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     width="${w}mm"
+     height="${h}mm"
+     viewBox="0 0 ${w} ${h}">
+  <path d="M 0 0 L ${w} 0 L ${w} ${h} L 0 ${h} Z"
+        fill="black"
+        stroke="none"/>
+</svg>`;
 }
 
 // Helper function to get SVG dimensions in mm
@@ -360,7 +433,7 @@ function getSvgDimensions(
   svgContent: string | null,
   pixelsPerMm: number | null
 ): { width: number; height: number } | undefined {
-  if (!svgContent || !pixelsPerMm) return undefined;
+  if (!svgContent) return undefined;
 
   try {
     const parser = new DOMParser();
@@ -369,23 +442,42 @@ function getSvgDimensions(
 
     if (!svg) return undefined;
 
-    const viewBox = svg.getAttribute("viewBox");
-    if (viewBox) {
-      const [, , width, height] = viewBox.split(" ").map(Number);
-      return {
-        width: width / pixelsPerMm,
-        height: height / pixelsPerMm,
-      };
+    // First, check for explicit width/height attributes with units
+    const widthAttr = svg.getAttribute("width") || "";
+    const heightAttr = svg.getAttribute("height") || "";
+
+    // If dimensions are in mm (from our generator), parse directly
+    if (widthAttr.endsWith("mm") && heightAttr.endsWith("mm")) {
+      const width = parseFloat(widthAttr);
+      const height = parseFloat(heightAttr);
+      if (width > 0 && height > 0) {
+        return { width, height };
+      }
     }
 
-    const width = parseFloat(svg.getAttribute("width") || "0");
-    const height = parseFloat(svg.getAttribute("height") || "0");
+    // Check viewBox (which is now in mm from our generator)
+    const viewBox = svg.getAttribute("viewBox");
+    if (viewBox) {
+      const parts = viewBox.split(/[\s,]+/).filter(Boolean);
+      if (parts.length >= 4) {
+        const width = parseFloat(parts[2]);
+        const height = parseFloat(parts[3]);
+        if (width > 0 && height > 0) {
+          return { width, height };
+        }
+      }
+    }
 
-    if (width && height) {
-      return {
-        width: width / pixelsPerMm,
-        height: height / pixelsPerMm,
-      };
+    // Fallback: parse width/height as pixels and convert using pixelsPerMm
+    if (pixelsPerMm) {
+      const width = parseFloat(widthAttr) || 0;
+      const height = parseFloat(heightAttr) || 0;
+      if (width > 0 && height > 0) {
+        return {
+          width: width / pixelsPerMm,
+          height: height / pixelsPerMm,
+        };
+      }
     }
   } catch {
     // Ignore parse errors
