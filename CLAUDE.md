@@ -215,6 +215,54 @@ git commit --no-verify -m "your message"
 
 **Note:** This should only be used in emergencies. Always fix lint issues before pushing.
 
+## Feature Branch Workflow
+
+Feature branches must maintain a **single commit** throughout development. This keeps git history clean and makes rebasing much easier.
+
+### Always Amend on Feature Branches
+
+When working on a feature branch, always use `git commit --amend` to update your existing commit rather than creating new commits:
+
+```bash
+# After making changes
+bun format && bun lint:fix
+git add .
+git commit --amend
+```
+
+### Why Single Commits?
+
+- **Cleaner git history** - Main branch shows one commit per feature/fix
+- **Easier rebasing** - Single commits rebase cleanly without conflicts between your own commits
+- **Better reviews** - Reviewers see the complete change, not incremental WIP states
+- **Simpler squashing** - No need to squash multiple commits before merging
+
+### Commit Message Quality
+
+Since your feature branch has only one commit, make it count:
+- Follow the [Conventional Commits](docs/conventional-commits.md) specification
+- Write a clear, descriptive message that explains the "why"
+- Update the message with `--amend` as the feature evolves
+
+```bash
+# Update commit message as you refine the feature
+git commit --amend -m "$(cat <<'EOF'
+feat(wizard): add step validation with error recovery
+
+Implement validation checks between wizard steps to prevent
+users from proceeding with invalid data. Includes automatic
+error recovery suggestions.
+EOF
+)"
+```
+
+### Important Notes
+
+- **First commit**: Use regular `git commit` for your initial commit
+- **Subsequent changes**: Always use `git commit --amend`
+- **Force push required**: After amending, you'll need `git push --force` to update the remote branch
+- **Never amend shared commits**: Only amend commits on your own feature branches
+
 ## Code Patterns & Conventions
 
 ### Component Structure
@@ -239,10 +287,12 @@ git commit --no-verify -m "your message"
 - Schemas used in both API and client-side
 
 ### Testing
+- **All new code must have test coverage** - No exceptions
 - Unit tests: `*.test.ts` files alongside source
 - E2E tests: `e2e/*.e2e.ts` files
 - Use `describe`/`it` pattern with Bun test runner
 - Mock external services (Replicate API, OpenSCAD)
+- Run `bun test --coverage` to verify coverage before committing
 
 ### Styling
 - Tailwind CSS with shadcn/ui design tokens
