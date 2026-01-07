@@ -132,6 +132,7 @@ export function useSTLLoader(
       setError(err instanceof Error ? err : new Error("Failed to load STL"));
       setLoading(false);
     }
+    // biome-ignore lint/correctness/useExhaustiveDependencies: _retryCount triggers reload on retry
   }, [url, center, computeNormals, _retryCount]);
 
   // Load STL when URL changes or on retry

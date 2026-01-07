@@ -151,9 +151,10 @@ export function GridfinityPreview({
               </>
             )}
 
-            {/* Grid unit labels */}
+            {/* Grid unit labels - index is stable as it represents fixed grid positions */}
             {Array.from({ length: config.gridUnitsX }).map((_, i) => (
               <text
+                // biome-ignore lint/suspicious/noArrayIndexKey: index represents fixed grid position
                 key={`x-label-${i}`}
                 x={(i + 0.5) * GRID_SIZE}
                 y={viewHeight - 5}
@@ -167,6 +168,7 @@ export function GridfinityPreview({
             ))}
             {Array.from({ length: config.gridUnitsY }).map((_, i) => (
               <text
+                // biome-ignore lint/suspicious/noArrayIndexKey: index represents fixed grid position
                 key={`y-label-${i}`}
                 x={5}
                 y={(i + 0.5) * GRID_SIZE + 3}
