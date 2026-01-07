@@ -56,7 +56,9 @@ export function SelectStep({ imageUrl, onMasksSelected }: SelectStepProps) {
 
   // Fetch masks from SAM 2 when image dimensions are available
   useEffect(() => {
-    if (!imageDimensions || masks.length > 0 || isSegmenting) return;
+    // Don't fetch if: no dimensions, already have masks, currently fetching, or had an error
+    // Error state prevents infinite retry loop - user must manually click Retry
+    if (!imageDimensions || masks.length > 0 || isSegmenting || error) return;
 
     const fetchMasks = async () => {
       setIsSegmenting(true);
@@ -111,7 +113,7 @@ export function SelectStep({ imageUrl, onMasksSelected }: SelectStepProps) {
     };
 
     fetchMasks();
-  }, [imageDimensions, masks.length, isSegmenting, imageUrl]);
+  }, [imageDimensions, masks.length, isSegmenting, imageUrl, error]);
 
   /**
    * Toggle a mask's selection state

@@ -16,17 +16,18 @@ RUN apk add --no-cache libc6-compat
 COPY package.json bun.lock* package-lock.json* yarn.lock* pnpm-lock.yaml* ./
 
 # Install dependencies based on available lock file
+# Skip prepare scripts (git hooks) since .git directory doesn't exist in Docker
 RUN \
   if [ -f bun.lock ]; then \
-    npm install -g bun && bun install --frozen-lockfile; \
+    npm install -g bun && bun install --frozen-lockfile --ignore-scripts; \
   elif [ -f yarn.lock ]; then \
-    yarn --frozen-lockfile; \
+    yarn --frozen-lockfile --ignore-scripts; \
   elif [ -f package-lock.json ]; then \
-    npm ci; \
+    npm ci --ignore-scripts; \
   elif [ -f pnpm-lock.yaml ]; then \
-    corepack enable pnpm && pnpm i --frozen-lockfile; \
+    corepack enable pnpm && pnpm i --frozen-lockfile --ignore-scripts; \
   else \
-    echo "No lockfile found." && npm install; \
+    echo "No lockfile found." && npm install --ignore-scripts; \
   fi
 
 

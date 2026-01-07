@@ -53,6 +53,16 @@ export function useGenerationPolling(
   // Use ref to track if we've already called completion callback
   const completedRef = useRef<boolean>(false);
 
+  // Use refs to store callbacks to avoid re-running effect when they change
+  const onCompleteRef = useRef(onComplete);
+  const onErrorRef = useRef(onError);
+
+  // Update refs when callbacks change
+  useEffect(() => {
+    onCompleteRef.current = onComplete;
+    onErrorRef.current = onError;
+  }, [onComplete, onError]);
+
   useEffect(() => {
     // Reset state when generationId changes
     if (generationId) {
@@ -96,9 +106,9 @@ export function useGenerationPolling(
           }
 
           // Only call onComplete once
-          if (!completedRef.current && onComplete) {
+          if (!completedRef.current && onCompleteRef.current) {
             completedRef.current = true;
-            onComplete(response);
+            onCompleteRef.current(response);
           }
         }
 
@@ -114,9 +124,9 @@ export function useGenerationPolling(
           }
 
           // Only call onError once
-          if (!completedRef.current && onError) {
+          if (!completedRef.current && onErrorRef.current) {
             completedRef.current = true;
-            onError(errorMsg);
+            onErrorRef.current(errorMsg);
           }
         }
       } catch (err) {
@@ -138,9 +148,9 @@ export function useGenerationPolling(
             intervalRef.current = null;
           }
 
-          if (!completedRef.current && onError) {
+          if (!completedRef.current && onErrorRef.current) {
             completedRef.current = true;
-            onError(errorMsg);
+            onErrorRef.current(errorMsg);
           }
         }
         // For other errors, just log and continue polling
@@ -161,7 +171,7 @@ export function useGenerationPolling(
       }
       setIsPolling(false);
     };
-  }, [generationId, enabled, pollingInterval, status, onComplete, onError]);
+  }, [generationId, enabled, pollingInterval, status]);
 
   return {
     status,
