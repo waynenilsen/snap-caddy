@@ -12,9 +12,12 @@ import {
   mock,
   spyOn,
 } from "bun:test";
+import type { Stats } from "node:fs";
 import { promises as fs } from "node:fs";
-import type { Dirent, Stats } from "node:fs";
 import { join } from "node:path";
+
+// Type alias for readdir result (workaround for Dirent<NonSharedBuffer> type issues)
+type DirentResult = Awaited<ReturnType<typeof fs.readdir>>;
 
 // Mock environment variables
 const MOCK_TEMP_DIR = "/tmp/test-snap-caddy";
@@ -360,24 +363,21 @@ describe("FileManager", () => {
       ];
 
       spyOn(fs, "readdir").mockResolvedValue(
-        mockEntries as Partial<Dirent>[] as Dirent[],
+        mockEntries as unknown as DirentResult,
       );
 
       const _statCallCount = 0;
-      spyOn(fs, "stat").mockImplementation(
-        async (path: string | Buffer | URL) => {
-          const pathStr = path.toString();
-          if (
-            pathStr.includes("old-file-1") ||
-            pathStr.includes("old-file-2")
-          ) {
-            return { mtimeMs: oldFileAge } as Partial<Stats> as Stats;
-          } else if (pathStr.includes("recent-file")) {
-            return { mtimeMs: recentFileAge } as Partial<Stats> as Stats;
-          }
-          return { mtimeMs: now } as Partial<Stats> as Stats;
-        },
-      );
+      spyOn(fs, "stat").mockImplementation((async (
+        path: string | Buffer | URL,
+      ) => {
+        const pathStr = path.toString();
+        if (pathStr.includes("old-file-1") || pathStr.includes("old-file-2")) {
+          return { mtimeMs: oldFileAge } as Partial<Stats> as Stats;
+        } else if (pathStr.includes("recent-file")) {
+          return { mtimeMs: recentFileAge } as Partial<Stats> as Stats;
+        }
+        return { mtimeMs: now } as Partial<Stats> as Stats;
+      }) as typeof fs.stat);
 
       const maxAge = 3600000; // 1 hour
       const cleaned = await fileManager.cleanupOldFiles(maxAge);
@@ -404,7 +404,7 @@ describe("FileManager", () => {
       ];
 
       spyOn(fs, "readdir").mockResolvedValue(
-        mockEntries as Partial<Dirent>[] as Dirent[],
+        mockEntries as unknown as DirentResult,
       );
 
       const cleaned = await fileManager.cleanupOldFiles(3600000);
@@ -421,18 +421,18 @@ describe("FileManager", () => {
       ];
 
       spyOn(fs, "readdir").mockResolvedValue(
-        mockEntries as Partial<Dirent>[] as Dirent[],
+        mockEntries as unknown as DirentResult,
       );
 
-      spyOn(fs, "stat").mockImplementation(
-        async (path: string | Buffer | URL) => {
-          const pathStr = path.toString();
-          if (pathStr.includes("inaccessible-dir")) {
-            throw new Error("Permission denied");
-          }
-          return { mtimeMs: Date.now() - 7200000 } as Partial<Stats> as Stats; // 2 hours old
-        },
-      );
+      spyOn(fs, "stat").mockImplementation((async (
+        path: string | Buffer | URL,
+      ) => {
+        const pathStr = path.toString();
+        if (pathStr.includes("inaccessible-dir")) {
+          throw new Error("Permission denied");
+        }
+        return { mtimeMs: Date.now() - 7200000 } as Partial<Stats> as Stats; // 2 hours old
+      }) as typeof fs.stat);
 
       const cleaned = await fileManager.cleanupOldFiles(3600000);
 
@@ -454,7 +454,7 @@ describe("FileManager", () => {
       ];
 
       spyOn(fs, "readdir").mockResolvedValue(
-        mockEntries as Partial<Dirent>[] as Dirent[],
+        mockEntries as unknown as DirentResult,
       );
       spyOn(fs, "stat").mockResolvedValue({
         mtimeMs: now - 1000,

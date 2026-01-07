@@ -8,9 +8,9 @@
 import { NextResponse } from "next/server";
 import { env, isDev } from "@/lib/env";
 import {
+  getFixturesDir,
   getRecordMode,
   getReplicateBaseUrl,
-  getFixturesDir,
   listRecordings,
 } from "@/lib/replicate";
 

@@ -9,7 +9,7 @@
 
 import { NextResponse } from "next/server";
 import { isDev } from "@/lib/env";
-import { listRecordings, clearAllRecordings } from "@/lib/replicate";
+import { clearAllRecordings, listRecordings } from "@/lib/replicate";
 
 export const dynamic = "force-dynamic";
 

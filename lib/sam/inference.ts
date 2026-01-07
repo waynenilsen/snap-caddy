@@ -10,8 +10,8 @@ import { env } from "@/lib/env";
 import { logger } from "@/lib/logger";
 import {
   createRecordedFetch,
-  getReplicateBaseUrl,
   getRecordMode,
+  getReplicateBaseUrl,
 } from "@/lib/replicate";
 import type {
   ReplicatePrediction,
