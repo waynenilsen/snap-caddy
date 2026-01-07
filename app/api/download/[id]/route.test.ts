@@ -23,6 +23,8 @@ const mockLogger = {
   info: mock((_message: string, _meta?: any) => {}),
   // biome-ignore lint/suspicious/noExplicitAny: Test mock - meta can be any object
   error: mock((_message: string, _meta?: any) => {}),
+  // biome-ignore lint/suspicious/noExplicitAny: Test mock - meta can be any object
+  debug: mock((_message: string, _meta?: any) => {}),
 };
 
 const mockMetrics = {

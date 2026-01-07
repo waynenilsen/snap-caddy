@@ -21,6 +21,20 @@ Snap Caddy automates the creation of custom Gridfinity bin cutouts using AI imag
 | Package Manager | Bun (primary), npm/yarn supported |
 | Linting | Biome (formatting + linting) |
 
+## Quick Start (Claude Code Web)
+
+For Claude Code web sessions, run the initialization script first:
+```bash
+./scripts/initialize.sh
+```
+
+This script automatically:
+- Installs dependencies (via Bun or npm)
+- Starts Redis on port 6397
+- Installs git hooks
+- Runs TypeScript and lint checks
+- Creates required temp directories
+
 ## Quick Commands
 
 ```bash
